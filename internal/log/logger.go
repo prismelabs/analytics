@@ -28,8 +28,6 @@ func init() {
 
 type Logger struct {
 	zerolog.Logger
-
-	name string
 }
 
 func NewLogger(name string, w io.Writer, debug bool) Logger {
@@ -56,7 +54,6 @@ func NewLogger(name string, w io.Writer, debug bool) Logger {
 
 	return Logger{
 		Logger: logger,
-		name:   name,
 	}
 }
 
@@ -71,7 +68,7 @@ func TestLoggers(logger ...Logger) {
 	}
 
 	for _, l := range logger {
-		l.Log().Msgf("logger %q ready", l.name)
+		l.Log().Msgf("logger ready")
 	}
 
 	zerolog.ErrorHandler = nil
