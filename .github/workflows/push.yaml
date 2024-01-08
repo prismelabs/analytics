@@ -1,0 +1,35 @@
+name: push
+on:
+  push:
+    paths-ignore:
+      - ".gitignore"
+      - ".github/images"
+      - "README.md"
+jobs:
+  push:
+    if: "! contains(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-20.04
+    env:
+      GENENV_FILE: ./config/genenv.ci.sh
+      STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v22
+        with:
+          extra_nix_config: "system-features = nixos-test benchmark big-parallel kvm"
+      - run: printenv
+      - name: Lint
+        run: nix develop --command make lint
+      - name: Unit tests
+        run: nix develop --command make test/unit
+      - name: Docker build
+        run: REMOVE_RESULT=0 nix develop --command make docker/build
+      - name: End to end tests
+        run: nix develop --command make test/e2e
+      - name: Store docker image as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-image
+          path: ./result
+
