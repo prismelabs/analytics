@@ -1,6 +1,10 @@
 .PHONY: start
 start:
-	go run ./cmd/server
+	go run ./cmd/server |& bunyan
+
+watch/%:
+	# When a new file is added, you must rerun make watch/...
+	find . | entr -n -r sh -c "$(MAKE) $*"
 
 .PHONY: lint
 lint:
@@ -8,7 +12,7 @@ lint:
 
 .PHONY: test/unit
 test/unit:
-	go test -v -p 1 -count=1 ./...
+	go test -v ./...
 
 .PHONY: test/e2e
 test/e2e:

@@ -21,6 +21,8 @@
                   go
                   gopls
                   golangci-lint
+                  bunyan-rs
+                  entr
                 ];
               };
             };
