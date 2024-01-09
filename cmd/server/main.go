@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -11,10 +12,24 @@ import (
 )
 
 func main() {
-	cfg := config.FromEnv()
+	// Bootstrap logger.
+	logger := log.NewLogger("bootstrap", os.Stderr, true)
+	log.TestLoggers(logger)
 
-	logger := log.NewLogger("app", os.Stderr, cfg.Server.Debug)
-	accessLogger := log.NewLogger("access_log", os.Stderr, cfg.Server.Debug)
+	logger.Info().Msg("loading configuration...")
+	cfg := config.FromEnv()
+	logger.Info().Any("config", cfg).Msg("configuration successfully loaded.")
+
+	// Application logger.
+	logger = log.NewLogger("app", os.Stderr, cfg.Server.Debug)
+	log.TestLoggers(logger)
+
+	// Open access log file.
+	accessLogFile, err := os.OpenFile(cfg.Server.AccessLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
+	if err != nil {
+		logger.Panic().Err(err).Msgf("failed to open access log file: %v", cfg.Server.AccessLog)
+	}
+	accessLogger := log.NewLogger("access_log", accessLogFile, cfg.Server.Debug)
 	log.TestLoggers(logger)
 
 	e := echo.New()
@@ -33,7 +48,7 @@ func main() {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 
-	socket := "0.0.0.0:8000"
+	socket := "0.0.0.0:" + fmt.Sprint(cfg.Server.Port)
 	logger.Info().Msgf("start listening for incoming requests on http://%v", socket)
 	logger.Panic().Err(e.Start(socket)).Send()
 }

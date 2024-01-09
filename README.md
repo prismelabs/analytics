@@ -27,9 +27,10 @@ Configuration of the go server is done through environment variables:
 
 | Variable name | Default value | Description |
 |:------------- | :------------ | :---------- |
-| `PRISME_DEBUG`| `false`       | Sets log level to debug. |
-| `PRISME_TRUST_PROXY`| `false` | Whether `X-Forwarded-For`, `X-Request-Id` and other proxy related headers should be trusted. |
 | `PRISME_ACCESS_LOG`| `/dev/stdout` | Path to access log file. |
+| `PRISME_DEBUG`| `false`       | Sets log level to debug. |
+| `PRISME_PORT`| `80`           | Web server listening port. |
+| `PRISME_TRUST_PROXY`| `false` | Whether `X-Forwarded-For`, `X-Request-Id` and other proxy related headers should be trusted. |
 | `PRISME_POSTGRES_URL`| **required** | Postgres connection string. |
 
 ## Contributing

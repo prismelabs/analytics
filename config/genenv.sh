@@ -7,7 +7,9 @@ setenv() {
 }
 
 # Server options.
+setenv PRISME_ACCESS_LOG "/dev/stdout"
 setenv PRISME_DEBUG "true"
+setenv PRISME_PORT "8000"
 setenv PRISME_TRUST_PROXY "false"
 
 # Postgres related options.
