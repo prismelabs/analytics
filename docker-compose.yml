@@ -1,0 +1,28 @@
+version: '3'
+services:
+  postgres:
+    image: "docker.io/library/postgres:15"
+    command: "-c log_statement=all"
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: /usr/bin/pg_isready
+      timeout: 10s
+    user: "postgres:postgres"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "${PRISME_DATABASE:-prisme}"
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
+    networks:
+      default:
+        aliases:
+          - postgres.localhost
+
+volumes:
+  postgres_data:
+
+networks:
+  default: {}
+
