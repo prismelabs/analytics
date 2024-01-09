@@ -21,6 +21,17 @@ it's not until recently that I decided to open source it.
 There will be a lot of changes in the following weeks, be sure to watch and star
 the repository to get informed of the progress.
 
+## Configuration
+
+Configuration of the go server is done through environment variables:
+
+| Variable name | Default value | Description |
+|:------------- | :------------ | :---------- |
+| `PRISME_DEBUG`| `false`       | Sets log level to debug. |
+| `PRISME_TRUST_PROXY`| `false` | Whether `X-Forwarded-For`, `X-Request-Id` and other proxy related headers should be trusted. |
+| `PRISME_ACCESS_LOG`| `/dev/stdout` | Path to access log file. |
+| `PRISME_POSTGRES_URL`| **required** | Postgres connection string. |
+
 ## Contributing
 
 If you want to contribute to `prismeanalytics` to add a feature or improve the
