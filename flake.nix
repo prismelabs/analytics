@@ -23,6 +23,7 @@
                   golangci-lint
                   bunyan-rs
                   entr
+                  bun
                 ];
               };
             };

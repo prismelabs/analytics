@@ -5,3 +5,4 @@
 # .env generator script.
 .config/genenv.local.sh
 
+node_modules/

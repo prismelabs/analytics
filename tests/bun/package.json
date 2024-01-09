@@ -1,0 +1,12 @@
+{
+  "name": "bun",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "^1.0.0",
+    "ts-standard": "^12.0.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

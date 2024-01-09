@@ -40,6 +40,11 @@ watch/%:
 .PHONY: lint
 lint:
 	golangci-lint run --timeout 2m ./...
+	$(MAKE) -C ./tests lint
+
+.PHONY: lint/fix
+lint/fix:
+	$(MAKE) -C ./tests lint/fix
 
 .PHONY: test/unit
 test/unit:
