@@ -48,7 +48,7 @@ lint/fix:
 
 .PHONY: test/unit
 test/unit:
-	source ./.env && go test -v ./...
+	go test -v ./...
 
 .PHONY: test/e2e
 test/e2e:
