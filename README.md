@@ -24,8 +24,8 @@ the repository to get informed of the progress.
 ## Contributing
 
 If you want to contribute to `prismeanalytics` to add a feature or improve the
-code, open an [issue](https://github.com/negrel/prismeanalytics/issues)
-or make a [pull request](https://github.com/negrel/prismeanalytics/pulls).
+code, open an [issue](https://github.com/prismelabs/analytics/issues)
+or make a [pull request](https://github.com/prismelabs/analytics/pulls).
 
 ## :stars: Show your support
 
