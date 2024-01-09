@@ -11,16 +11,14 @@ import (
 )
 
 func main() {
-	cfg := config.ServerFromEnv()
+	cfg := config.FromEnv()
 
-	logger := log.NewLogger("app", os.Stderr, cfg.Debug)
-	accessLogger := log.NewLogger("access_log", os.Stderr, cfg.Debug)
+	logger := log.NewLogger("app", os.Stderr, cfg.Server.Debug)
+	accessLogger := log.NewLogger("access_log", os.Stderr, cfg.Server.Debug)
 	log.TestLoggers(logger)
 
-	_ = accessLogger
-
 	e := echo.New()
-	if cfg.TrustProxy {
+	if cfg.Server.TrustProxy {
 		e.IPExtractor = echo.ExtractIPFromXFFHeader()
 	} else {
 		e.IPExtractor = echo.ExtractIPDirect()
@@ -28,7 +26,7 @@ func main() {
 	e.HideBanner = true
 	e.HidePort = true
 
-	e.Use(middlewares.RequestId(cfg))
+	e.Use(middlewares.RequestId(cfg.Server))
 	e.Use(middlewares.AccessLog(accessLogger))
 
 	e.GET("/", func(c echo.Context) error {
