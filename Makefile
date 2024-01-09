@@ -1,5 +1,6 @@
-DOCKER ?= docker
-DOCKER_COMPOSE ?= docker compose
+repository_root := $(shell git rev-parse --show-toplevel)
+repository_root := $(or $(repository_root), $(CURDIR))
+include $(repository_root)/variables.mk
 
 GENENV_FILE ?= ./config/genenv.local.sh
 
@@ -9,7 +10,7 @@ start: dev/start
 
 .PHONY: dev/start
 dev/start: .env
-	source ./.env && $(DOCKER_COMPOSE) up -d
+	source ./.env && $(DOCKER_COMPOSE) up --wait -d
 
 .PHONY: dev/stop
 dev/stop:
@@ -41,17 +42,25 @@ lint:
 	golangci-lint run --timeout 2m ./...
 
 .PHONY: test/unit
-test/unit: dev/start
+test/unit:
 	source ./.env && go test -v ./...
 
 .PHONY: test/e2e
 test/e2e:
-	@true
+	$(MAKE) -C ./tests
 
 .PHONY: build
 build:
-	@true
+	nix build -L .#prisme-bin
 
 .PHONY: docker/build
 docker/build:
-	@true
+	nix build -L .#docker
+	$(DOCKER) load < result
+	if [ "$${REMOVE_RESULT:=1}" = "1" ]; then rm -f result; fi
+
+.PHONY: clean
+clean: dev/clean
+	docker rmi prismelabs/analytics:dev
+	rm -f .env
+
