@@ -28,7 +28,8 @@ func TestAccessLog(t *testing.T) {
 		c := e.NewContext(req, res)
 
 		require.Panics(t, func() {
-			h(c)
+			err := h(c)
+			require.NoError(t, err)
 		})
 	})
 
@@ -47,7 +48,8 @@ func TestAccessLog(t *testing.T) {
 		res := httptest.NewRecorder()
 		c := e.NewContext(req, res)
 
-		h(c)
+		err := h(c)
+		require.NoError(t, err)
 
 		actual := accessLoggerOutput.String()
 		require.Regexp(t,

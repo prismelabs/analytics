@@ -29,7 +29,8 @@ func TestRequestIdMiddleware(t *testing.T) {
 			res := httptest.NewRecorder()
 			c := e.NewContext(req, res)
 
-			h(c)
+			err := h(c)
+			require.NoError(t, err)
 		})
 
 		t.Run("WithRequestIdHeader", func(t *testing.T) {
@@ -51,7 +52,8 @@ func TestRequestIdMiddleware(t *testing.T) {
 			res := httptest.NewRecorder()
 			c := e.NewContext(req, res)
 
-			h(c)
+			err := h(c)
+			require.NoError(t, err)
 		})
 	})
 
@@ -72,7 +74,8 @@ func TestRequestIdMiddleware(t *testing.T) {
 			res := httptest.NewRecorder()
 			c := e.NewContext(req, res)
 
-			h(c)
+			err := h(c)
+			require.NoError(t, err)
 		})
 
 		t.Run("WithRequestIdHeader", func(t *testing.T) {
@@ -92,7 +95,8 @@ func TestRequestIdMiddleware(t *testing.T) {
 			res := httptest.NewRecorder()
 			c := e.NewContext(req, res)
 
-			h(c)
+			err := h(c)
+			require.NoError(t, err)
 		})
 	})
 }
