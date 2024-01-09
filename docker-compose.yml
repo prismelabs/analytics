@@ -3,8 +3,6 @@ services:
   postgres:
     image: "docker.io/library/postgres:15"
     command: "-c log_statement=all"
-    ports:
-      - 5432:5432
     healthcheck:
       test: /usr/bin/pg_isready
       timeout: 10s
@@ -22,7 +20,4 @@ services:
 
 volumes:
   postgres_data:
-
-networks:
-  default: {}
 

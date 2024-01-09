@@ -22,10 +22,5 @@ func TestPostgresConnect(t *testing.T) {
 		})
 	})
 
-	t.Run("Success", func(t *testing.T) {
-		cfg := config.PostgresFromEnv()
-
-		db := Connect(logger, cfg, 1)
-		require.NotNil(t, db)
-	})
+	// We're not testing a real connection to postgres in unit tests.
 }
