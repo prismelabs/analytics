@@ -13,6 +13,14 @@
 
 # :gem: `prismeanalytics` - An Open Source, privacy-focused and progressive analytics service.
 
+## Why is the repository empty ?
+
+I've already built a closed source MVP of what Prisme Analytics may look like but
+it's not until recently that I decided to open source it.
+
+There will be a lot of changes in the following weeks, be sure to watch and star
+the repository to get informed of the progress.
+
 ## Contributing
 
 If you want to contribute to `prismeanalytics` to add a feature or improve the
