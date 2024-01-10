@@ -2,39 +2,44 @@ repository_root := $(shell git rev-parse --show-toplevel)
 repository_root := $(or $(repository_root), $(CURDIR))
 include $(repository_root)/variables.mk
 
+GENENV_FILES ?= $(wildcard ./config/*)
 GENENV_FILE ?= ./config/genenv.local.sh
 
 .PHONY: start
-start: dev/start ./cmd/server/wire_gen.go
-	source ./.env && go run ./cmd/server |& bunyan
+start: codegen
+	source ./.env && go build ./cmd/server
+	$(DOCKER_COMPOSE) \
+		-f ./docker-compose.yml \
+		up --wait -d
+	$(DOCKER_COMPOSE) \
+		-f ./docker-compose.dev.yml \
+		down
+	$(DOCKER_COMPOSE) \
+		-f ./docker-compose.dev.yml \
+		up --wait -d --force-recreate
+	docker logs -f $(notdir $(CURDIR))-prisme-1 |& bunyan
 
-./cmd/server/wire_gen.go:
-	wire ./...
+.PHONY: stop
+stop:
+	$(DOCKER_COMPOSE) \
+		-f ./docker-compose.dev.yml \
+		-f ./docker-compose.yml \
+		stop
 
-.PHONY: dev/start
-dev/start: .env
-	source ./.env && $(DOCKER_COMPOSE) up --wait -d
+.PHONY: down
+down:
+	$(DOCKER_COMPOSE) \
+		-f ./docker-compose.dev.yml \
+		-f ./docker-compose.yml \
+		down
 
-.PHONY: dev/stop
-dev/stop:
-	$(DOCKER_COMPOSE) stop
-
-.PHONY: dev/down
-dev/down:
-	$(DOCKER_COMPOSE) down
-
-.PHONY: dev/clean
-dev/clean:
-	$(DOCKER_COMPOSE) down --volumes --remove-orphans
-
-$(GENENV_FILE):
-	@echo "$(GENENV_FILE) doesn't exist, generating one..."
-	@printf '#!/usr/bin/env bash\n\nDIR="$$(dirname $$0)"\nsource "$$DIR/genenv.sh"\n\n# setenv PRISME_XXX_OPTION "value"' > $@
-	@chmod +x $(GENENV_FILE)
-	@echo "$(GENENV_FILE) generated, you can edit it!"
-
-.env: $(GENENV_FILE)
-	bash $(GENENV_FILE) > .env; \
+.PHONY: clean
+clean:
+	$(DOCKER_COMPOSE) \
+		-f ./docker-compose.dev.yml \
+		-f ./docker-compose.yml \
+		 down --volumes --remove-orphans
+	rm -f .env
 
 watch/%:
 	# When a new file is added, you must rerun make watch/...
@@ -48,6 +53,21 @@ lint:
 .PHONY: lint/fix
 lint/fix:
 	$(MAKE) -C ./tests lint/fix
+
+.PHONY: codegen
+codegen: ./cmd/server/wire_gen.go
+
+./cmd/server/wire_gen.go: ./cmd/server/wire.go
+	wire ./...
+
+$(GENENV_FILE):
+	@echo "$(GENENV_FILE) doesn't exist, generating one..."
+	@printf '#!/usr/bin/env bash\n\nDIR="$$(dirname $$0)"\nsource "$$DIR/genenv.sh"\n\n# setenv PRISME_XXX_OPTION "value"' > $@
+	@chmod +x $(GENENV_FILE)
+	@echo "$(GENENV_FILE) generated, you can edit it!"
+
+.env: $(GENENV_FILES) $(GENENV_FILES)
+	bash $(GENENV_FILE) > .env; \
 
 .PHONY: test/unit
 test/unit:
@@ -66,9 +86,3 @@ docker/build:
 	nix build -L .#docker
 	$(DOCKER) load < result
 	if [ "$${REMOVE_RESULT:=1}" = "1" ]; then rm -f result; fi
-
-.PHONY: clean
-clean: dev/clean
-	docker rmi prismelabs/analytics:dev
-	rm -f .env
-

@@ -4,8 +4,8 @@ services:
     image: "docker.io/library/postgres:15"
     command: "-c log_statement=all"
     healthcheck:
-      test: /usr/bin/pg_isready
-      timeout: 10s
+      test: "/usr/bin/pg_isready"
+      timeout: "10s"
     user: "postgres:postgres"
     environment:
       POSTGRES_USER: "postgres"
@@ -13,10 +13,11 @@ services:
       POSTGRES_DB: "${PRISME_DATABASE:-prisme}"
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
+      - "./postgres:/docker-entrypoint-initdb.d:ro"
     networks:
       default:
         aliases:
-          - postgres.localhost
+          - "postgres.localhost"
 
 volumes:
   postgres_data:

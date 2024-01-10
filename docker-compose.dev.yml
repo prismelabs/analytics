@@ -1,0 +1,14 @@
+version: '3'
+services:
+  prisme:
+    image: "prismelabs/analytics:dev"
+    env_file: "./.env"
+    command: "/server"
+    volumes:
+      - "./server:/server:ro"
+    ports:
+      - "8000:8000"
+    networks:
+      default:
+        aliases:
+          - "prisme.localhost"
