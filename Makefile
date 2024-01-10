@@ -5,8 +5,11 @@ include $(repository_root)/variables.mk
 GENENV_FILE ?= ./config/genenv.local.sh
 
 .PHONY: start
-start: dev/start
+start: dev/start ./cmd/server/wire_gen.go
 	source ./.env && go run ./cmd/server |& bunyan
+
+./cmd/server/wire_gen.go:
+	wire ./...
 
 .PHONY: dev/start
 dev/start: .env

@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/google/uuid v1.5.0
+	github.com/google/wire v0.5.0
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4

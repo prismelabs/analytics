@@ -21,6 +21,7 @@
                   go
                   gopls
                   golangci-lint
+                  wire
                   bunyan-rs
                   entr
                   bun
@@ -50,7 +51,7 @@
               prisme-bin = pkgs.buildGoModule {
                 pname = "prisme";
                 version = "0.1.0";
-                vendorHash = "sha256-4S7ELy7+9qFdZo1ACcU9NDd54XPod2zaTHdzBqdn9H8=";
+                vendorHash = "sha256-sIqQerBGVuxk6Y5vhbGZA0OAR89OMKZ55Gsp0ippXrc=";
 
                 src = ./.;
                 # Skip go test.

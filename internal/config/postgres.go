@@ -1,11 +1,11 @@
 package config
 
-// Postgres connection options.
+// Postgres related options.
 type Postgres struct {
 	Url SecretString
 }
 
-// PostgresFromEnv loads postgres config from environment variables.
+// PostgresFromEnv loads postgres related options from environment variables.
 // This function panics if required environment variables are missing.
 func PostgresFromEnv() Postgres {
 	return Postgres{

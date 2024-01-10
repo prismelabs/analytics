@@ -12,6 +12,7 @@ type Server struct {
 	TrustProxy bool
 }
 
+// ServerFromEnv loads server related options from environment variables.
 func ServerFromEnv() Server {
 	return Server{
 		AccessLog:  getEnvOrDefault("PRISME_ACCESS_LOG", "/dev/stdout"),
