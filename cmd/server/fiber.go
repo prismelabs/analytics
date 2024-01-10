@@ -1,7 +1,10 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/proxy"
 	"github.com/prismelabs/prismeanalytics/internal/config"
 	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 	"github.com/prismelabs/prismeanalytics/internal/renderer"
@@ -35,6 +38,10 @@ func ProvideFiber(
 
 	app.Use(middlewares.RequestId(cfg.Server))
 	app.Use(middlewares.AccessLog(accessLogger.Logger))
+
+	// Error handler.
+	// Handle error manually before access log middleware.
+	app.Use(middlewares.RestError)
 
 	return app
 }
