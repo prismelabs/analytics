@@ -6,7 +6,7 @@ package main
 import (
 	"github.com/google/wire"
 	"github.com/prismelabs/prismeanalytics/internal/log"
-	"github.com/prismelabs/prismeanalytics/internal/middlewares"
+	"github.com/prismelabs/prismeanalytics/internal/renderer"
 )
 
 func initialize(logger log.Logger) App {
@@ -14,7 +14,8 @@ func initialize(logger log.Logger) App {
 		ProvideConfig,
 		ProvideStandardLogger,
 		ProvideAccessLogger,
-		ProvideEcho,
+		renderer.ProvideRenderer,
+		ProvideFiber,
 		ProvideApp,
 	)
 	return App{}

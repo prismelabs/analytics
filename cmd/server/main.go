@@ -16,5 +16,5 @@ func main() {
 
 	socket := "0.0.0.0:" + fmt.Sprint(app.cfg.Server.Port)
 	logger.Info().Msgf("start listening for incoming requests on http://%v", socket)
-	logger.Panic().Err(app.echo.Start(socket)).Send()
+	logger.Panic().Err(app.fiber.Listen(socket)).Send()
 }

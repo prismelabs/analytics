@@ -3,12 +3,11 @@ package middlewares
 import (
 	"bytes"
 	"io"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/prismeanalytics/internal/config"
 	"github.com/prismelabs/prismeanalytics/internal/log"
 	"github.com/stretchr/testify/require"
@@ -18,63 +17,85 @@ func TestAccessLog(t *testing.T) {
 	t.Run("WithoutRequestIdMiddleware/Panics", func(t *testing.T) {
 		accessLogger := log.NewLogger("access_log", io.Discard, false)
 
-		e := echo.New()
-		h := AccessLog(accessLogger)(func(c echo.Context) error {
-			return c.String(http.StatusOK, "Hello, World!")
+		app := fiber.New()
+		app.Use(func(c *fiber.Ctx) error {
+			require.Panics(t, func() {
+				c.Next()
+			})
+			return nil
+		})
+		app.Use(AccessLog(accessLogger))
+		app.Use(func(c *fiber.Ctx) error {
+			return nil
 		})
 
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		res := httptest.NewRecorder()
-		c := e.NewContext(req, res)
 
-		require.Panics(t, func() {
-			err := h(c)
-			require.NoError(t, err)
-		})
+		_, err := app.Test(req)
+		require.NoError(t, err)
 	})
 
 	t.Run("WithRequestIdMiddleware", func(t *testing.T) {
-		accessLoggerOutput := bytes.Buffer{}
-		accessLogger := log.NewLogger("access_log", &accessLoggerOutput, false)
+		type testCase struct {
+			name           string
+			proxyHeader    string
+			xForwardedFor  string
+			loggedSourceIp string
+		}
 
-		e := echo.New()
-		h := RequestId(config.Server{
-			TrustProxy: true,
-		})(AccessLog(accessLogger)(func(c echo.Context) error {
-			return c.String(http.StatusOK, "Hello, World!")
-		}))
+		testCases := []testCase{
+			{
+				name:           "TrustXForwardedFor",
+				proxyHeader:    fiber.HeaderXForwardedFor,
+				xForwardedFor:  "10.1.2.3",
+				loggedSourceIp: "10.1.2.3",
+			},
+			{
+				name:           "DoNotTrustXForwardedFor",
+				proxyHeader:    "",
+				xForwardedFor:  "10.1.2.3",
+				loggedSourceIp: "0.0.0.0",
+			},
+		}
 
-		req := httptest.NewRequest(http.MethodGet, "/hello", nil)
-		res := httptest.NewRecorder()
-		c := e.NewContext(req, res)
+		for _, tcase := range testCases {
+			t.Run(tcase.name, func(t *testing.T) {
+				accessLoggerOutput := bytes.Buffer{}
+				accessLogger := log.NewLogger("access_log", &accessLoggerOutput, false)
 
-		err := h(c)
-		require.NoError(t, err)
+				app := fiber.New(fiber.Config{
+					ProxyHeader: tcase.proxyHeader,
+				})
+				app.Use(RequestId(config.Server{}))
+				app.Use(AccessLog(accessLogger))
+				app.Use(func(c *fiber.Ctx) error {
+					return nil
+				})
 
-		actual := accessLoggerOutput.String()
-		require.Regexp(t,
-			`{"v":0,`+
-				`"pid":\d+,`+
-				`"hostname":"[^"]+",`+
-				`"name":"access_log",`+
-				`"request_id":"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",`+
-				`"duration_ms":\d+(.\d+)?,`+
-				`"source_ip":"`+extractIP(req)+`",`+
-				`"method":"GET",`+
-				`"path":"/hello",`+
-				`"status_code":200,`+
-				`"level":30,`+
-				`"time":"((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)",`+
-				`"msg":"request handled"}`,
-			actual,
-		)
+				req := httptest.NewRequest(http.MethodGet, "/hello", nil)
+				req.Header.Add(fiber.HeaderXForwardedFor, tcase.xForwardedFor)
 
-		require.Equal(t, http.StatusOK, res.Code)
-		require.Equal(t, "Hello, World!", res.Body.String())
+				_, err := app.Test(req)
+				require.NoError(t, err)
+
+				actual := accessLoggerOutput.String()
+				require.Regexp(t,
+					`{"v":0,`+
+						`"pid":\d+,`+
+						`"hostname":"[^"]+",`+
+						`"name":"access_log",`+
+						`"request_id":"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",`+
+						`"duration_ms":\d+(.\d+)?,`+
+						`"source_ip":"`+tcase.loggedSourceIp+`",`+
+						`"method":"GET",`+
+						`"path":"/hello",`+
+						`"status_code":200,`+
+						`"level":30,`+
+						`"time":"((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)",`+
+						`"msg":"request handled"}`,
+					actual,
+				)
+			})
+		}
 	})
-}
-
-func extractIP(req *http.Request) string {
-	ra, _, _ := net.SplitHostPort(req.RemoteAddr)
-	return ra
 }

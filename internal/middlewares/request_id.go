@@ -1,29 +1,28 @@
 package middlewares
 
 import (
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/prismeanalytics/internal/config"
 )
 
-const RequestIdKey = "request-id"
+type RequestIdKey struct{}
 
-func RequestId(cfg config.Server) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			var reqId string
+func RequestId(cfg config.Server) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var requestId string
 
-			if cfg.TrustProxy {
-				reqId = c.Request().Header.Get(echo.HeaderXRequestID)
-			}
-
-			if reqId == "" {
-				reqId = uuid.New().String()
-			}
-
-			c.Set(RequestIdKey, reqId)
-
-			return next(c)
+		if cfg.TrustProxy {
+			requestId = utils.UnsafeString(c.Request().Header.Peek("X-Request-Id"))
 		}
+
+		if requestId == "" {
+			requestId = utils.UUIDv4()
+		}
+
+		c.Locals(RequestIdKey{}, requestId)
+
+		return c.Next()
 	}
 }
+

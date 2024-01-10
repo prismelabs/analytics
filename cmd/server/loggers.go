@@ -20,6 +20,7 @@ func ProvideStandardLogger(cfg config.Config) StandardLogger {
 	return StandardLogger{logger}
 }
 
+// Access Logger is the logger for access logs.
 type AccessLogger struct {
 	log.Logger
 }

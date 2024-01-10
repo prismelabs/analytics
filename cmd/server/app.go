@@ -1,22 +1,22 @@
 package main
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/prismeanalytics/internal/config"
 	"github.com/prismelabs/prismeanalytics/internal/log"
 )
 
 type App struct {
 	cfg    config.Config
-	echo   *echo.Echo
+	fiber  *fiber.App
 	logger log.Logger
 }
 
 // ProvideApp is a wire provider for App.
-func ProvideApp(cfg config.Config, e *echo.Echo, logger StandardLogger) App {
+func ProvideApp(cfg config.Config, app *fiber.App, logger StandardLogger) App {
 	return App{
 		cfg:    cfg,
-		echo:   e,
+		fiber:  app,
 		logger: logger.Logger,
 	}
 }
