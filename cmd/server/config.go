@@ -6,7 +6,9 @@ import (
 )
 
 // ProvideConfig is a wire provider config.Config.
-func ProvideConfig(logger log.Logger) config.Config {
+func ProvideConfig(bootstrapLogger BootstrapLogger) config.Config {
+	logger := log.Logger(bootstrapLogger)
+
 	logger.Info().Msg("loading configuration...")
 	cfg := config.FromEnv()
 	logger.Info().Any("config", cfg).Msg("configuration successfully loaded.")

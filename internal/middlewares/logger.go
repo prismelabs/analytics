@@ -6,9 +6,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type Logger fiber.Handler
+
 type LoggerKey struct{}
 
-func Logger(logger log.Logger) fiber.Handler {
+// ProvideLogger define a wire provider for logger middleware.
+func ProvideLogger(logger log.Logger) Logger {
 	appLogger := logger
 	return func(c *fiber.Ctx) error {
 		logger = appLogger

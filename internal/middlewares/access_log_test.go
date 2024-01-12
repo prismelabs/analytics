@@ -24,7 +24,7 @@ func TestAccessLog(t *testing.T) {
 			})
 			return nil
 		})
-		app.Use(AccessLog(accessLogger))
+		app.Use(accessLog(accessLogger))
 		app.Use(func(c *fiber.Ctx) error {
 			return nil
 		})
@@ -66,8 +66,8 @@ func TestAccessLog(t *testing.T) {
 				app := fiber.New(fiber.Config{
 					ProxyHeader: tcase.proxyHeader,
 				})
-				app.Use(RequestId(config.Server{}))
-				app.Use(AccessLog(accessLogger))
+				app.Use(fiber.Handler(ProvideRequestId(config.Server{})))
+				app.Use(accessLog(accessLogger))
 				app.Use(func(c *fiber.Ctx) error {
 					return nil
 				})

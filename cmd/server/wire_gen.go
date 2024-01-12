@@ -7,18 +7,21 @@
 package main
 
 import (
-	"github.com/prismelabs/prismeanalytics/internal/log"
-	"github.com/prismelabs/prismeanalytics/internal/renderer"
+	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 )
 
 // Injectors from wire.go:
 
-func initialize(logger log.Logger) App {
+func initialize(logger BootstrapLogger) App {
 	config := ProvideConfig(logger)
-	standardLogger := ProvideStandardLogger(config)
-	accessLogger := ProvideAccessLogger(config, standardLogger)
-	rendererRenderer := renderer.ProvideRenderer()
-	app := ProvideFiber(config, accessLogger, rendererRenderer)
-	mainApp := ProvideApp(config, app, standardLogger)
+	views := ProvideFiberViewsEngine(config)
+	logLogger := ProvideLogger(config)
+	middlewaresLogger := middlewares.ProvideLogger(logLogger)
+	server := config.Server
+	accessLog := middlewares.ProvideAccessLog(server, logLogger)
+	requestId := middlewares.ProvideRequestId(server)
+	static := middlewares.ProvideStatic(server)
+	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static)
+	mainApp := ProvideApp(config, app, logLogger)
 	return mainApp
 }

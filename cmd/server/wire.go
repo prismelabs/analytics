@@ -5,16 +5,20 @@ package main
 
 import (
 	"github.com/google/wire"
-	"github.com/prismelabs/prismeanalytics/internal/log"
-	"github.com/prismelabs/prismeanalytics/internal/renderer"
+	"github.com/prismelabs/prismeanalytics/internal/config"
+	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 )
 
-func initialize(logger log.Logger) App {
+func initialize(logger BootstrapLogger) App {
 	wire.Build(
 		ProvideConfig,
-		ProvideStandardLogger,
-		ProvideAccessLogger,
-		renderer.ProvideRenderer,
+		wire.FieldsOf(new(config.Config), "Server"),
+		ProvideLogger,
+		ProvideFiberViewsEngine,
+		middlewares.ProvideStatic,
+		middlewares.ProvideRequestId,
+		middlewares.ProvideAccessLog,
+		middlewares.ProvideLogger,
 		ProvideFiber,
 		ProvideApp,
 	)

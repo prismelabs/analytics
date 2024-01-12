@@ -24,7 +24,7 @@ func TestLogger(t *testing.T) {
 			})
 			return nil
 		})
-		app.Use(Logger(logger))
+		app.Use(fiber.Handler(ProvideLogger(logger)))
 		app.Use(func(c *fiber.Ctx) error {
 			return nil
 		})
@@ -40,8 +40,8 @@ func TestLogger(t *testing.T) {
 		logger := log.NewLogger("app_log", &loggerOutput, false)
 
 		app := fiber.New()
-		app.Use(RequestId(config.Server{}))
-		app.Use(Logger(logger))
+		app.Use(fiber.Handler(ProvideRequestId(config.Server{})))
+		app.Use(fiber.Handler(ProvideLogger(logger)))
 		app.Use(func(c *fiber.Ctx) error {
 			logger := c.Locals(LoggerKey{}).(log.Logger)
 			logger.Info().Msg("hello from middleware")

@@ -6,9 +6,12 @@ import (
 	"github.com/prismelabs/prismeanalytics/internal/config"
 )
 
+type RequestId fiber.Handler
+
 type RequestIdKey struct{}
 
-func RequestId(cfg config.Server) fiber.Handler {
+// ProvideRequestId define a wire provider for request id middleware.
+func ProvideRequestId(cfg config.Server) RequestId {
 	return func(c *fiber.Ctx) error {
 		var requestId string
 
@@ -25,4 +28,3 @@ func RequestId(cfg config.Server) fiber.Handler {
 		return c.Next()
 	}
 }
-

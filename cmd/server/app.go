@@ -13,10 +13,10 @@ type App struct {
 }
 
 // ProvideApp is a wire provider for App.
-func ProvideApp(cfg config.Config, app *fiber.App, logger StandardLogger) App {
+func ProvideApp(cfg config.Config, app *fiber.App, logger log.Logger) App {
 	return App{
 		cfg:    cfg,
 		fiber:  app,
-		logger: logger.Logger,
+		logger: logger,
 	}
 }
