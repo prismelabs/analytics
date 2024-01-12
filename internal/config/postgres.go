@@ -1,16 +1,16 @@
 package config
 
-import "github.com/prismelabs/prismeanalytics/internal/secretstring"
+import "github.com/prismelabs/prismeanalytics/internal/secret"
 
 // Postgres related options.
 type Postgres struct {
-	Url secretstring.SecretString
+	Url secret.Secret[string]
 }
 
 // PostgresFromEnv loads postgres related options from environment variables.
 // This function panics if required environment variables are missing.
 func PostgresFromEnv() Postgres {
 	return Postgres{
-		Url: secretstring.NewSecretString(mustGetEnv("PRISME_POSTGRES_URL")),
+		Url: secret.New(mustGetEnv("PRISME_POSTGRES_URL")),
 	}
 }

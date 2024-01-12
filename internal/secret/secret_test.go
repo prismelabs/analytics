@@ -1,4 +1,4 @@
-package secretstring
+package secret
 
 import (
 	"bytes"
@@ -11,14 +11,14 @@ import (
 func TestSecretString(t *testing.T) {
 	t.Run("PrintSecretString", func(t *testing.T) {
 		buf := bytes.Buffer{}
-		secret := NewSecretString("MyUltraSecretString")
+		secret := New("MyUltraSecretString")
 
 		fmt.Fprintf(&buf, "%v", secret)
-		require.Equal(t, "SecretString(******)", buf.String())
+		require.Equal(t, "Secret[string](******)", buf.String())
 
 		buf.Reset()
 
 		fmt.Fprintf(&buf, "%+v", secret)
-		require.Equal(t, "SecretString(******)", buf.String())
+		require.Equal(t, "Secret[string](******)", buf.String())
 	})
 }
