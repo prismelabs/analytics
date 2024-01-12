@@ -22,6 +22,7 @@
                   gopls
                   golangci-lint
                   wire
+                  go-migrate
                   bunyan-rs
                   entr
                   bun

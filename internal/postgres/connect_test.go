@@ -6,7 +6,7 @@ import (
 
 	"github.com/prismelabs/prismeanalytics/internal/config"
 	"github.com/prismelabs/prismeanalytics/internal/log"
-	"github.com/prismelabs/prismeanalytics/internal/secretstring"
+	"github.com/prismelabs/prismeanalytics/internal/secret"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,11 +15,11 @@ func TestPostgresConnect(t *testing.T) {
 
 	t.Run("NonExistentPostgresInstance", func(t *testing.T) {
 		cfg := config.Postgres{
-			Url: secretstring.NewSecretString("postgres://foo:bar@down.localhost:5432/public?sslmode=disable"),
+			Url: secret.New("postgres://foo:bar@down.localhost:5432/public?sslmode=disable"),
 		}
 
 		require.Panics(t, func() {
-			_ = Connect(logger, cfg, 1)
+			_ = connect(logger, cfg, 1)
 		})
 	})
 

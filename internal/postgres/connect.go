@@ -8,9 +8,9 @@ import (
 	"github.com/prismelabs/prismeanalytics/internal/log"
 )
 
-// Connect tries to connect to postgres instance using the given config.
+// connect tries to connect to postgres instance using the given config.
 // This function panics if `maxRetry` connect attempt fails.
-func Connect(logger log.Logger, cfg config.Postgres, maxRetry int) *sql.DB {
+func connect(logger log.Logger, cfg config.Postgres, maxRetry int) *sql.DB {
 	var db *sql.DB
 	var err error
 
