@@ -6,7 +6,7 @@ GENENV_FILES ?= $(wildcard ./config/*)
 GENENV_FILE ?= ./config/genenv.local.sh
 
 .PHONY: start
-start: codegen
+start: .env codegen
 	source ./.env && go build ./cmd/server
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.yml \
@@ -43,7 +43,9 @@ clean:
 
 watch/%:
 	# When a new file is added, you must rerun make watch/...
-	find . | entr -n -r sh -c "$(MAKE) $*"
+	find . | \
+		grep -v ./internal/embedded/views | \
+		entr -n -r sh -c "$(MAKE) $*"
 
 .PHONY: lint
 lint:
@@ -57,7 +59,7 @@ lint/fix:
 .PHONY: codegen
 codegen: ./cmd/server/wire_gen.go
 
-./cmd/server/wire_gen.go: ./cmd/server/wire.go
+./cmd/server/wire_gen.go: $(wildcard ./cmd/server/*.go)
 	wire ./...
 
 $(GENENV_FILE):

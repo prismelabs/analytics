@@ -3,9 +3,10 @@ services:
   prisme:
     image: "prismelabs/analytics:dev"
     env_file: "./.env"
-    command: "/server"
+    working_dir: "/app"
+    command: "/app/server"
     volumes:
-      - "./server:/server:ro"
+      - "./:/app:ro"
     ports:
       - "8000:8000"
     networks:

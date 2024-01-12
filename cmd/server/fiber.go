@@ -15,6 +15,8 @@ func ProvideFiber(
 	accessLogMiddleware middlewares.AccessLog,
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
+	getSignUpHandler handlers.GetSignUp,
+	postSignUpHander handlers.PostSignUp,
 ) *fiber.App {
 	fiberCfg := fiber.Config{
 		ServerHeader:          "prisme",
@@ -44,8 +46,8 @@ func ProvideFiber(
 
 	app.Use("/static", fiber.Handler(staticMiddleware))
 
-	app.Get("/sign_up", handlers.GetSignUp)
-	app.Post("/sign_up", handlers.PostSignUp)
+	app.Get("/sign_up", fiber.Handler(getSignUpHandler))
+	app.Post("/sign_up", fiber.Handler(postSignUpHander))
 
 	return app
 }

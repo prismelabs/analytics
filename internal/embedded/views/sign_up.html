@@ -1,0 +1,49 @@
+<div
+	class="absolute h-full w-full flex flex-col justify-between bg-cover bg-center bg-gradient-to-br from-orange-100 via-purple-100 to-sky-600 overflow-auto"
+	style="background-size: 150% 150%">
+	<main class="flex-1 flex justify-center items-center">
+		<form class="bg-slate-50 dark:bg-slate-900 border-round rounded-md py-4 w-full max-w-lg" method="POST">
+			<div class="flex flex-col justify-center max-w-md my-12 mx-8">
+				<img src="/static/logo.svg" class="max-h-24 aspect-square mx-auto" />
+				<h1 class="text-2xl text-center mt-8">Welcome to Prisme Analytics</h1>
+			</div>
+			{{- with .error -}}
+			<div class="max-w-md px-4 pb-8 mx-auto">
+				{{- template "partials/alert" (dict "title" "Sign up failed" "message" .) -}}
+			</div>
+			{{- end -}}
+			<div class="max-w-md px-4 pb-8 mx-auto">
+				<div class="mb-4 flex flex-col justify-center">
+					<label for="name" class="text-xs mb-1">Name</label><br />
+					<input type="name" id="name" name="name" placeholder="Your name" required minlength="3" maxlength="64"
+						class="border dark:border-slate-600 rounded-sm text-sm px-2 py-1 w-full dark:bg-slate-800" />
+				</div>
+				<div class="mb-4 flex flex-col justify-center">
+					<label for="email" class="text-xs mb-1">Email</label><br />
+					<input type="email" id="email" name="email" placeholder="Your email" required
+						class="border dark:border-slate-600 rounded-sm text-sm px-2 py-1 w-full dark:bg-slate-800" />
+				</div>
+				<div class="flex flex-col justify-center">
+					<label for="password" class="text-xs mb-1">Password</label><br />
+					<input type="password" id="password" name="password" placeholder="Your password" required minlength="6"
+						class="border dark:border-slate-600 rounded-sm text-sm px-2 py-1 w-full dark:bg-slate-800" />
+				</div>
+				<div class="flex flex-col justify-center">
+					<button type="submit"
+						class="w-full mt-4 bg-purple-500 text-slate-50 rounded-sm text-sm p-2 w-full active:bg-purple-600">
+						Sign up
+					</button>
+				</div>
+			</div>
+		</form>
+	</main>
+	<footer class="hidden sm:block">
+		<nav class="flex justify-center my-2 gap-2 text-xs">
+			<a href="#documentation" class="hover:underline">Documentation</a>
+			|
+			<a href="https://github.com/prismelabs/analytics/issues" class="hover:underline">Support</a>
+			|
+			<a href="https://github.com/prismelabs/analytics" class="hover:underline">Open Source</a>
+		</nav>
+	</footer>
+</div>

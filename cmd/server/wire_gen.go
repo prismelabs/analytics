@@ -7,7 +7,10 @@
 package main
 
 import (
+	"github.com/prismelabs/prismeanalytics/internal/handlers"
 	"github.com/prismelabs/prismeanalytics/internal/middlewares"
+	"github.com/prismelabs/prismeanalytics/internal/postgres"
+	"github.com/prismelabs/prismeanalytics/internal/services/users"
 )
 
 // Injectors from wire.go:
@@ -21,7 +24,13 @@ func initialize(logger BootstrapLogger) App {
 	accessLog := middlewares.ProvideAccessLog(server, logLogger)
 	requestId := middlewares.ProvideRequestId(server)
 	static := middlewares.ProvideStatic(server)
-	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static)
+	getSignUp := handlers.ProvideGetSignUp()
+	configPostgres := config.Postgres
+	pg := postgres.ProvidePg(logLogger, configPostgres)
+	store := users.ProvideStore(pg)
+	service := users.ProvideService(store)
+	postSignUp := handlers.ProvidePostSignUp(service)
+	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static, getSignUp, postSignUp)
 	mainApp := ProvideApp(config, app, logLogger)
 	return mainApp
 }
