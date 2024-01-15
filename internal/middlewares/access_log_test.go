@@ -20,7 +20,8 @@ func TestAccessLog(t *testing.T) {
 		app := fiber.New()
 		app.Use(func(c *fiber.Ctx) error {
 			require.Panics(t, func() {
-				c.Next()
+				err := c.Next()
+				require.NoError(t, err)
 			})
 			return nil
 		})
