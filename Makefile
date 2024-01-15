@@ -70,7 +70,7 @@ $(GENENV_FILE):
 	bash $(GENENV_FILE) > .env; \
 
 .PHONY: test/unit
-test/unit:
+test/unit: codegen
 	go test -v ./...
 
 .PHONY: test/e2e
