@@ -15,8 +15,12 @@ func ProvideFiber(
 	accessLogMiddleware middlewares.AccessLog,
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
+	withSessionMiddleware middlewares.WithSession,
 	getSignUpHandler handlers.GetSignUp,
 	postSignUpHander handlers.PostSignUp,
+	getSignInHandler handlers.GetSignIn,
+	postSignInHander handlers.PostSignIn,
+	getIndexHander handlers.GetIndex,
 ) *fiber.App {
 	fiberCfg := fiber.Config{
 		ServerHeader:          "prisme",
@@ -44,10 +48,20 @@ func ProvideFiber(
 	app.Use(fiber.Handler(accessLogMiddleware))
 	app.Use(fiber.Handler(loggerMiddleware))
 
+	// Public endpoints.
 	app.Use("/static", fiber.Handler(staticMiddleware))
 
 	app.Get("/sign_up", fiber.Handler(getSignUpHandler))
 	app.Post("/sign_up", fiber.Handler(postSignUpHander))
+
+	app.Get("/sign_in", fiber.Handler(getSignInHandler))
+	app.Post("/sign_in", fiber.Handler(postSignInHander))
+
+	// Authenticated endpoints.
+	app.Use(fiber.Handler(withSessionMiddleware))
+
+	// Default to index handler.
+	app.Use(fiber.Handler(getIndexHander))
 
 	return app
 }
