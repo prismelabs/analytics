@@ -43,8 +43,10 @@ clean:
 
 watch/%:
 	# When a new file is added, you must rerun make watch/...
-	find . | \
-		grep -v ./internal/embedded/views | \
+	find '(' -regex '.*\.go$$' -or -regex '.*docker-compose.*' ')' \
+		-and -not -regex '.*_test.go' \
+		-and -not -regex '.*_gen.go' \
+		-and -not -regex '.*/tests/.*' | \
 		entr -n -r sh -c "$(MAKE) $*"
 
 .PHONY: lint
