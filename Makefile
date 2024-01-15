@@ -48,7 +48,7 @@ watch/%:
 		entr -n -r sh -c "$(MAKE) $*"
 
 .PHONY: lint
-lint:
+lint: codegen
 	golangci-lint run --timeout 2m ./...
 	$(MAKE) -C ./tests lint
 
