@@ -160,7 +160,7 @@ func TestService(t *testing.T) {
 				require.NoError(t, err)
 				require.Len(t, resp.Cookies(), 1)
 				sessCookie := resp.Cookies()[0]
-				require.Positive(t, time.Now().Sub(sessCookie.Expires))
+				require.Positive(t, time.Since(sessCookie.Expires))
 				require.Equal(t, 0, sessCookie.MaxAge)
 			})
 

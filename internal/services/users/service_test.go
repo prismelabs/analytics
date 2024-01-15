@@ -118,7 +118,7 @@ func TestService(t *testing.T) {
 			expectedUser := User{
 				Id:        NewUserId(),
 				Email:     email,
-				Password:  testutils.Must(NewPassword)(secret.New("s3cretPassw0rd")),
+				Password:  secret.New("p4ssW0rdHash"),
 				Name:      testutils.Must(NewUserName)("foo"),
 				CreatedAt: time.Now(),
 			}

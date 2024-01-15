@@ -15,8 +15,7 @@ const (
 )
 
 var (
-	ErrSessionNotFound    = errors.New("session not found")
-	errSessionIsAnonymous = errors.New("anonymous session")
+	ErrSessionNotFound = errors.New("session not found")
 
 	sessionConfig = session.Config{
 		Storage:           nil, // in memory storage.
@@ -61,7 +60,10 @@ func (s service) CreateSession(c *fiber.Ctx, userId users.UserId) error {
 
 	// User already have a session, resets it first.
 	if !session.Fresh() {
-		session.Reset()
+		err := session.Reset()
+		if err != nil {
+			return fmt.Errorf("failed to reset session: %w", err)
+		}
 	}
 
 	session.Set(UserIdKey, userId.String())
