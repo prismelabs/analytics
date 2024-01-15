@@ -1,14 +1,12 @@
 import { test, expect } from 'bun:test'
 
-const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-
-test('X-Request-Id is used when present', async () => {
-  const requestId = 'foo'
+test('X-Forwarded-For is used when present', async () => {
+  const sourceIp = '10.127.42.1'
 
   // Generate an access log.
   await fetch('http://prisme.localhost/', {
     headers: {
-      'X-Request-Id': requestId
+      'X-Forwarded-For': sourceIp
     }
   })
 
@@ -19,10 +17,10 @@ test('X-Request-Id is used when present', async () => {
   const lastLogLine = lines[lines.length - 1]
   const lastLog = JSON.parse(lastLogLine)
 
-  expect(lastLog.request_id).toBe(requestId)
+  expect(lastLog.source_ip).toBe(sourceIp)
 })
 
-test('Random UUID v4 is used when X-Request-Id is missing', async () => {
+test('Real IP is used when X-Forwarded-For is missing', async () => {
   // Generate an access log.
   await fetch('http://prisme.localhost/')
 
@@ -33,5 +31,5 @@ test('Random UUID v4 is used when X-Request-Id is missing', async () => {
   const lastLogLine = lines[lines.length - 1]
   const lastLog = JSON.parse(lastLogLine)
 
-  expect(lastLog.request_id).toMatch(UUID_V4_REGEX)
+  expect(lastLog.source_ip).toBe('')
 })
