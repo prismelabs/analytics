@@ -58,7 +58,8 @@ lint/fix:
 
 .PHONY: codegen
 codegen:
-	go generate ./...
+	wire ./...
+	go generate -skip="wire" ./...
 
 $(GENENV_FILE):
 	@echo "$(GENENV_FILE) doesn't exist, generating one..."
