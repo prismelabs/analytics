@@ -53,7 +53,7 @@
               prisme-bin = pkgs.buildGoModule {
                 pname = "prisme";
                 version = "0.1.0";
-                vendorHash = "sha256-sIqQerBGVuxk6Y5vhbGZA0OAR89OMKZ55Gsp0ippXrc=";
+                vendorHash = "sha256-nQFBYOQ08q/sg7h5Ln2PkzamPbxcfcsLbQj4Z208F4o=";
 
                 src = ./.;
                 # Skip go test.
