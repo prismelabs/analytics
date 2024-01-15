@@ -57,10 +57,8 @@ lint/fix:
 	$(MAKE) -C ./tests lint/fix
 
 .PHONY: codegen
-codegen: ./cmd/server/wire_gen.go
-
-./cmd/server/wire_gen.go: $(wildcard ./cmd/server/*.go)
-	wire ./...
+codegen:
+	go generate ./...
 
 $(GENENV_FILE):
 	@echo "$(GENENV_FILE) doesn't exist, generating one..."

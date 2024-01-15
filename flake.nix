@@ -19,6 +19,7 @@
               default = pkgs.mkShell {
                 buildInputs = with pkgs; [
                   go
+                  mockgen
                   gopls
                   golangci-lint
                   wire
