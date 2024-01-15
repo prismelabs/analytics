@@ -71,3 +71,29 @@ func TestParseUintEnvOrDefault(t *testing.T) {
 		require.Equal(t, uint64(16), actual)
 	})
 }
+
+func TestMustParseUrlEnv(t *testing.T) {
+	os.Clearenv()
+	t.Run("UndefinedVar", func(t *testing.T) {
+		require.Panics(t, func() {
+			mustParseUrlEnv("MY_ENV_VAR")
+		})
+	})
+
+	os.Clearenv()
+	t.Run("DefinedVar/InvalidUrl", func(t *testing.T) {
+		os.Setenv("MY_ENV_VAR", "")
+		require.Panics(t, func() {
+			mustParseUrlEnv("MY_ENV_VAR")
+		})
+	})
+
+	os.Clearenv()
+	t.Run("DefinedVar/ValidUrl", func(t *testing.T) {
+		expected := "http://admin:password@example.com:443/path#fragment?query=q"
+		os.Setenv("MY_ENV_VAR", expected)
+		actual := mustParseUrlEnv("MY_ENV_VAR")
+		require.NotNil(t, actual)
+		require.Equal(t, expected, actual.String())
+	})
+}

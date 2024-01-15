@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 )
@@ -37,4 +38,14 @@ func parseUintEnvOrDefault(name string, defaultValue uint64, bitSize int) uint64
 	}
 
 	return defaultValue
+}
+
+func mustParseUrlEnv(name string) *url.URL {
+	rawUrl := mustGetEnv(name)
+	u, err := url.Parse(rawUrl)
+	if err != nil {
+		panic(fmt.Errorf("%v environment variable is not a valid URL", name))
+	}
+
+	return u
 }
