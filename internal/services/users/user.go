@@ -1,11 +1,15 @@
 package users
 
-import "time"
+import (
+	"time"
+
+	"github.com/prismelabs/prismeanalytics/internal/secret"
+)
 
 type User struct {
 	Id        UserId
 	Email     Email
-	Password  Password
+	Password  secret.Secret[string]
 	Name      UserName
 	CreatedAt time.Time
 }

@@ -27,3 +27,12 @@ func (s Secret[T]) String() string {
 	typeName := reflect.TypeOf(s.value).String()
 	return fmt.Sprintf("Secret[%v](******)", typeName)
 }
+
+// Scan implements sql.Scanner.
+func (s *Secret[T]) Scan(src any) error {
+	if t, ok := src.(T); ok {
+		*s = New(t)
+		return nil
+	}
+	return fmt.Errorf("cannot scan %T into Secret[%T]", src, *new(T))
+}
