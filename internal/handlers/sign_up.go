@@ -1,8 +1,9 @@
 package handlers
 
 import (
+	"errors"
+
 	"github.com/gofiber/fiber/v2"
-	"github.com/prismelabs/prismeanalytics/internal/models"
 	"github.com/prismelabs/prismeanalytics/internal/secret"
 	"github.com/prismelabs/prismeanalytics/internal/services/users"
 )
@@ -38,7 +39,7 @@ func ProvidePostSignUp(userService users.Service) PostSignUp {
 		// Validate request.
 
 		// Validate user name.
-		userName, err := models.NewUserName(req.Name)
+		userName, err := users.NewUserName(req.Name)
 		if err != nil {
 			mustRender(c, fiber.StatusBadRequest,
 				"sign_up", fiber.Map{
@@ -50,7 +51,7 @@ func ProvidePostSignUp(userService users.Service) PostSignUp {
 		}
 
 		// Validate email.
-		email, err := models.NewEmail(req.Email)
+		email, err := users.NewEmail(req.Email)
 		if err != nil {
 			mustRender(c, fiber.StatusBadRequest,
 				"sign_up", fiber.Map{
@@ -62,7 +63,7 @@ func ProvidePostSignUp(userService users.Service) PostSignUp {
 		}
 
 		// Validate password.
-		password, err := models.NewPassword(secret.New(req.Password))
+		password, err := users.NewPassword(secret.New(req.Password))
 		if err != nil {
 			mustRender(c, fiber.StatusBadRequest,
 				"sign_up", fiber.Map{
@@ -80,6 +81,16 @@ func ProvidePostSignUp(userService users.Service) PostSignUp {
 			Password: password,
 		})
 		if err != nil {
+			if errors.Is(err, users.ErrUserAlreadyExists) {
+				mustRender(c, fiber.StatusBadRequest,
+					"sign_up", fiber.Map{
+						"title": "Sign up - Prisme Analytics",
+						"error": "email already taken",
+					},
+				)
+				return nil
+			}
+
 			mustRender(c, fiber.StatusInternalServerError,
 				"sign_up",
 				fiber.Map{
