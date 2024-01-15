@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/prismeanalytics/internal/secret"
+	"github.com/prismelabs/prismeanalytics/internal/services/sessions"
 	"github.com/prismelabs/prismeanalytics/internal/services/users"
 )
 
@@ -22,7 +23,7 @@ func ProvideGetSignUp() GetSignUp {
 type PostSignUp fiber.Handler
 
 // ProvidePostSignUp define a wire provider for POST sign up handler.
-func ProvidePostSignUp(userService users.Service) PostSignUp {
+func ProvidePostSignUp(userService users.Service, sessionsService sessions.Service) PostSignUp {
 	return func(c *fiber.Ctx) error {
 		type request struct {
 			Name     string `form:"name"`
@@ -75,7 +76,7 @@ func ProvidePostSignUp(userService users.Service) PostSignUp {
 		}
 
 		// Create user.
-		_, err = userService.CreateUser(c.UserContext(), users.CreateCmd{
+		userId, err := userService.CreateUser(c.UserContext(), users.CreateCmd{
 			UserName: userName,
 			Email:    email,
 			Password: password,
@@ -91,6 +92,19 @@ func ProvidePostSignUp(userService users.Service) PostSignUp {
 				return nil
 			}
 
+			mustRender(c, fiber.StatusInternalServerError,
+				"sign_up",
+				fiber.Map{
+					"title": "Sign up - Prisme Analytics",
+					"error": "Internal server error, please try again later",
+				},
+			)
+			return err
+		}
+
+		// Create session.
+		err = sessionsService.CreateSession(c, userId)
+		if err != nil {
 			mustRender(c, fiber.StatusInternalServerError,
 				"sign_up",
 				fiber.Map{
