@@ -2,6 +2,7 @@ package users
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/prismelabs/prismeanalytics/internal/secret"
 )
@@ -33,4 +34,13 @@ func NewPassword(value secret.Secret[string]) (Password, error) {
 // It is best practice to never store the secret and expose it only when needed.
 func (p Password) ExposeSecret() string {
 	return p.value.ExposeSecret()
+}
+
+// Scan implements sql.Scanner.
+func (p *Password) Scan(src any) error {
+	if t, ok := src.(string); ok {
+		p.value = secret.New(t)
+		return nil
+	}
+	return fmt.Errorf("cannot scan %T into Domain", src)
 }

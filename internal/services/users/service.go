@@ -2,7 +2,6 @@ package users
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/prismelabs/prismeanalytics/internal/postgres"
@@ -10,13 +9,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var (
-	ErrUserNotFound = errors.New("user not found")
-)
-
 // Service define user management service.
 type Service interface {
 	CreateUser(context.Context, CreateCmd) (UserId, error)
+	GetUserByEmail(context.Context, Email) (User, error)
 }
 
 // ProvideService define a wire provider for user Service.
@@ -49,4 +45,14 @@ func (s service) CreateUser(ctx context.Context, cmd CreateCmd) (UserId, error) 
 	// TODO: sent verification email and implement email verification.
 
 	return uid, nil
+}
+
+// GetUserByEmail implements Service.
+func (s service) GetUserByEmail(ctx context.Context, email Email) (User, error) {
+	user, err := s.store.SelectUserByEmail(ctx, email)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to select user by email: %w", err)
+	}
+
+	return user, nil
 }
