@@ -44,7 +44,7 @@ func (un *UserName) Scan(src any) error {
 		un.value = t
 		return nil
 	}
-	return fmt.Errorf("cannot scan %T into Domain", src)
+	return fmt.Errorf("cannot scan %T into UserName", src)
 }
 
 // Value implements driver.Valuer.

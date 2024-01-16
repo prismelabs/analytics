@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>{{- .org.Name -}} - Prisme Analytics</title>
+	{{ template "partials/head" }}
+	{{ template "partials/tailwindcss" }}
+</head>
+
+<body class="{{ .bodyClass }}">
+	<div class="max-w-6xl mx-auto">
+		{{- template "partials/app/header" -}}
+	</div>
+	<hr class="mb-4 dark:border-slate-600" />
+	<main class="max-w-3xl mx-auto px-4">
+		<h1 class="text-2xl font-bold mb-8">{{- .org.Name -}}</h1>
+		<a href="/grafana/?orgId={{- .org.Id -}}" class="underline">Access Grafana</a>
+	</main>
+</body>
+
+</html>

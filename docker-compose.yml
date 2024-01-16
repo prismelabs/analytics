@@ -13,12 +13,41 @@ services:
       POSTGRES_DB: "${PRISME_DATABASE:-prisme}"
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
-      - "./postgres:/docker-entrypoint-initdb.d:ro"
+      - "./postgres/:/docker-entrypoint-initdb.d/:ro"
     networks:
       default:
         aliases:
           - "postgres.localhost"
 
+  grafana:
+    image: "docker.io/grafana/grafana-oss:10.2.3"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - 8002:8002
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8002/api/health || exit 1
+    environment:
+      # https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/
+      GF_INSTALL_PLUGINS: "grafana-clickhouse-datasource"
+      GF_LOG_LEVEL: "debug"
+      # [server]
+      GF_SERVER_HTTP_PORT: 8002
+      GF_SERVER_ROOT_URL: http://localhost:8002/grafana
+      GF_SERVER_SERVE_FROM_SUB_PATH: true
+      # [database]
+      GF_DATABASE_URL: "postgres://postgres:password@postgres.localhost/grafana"
+      # [user]
+      GF_USERS_DEFAULT_THEME: "system"
+    volumes:
+      - "grafana_data:/var/lib/grafana"
+    networks:
+      default:
+        aliases:
+          - "grafana.localhost"
+
 volumes:
   postgres_data:
+  grafana_data:
 

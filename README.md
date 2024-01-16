@@ -13,6 +13,17 @@
 
 # :gem: `prismeanalytics` - An Open Source, privacy-focused and progressive analytics service.
 
+## Features
+
+* [ ] Data ingestion:
+  * [x] Live through HTTP endpoint
+  * [ ] Static through files (Google Analytics 4 export, etc)
+* [ ] Events validation:
+  * JSON schema
+* [ ] Website ownership validation
+* Data consumption:
+  * Direct access via ClickHouse interfaces.
+
 ## Why is the repository empty ?
 
 I've already built a closed source MVP of what Prisme Analytics may look like but

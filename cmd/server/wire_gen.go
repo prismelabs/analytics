@@ -11,6 +11,7 @@ import (
 	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 	"github.com/prismelabs/prismeanalytics/internal/postgres"
 	"github.com/prismelabs/prismeanalytics/internal/services/auth"
+	"github.com/prismelabs/prismeanalytics/internal/services/orgs"
 	"github.com/prismelabs/prismeanalytics/internal/services/sessions"
 	"github.com/prismelabs/prismeanalytics/internal/services/users"
 )
@@ -28,6 +29,8 @@ func initialize(logger BootstrapLogger) App {
 	static := middlewares.ProvideStatic(server)
 	service := sessions.ProvideService()
 	withSession := middlewares.ProvideWithSession(service)
+	favicon := middlewares.ProvideFavicon()
+	notFound := middlewares.ProvideNotFound()
 	getSignUp := handlers.ProvideGetSignUp()
 	configPostgres := config.Postgres
 	pg := postgres.ProvidePg(logLogger, configPostgres)
@@ -36,9 +39,13 @@ func initialize(logger BootstrapLogger) App {
 	getSignIn := handlers.ProvideGetSignIn()
 	authService := auth.ProvideService(usersService)
 	postSignIn := handlers.ProvidePostSignIn(authService, service)
-	getIndex := handlers.ProvideGetIndex()
-	notFound := handlers.ProvideNotFound()
-	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static, withSession, getSignUp, postSignUp, getSignIn, postSignIn, getIndex, notFound)
+	orgsService := orgs.ProvideService(pg)
+	getIndex := handlers.ProvideGetIndex(orgsService)
+	handlersNotFound := handlers.ProvideNotFound()
+	getOrgsNew := handlers.ProvideGetOrgsNew()
+	postOrgsNew := handlers.ProvidePostOrgsNew(orgsService)
+	getOrgsOrgId := handlers.ProvideGetOrgsOrgId(orgsService)
+	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static, withSession, favicon, notFound, getSignUp, postSignUp, getSignIn, postSignIn, getIndex, handlersNotFound, getOrgsNew, postOrgsNew, getOrgsOrgId)
 	mainApp := ProvideApp(config, app, logLogger)
 	return mainApp
 }

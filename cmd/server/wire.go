@@ -10,6 +10,7 @@ import (
 	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 	"github.com/prismelabs/prismeanalytics/internal/postgres"
 	"github.com/prismelabs/prismeanalytics/internal/services/auth"
+	"github.com/prismelabs/prismeanalytics/internal/services/orgs"
 	"github.com/prismelabs/prismeanalytics/internal/services/sessions"
 	"github.com/prismelabs/prismeanalytics/internal/services/users"
 )
@@ -23,6 +24,7 @@ func initialize(logger BootstrapLogger) App {
 		sessions.ProvideService,
 		users.ProvideService,
 		auth.ProvideService,
+		orgs.ProvideService,
 		ProvideLogger,
 		ProvideFiberViewsEngine,
 		middlewares.ProvideStatic,
@@ -30,12 +32,17 @@ func initialize(logger BootstrapLogger) App {
 		middlewares.ProvideAccessLog,
 		middlewares.ProvideLogger,
 		middlewares.ProvideWithSession,
+		middlewares.ProvideFavicon,
+		middlewares.ProvideNotFound,
 		handlers.ProvideGetSignUp,
 		handlers.ProvidePostSignUp,
 		handlers.ProvideGetSignIn,
 		handlers.ProvidePostSignIn,
 		handlers.ProvideGetIndex,
 		handlers.ProvideNotFound,
+		handlers.ProvideGetOrgsNew,
+		handlers.ProvidePostOrgsNew,
+		handlers.ProvideGetOrgsOrgId,
 		ProvideFiber,
 		ProvideApp,
 	)

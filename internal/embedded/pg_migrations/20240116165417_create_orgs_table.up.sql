@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS orgs (
+	id UUID UNIQUE NOT NULL,
+	owner_id UUID REFERENCES users(id) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	grafana_org_id INTEGER UNIQUE,
+	created_at TIMESTAMPTZ NOT NULL,
+	PRIMARY KEY(owner_id, id)
+);

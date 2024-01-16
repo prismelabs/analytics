@@ -16,12 +16,17 @@ func ProvideFiber(
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
 	withSessionMiddleware middlewares.WithSession,
+	faviconMiddleware middlewares.Favicon,
+	notFoundMiddleware middlewares.NotFound,
 	getSignUpHandler handlers.GetSignUp,
 	postSignUpHander handlers.PostSignUp,
 	getSignInHandler handlers.GetSignIn,
 	postSignInHander handlers.PostSignIn,
-	getIndexHander handlers.GetIndex,
+	getIndexHandler handlers.GetIndex,
 	notFoundHandler handlers.NotFound,
+	getOrgsNewHandler handlers.GetOrgsNew,
+	postOrgsNewHandler handlers.PostOrgsNew,
+	getOrgsOrgIdHandler handlers.GetOrgsOrgId,
 ) *fiber.App {
 	fiberCfg := fiber.Config{
 		ServerHeader:          "prisme",
@@ -48,8 +53,12 @@ func ProvideFiber(
 	app.Use(fiber.Handler(requestIdMiddleware))
 	app.Use(fiber.Handler(accessLogMiddleware))
 	app.Use(fiber.Handler(loggerMiddleware))
+	// Not found middleware that catches fiber.ErrNotFound.
+	app.Use(fiber.Handler(notFoundMiddleware))
 
 	// Public endpoints.
+	app.Use(fiber.Handler(faviconMiddleware))
+
 	app.Use("/static", fiber.Handler(staticMiddleware))
 
 	app.Get("/sign_up", fiber.Handler(getSignUpHandler))
@@ -61,9 +70,12 @@ func ProvideFiber(
 	// Authenticated endpoints.
 	app.Use(fiber.Handler(withSessionMiddleware))
 
-	app.Get("/", fiber.Handler(getIndexHander))
+	app.Get("/", fiber.Handler(getIndexHandler))
+	app.Get("/orgs/new", fiber.Handler(getOrgsNewHandler))
+	app.Post("/orgs/new", fiber.Handler(postOrgsNewHandler))
+	app.Get("/orgs/:org_id", fiber.Handler(getOrgsOrgIdHandler))
 
-	// 404 not found handler.
+	// Return fiber.ErrNotFound.
 	app.Use(fiber.Handler(notFoundHandler))
 
 	return app
