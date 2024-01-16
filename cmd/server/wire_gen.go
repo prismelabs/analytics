@@ -37,7 +37,8 @@ func initialize(logger BootstrapLogger) App {
 	authService := auth.ProvideService(usersService)
 	postSignIn := handlers.ProvidePostSignIn(authService, service)
 	getIndex := handlers.ProvideGetIndex()
-	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static, withSession, getSignUp, postSignUp, getSignIn, postSignIn, getIndex)
+	notFound := handlers.ProvideNotFound()
+	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static, withSession, getSignUp, postSignUp, getSignIn, postSignIn, getIndex, notFound)
 	mainApp := ProvideApp(config, app, logLogger)
 	return mainApp
 }

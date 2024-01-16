@@ -21,6 +21,7 @@ func ProvideFiber(
 	getSignInHandler handlers.GetSignIn,
 	postSignInHander handlers.PostSignIn,
 	getIndexHander handlers.GetIndex,
+	notFoundHandler handlers.NotFound,
 ) *fiber.App {
 	fiberCfg := fiber.Config{
 		ServerHeader:          "prisme",
@@ -60,8 +61,10 @@ func ProvideFiber(
 	// Authenticated endpoints.
 	app.Use(fiber.Handler(withSessionMiddleware))
 
-	// Default to index handler.
-	app.Use(fiber.Handler(getIndexHander))
+	app.Get("/", fiber.Handler(getIndexHander))
+
+	// 404 not found handler.
+	app.Use(fiber.Handler(notFoundHandler))
 
 	return app
 }

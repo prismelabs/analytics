@@ -35,6 +35,7 @@ func initialize(logger BootstrapLogger) App {
 		handlers.ProvideGetSignIn,
 		handlers.ProvidePostSignIn,
 		handlers.ProvideGetIndex,
+		handlers.ProvideNotFound,
 		ProvideFiber,
 		ProvideApp,
 	)

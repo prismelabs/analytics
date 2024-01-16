@@ -14,9 +14,7 @@ type GetSignIn fiber.Handler
 
 func ProvideGetSignIn() GetSignIn {
 	return func(c *fiber.Ctx) error {
-		return c.Render("sign_in", fiber.Map{
-			"title": "Sign in - Prisme Analytics",
-		})
+		return c.Render("sign_in", fiber.Map{})
 	}
 }
 
@@ -42,7 +40,6 @@ func ProvidePostSignIn(authService auth.Service, sessionsService sessions.Servic
 		if err != nil {
 			mustRender(c, fiber.StatusBadRequest,
 				"sign_in", fiber.Map{
-					"title": "Sign in - Prisme Analytics",
 					"error": err.Error(),
 				},
 			)
@@ -56,7 +53,6 @@ func ProvidePostSignIn(authService auth.Service, sessionsService sessions.Servic
 			if errors.Is(err, auth.ErrInvalidCredentials) {
 				mustRender(c, fiber.StatusUnauthorized,
 					"sign_in", fiber.Map{
-						"title": "Sign in - Prisme Analytics",
 						"error": err.Error(),
 					},
 				)
@@ -65,7 +61,6 @@ func ProvidePostSignIn(authService auth.Service, sessionsService sessions.Servic
 
 			mustRender(c, fiber.StatusInternalServerError,
 				"sign_in", fiber.Map{
-					"title": "Sign in - Prisme Analytics",
 					"error": "Internal server error, please try again later",
 				},
 			)
@@ -76,7 +71,6 @@ func ProvidePostSignIn(authService auth.Service, sessionsService sessions.Servic
 		if err != nil {
 			mustRender(c, fiber.StatusInternalServerError,
 				"sign_in", fiber.Map{
-					"title": "Sign in - Prisme Analytics",
 					"error": "Internal server error, please try again later",
 				},
 			)

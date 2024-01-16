@@ -14,9 +14,7 @@ type GetSignUp fiber.Handler
 // ProvideGetSignUp define a wire provider for GET sign up handler.
 func ProvideGetSignUp() GetSignUp {
 	return func(c *fiber.Ctx) error {
-		return c.Render("sign_up", fiber.Map{
-			"title": "Sign up - Prisme Analytics",
-		})
+		return c.Render("sign_up", fiber.Map{})
 	}
 }
 
@@ -44,7 +42,6 @@ func ProvidePostSignUp(userService users.Service, sessionsService sessions.Servi
 		if err != nil {
 			mustRender(c, fiber.StatusBadRequest,
 				"sign_up", fiber.Map{
-					"title": "Sign up - Prisme Analytics",
 					"error": err.Error(),
 				},
 			)
@@ -56,7 +53,6 @@ func ProvidePostSignUp(userService users.Service, sessionsService sessions.Servi
 		if err != nil {
 			mustRender(c, fiber.StatusBadRequest,
 				"sign_up", fiber.Map{
-					"title": "Sign up - Prisme Analytics",
 					"error": err.Error(),
 				},
 			)
@@ -68,7 +64,6 @@ func ProvidePostSignUp(userService users.Service, sessionsService sessions.Servi
 		if err != nil {
 			mustRender(c, fiber.StatusBadRequest,
 				"sign_up", fiber.Map{
-					"title": "Sign up - Prisme Analytics",
 					"error": err.Error(),
 				},
 			)
@@ -85,7 +80,6 @@ func ProvidePostSignUp(userService users.Service, sessionsService sessions.Servi
 			if errors.Is(err, users.ErrUserAlreadyExists) {
 				mustRender(c, fiber.StatusBadRequest,
 					"sign_up", fiber.Map{
-						"title": "Sign up - Prisme Analytics",
 						"error": "email already taken",
 					},
 				)
@@ -95,7 +89,6 @@ func ProvidePostSignUp(userService users.Service, sessionsService sessions.Servi
 			mustRender(c, fiber.StatusInternalServerError,
 				"sign_up",
 				fiber.Map{
-					"title": "Sign up - Prisme Analytics",
 					"error": "Internal server error, please try again later",
 				},
 			)
@@ -108,7 +101,6 @@ func ProvidePostSignUp(userService users.Service, sessionsService sessions.Servi
 			mustRender(c, fiber.StatusInternalServerError,
 				"sign_up",
 				fiber.Map{
-					"title": "Sign up - Prisme Analytics",
 					"error": "Internal server error, please try again later",
 				},
 			)
