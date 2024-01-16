@@ -16,6 +16,7 @@ func ProvideFiber(
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
 	withSessionMiddleware middlewares.WithSession,
+	faviconMiddleware middlewares.Favicon,
 	getSignUpHandler handlers.GetSignUp,
 	postSignUpHander handlers.PostSignUp,
 	getSignInHandler handlers.GetSignIn,
@@ -50,6 +51,8 @@ func ProvideFiber(
 	app.Use(fiber.Handler(loggerMiddleware))
 
 	// Public endpoints.
+	app.Use(fiber.Handler(faviconMiddleware))
+
 	app.Use("/static", fiber.Handler(staticMiddleware))
 
 	app.Get("/sign_up", fiber.Handler(getSignUpHandler))

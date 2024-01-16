@@ -28,6 +28,7 @@ func initialize(logger BootstrapLogger) App {
 	static := middlewares.ProvideStatic(server)
 	service := sessions.ProvideService()
 	withSession := middlewares.ProvideWithSession(service)
+	favicon := middlewares.ProvideFavicon()
 	getSignUp := handlers.ProvideGetSignUp()
 	configPostgres := config.Postgres
 	pg := postgres.ProvidePg(logLogger, configPostgres)
@@ -38,7 +39,7 @@ func initialize(logger BootstrapLogger) App {
 	postSignIn := handlers.ProvidePostSignIn(authService, service)
 	getIndex := handlers.ProvideGetIndex()
 	notFound := handlers.ProvideNotFound()
-	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static, withSession, getSignUp, postSignUp, getSignIn, postSignIn, getIndex, notFound)
+	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static, withSession, favicon, getSignUp, postSignUp, getSignIn, postSignIn, getIndex, notFound)
 	mainApp := ProvideApp(config, app, logLogger)
 	return mainApp
 }
