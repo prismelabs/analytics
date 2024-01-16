@@ -26,8 +26,7 @@ test('sign up without required name field', async () => {
     // name: faker.internet.userName(),
     email: faker.internet.email(),
     password: faker.internet.password()
-  }
-  )
+  })
   expect(response.status).toBe(400)
 
   const body = await response.text()
@@ -39,8 +38,7 @@ test('sign up without required email field', async () => {
     name: faker.internet.userName(),
     // email: faker.internet.email(),
     password: faker.internet.password()
-  }
-  )
+  })
   expect(response.status).toBe(400)
 
   const body = await response.text()
@@ -52,8 +50,7 @@ test('sign up without required password field', async () => {
     name: faker.internet.userName(),
     email: faker.internet.email()
     // password: faker.internet.password()
-  }
-  )
+  })
   expect(response.status).toBe(400)
 
   const body = await response.text()

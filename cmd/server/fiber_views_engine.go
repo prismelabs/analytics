@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/fs"
 	"net/http"
 
 	"github.com/Masterminds/sprig/v3"
@@ -11,7 +12,11 @@ import (
 )
 
 func ProvideFiberViewsEngine(cfg config.Config) fiber.Views {
-	engine := html.NewFileSystem(http.FS(embedded.Views), ".html")
+	viewsFs, err := fs.Sub(embedded.Views, "views")
+	if err != nil {
+		panic(err)
+	}
+	engine := html.NewFileSystem(http.FS(viewsFs), ".html")
 
 	if cfg.Server.Debug {
 		engine = html.New("internal/embedded/views", ".html")
