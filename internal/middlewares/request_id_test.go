@@ -7,7 +7,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/prismelabs/prismeanalytics/internal/config"
 	"github.com/stretchr/testify/require"
 )
@@ -55,7 +54,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			// Add request id.
-			req.Header.Add(echo.HeaderXRequestID, reqRequestId.String())
+			req.Header.Add(fiber.HeaderXRequestID, reqRequestId.String())
 
 			_, err := app.Test(req)
 			require.NoError(t, err)
@@ -107,7 +106,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			// Add request id.
-			req.Header.Add(echo.HeaderXRequestID, expectedRequestId.String())
+			req.Header.Add(fiber.HeaderXRequestID, expectedRequestId.String())
 
 			_, err := app.Test(req)
 			require.NoError(t, err)
