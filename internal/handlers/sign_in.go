@@ -12,6 +12,7 @@ import (
 
 type GetSignIn fiber.Handler
 
+// ProvidePostSignUp define a wire provider for GET sign in handler.
 func ProvideGetSignIn() GetSignIn {
 	return func(c *fiber.Ctx) error {
 		return c.Render("sign_in", fiber.Map{})
@@ -20,6 +21,7 @@ func ProvideGetSignIn() GetSignIn {
 
 type PostSignIn fiber.Handler
 
+// ProvidePostSignUp define a wire provider for POST sign in handler.
 func ProvidePostSignIn(authService auth.Service, sessionsService sessions.Service) PostSignIn {
 	return func(c *fiber.Ctx) error {
 		type request struct {

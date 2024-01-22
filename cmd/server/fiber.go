@@ -16,6 +16,7 @@ func ProvideFiber(
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
 	withSessionMiddleware middlewares.WithSession,
+	eventsCorsMiddleware middlewares.EventsCors,
 	faviconMiddleware middlewares.Favicon,
 	getSignUpHandler handlers.GetSignUp,
 	postSignUpHander handlers.PostSignUp,
@@ -23,6 +24,7 @@ func ProvideFiber(
 	postSignInHander handlers.PostSignIn,
 	getIndexHander handlers.GetIndex,
 	notFoundHandler handlers.NotFound,
+	postPageViewEventHandler handlers.PostPageViewEvent,
 ) *fiber.App {
 	fiberCfg := fiber.Config{
 		ServerHeader:          "prisme",
@@ -52,6 +54,9 @@ func ProvideFiber(
 
 	// Public endpoints.
 	app.Use(fiber.Handler(faviconMiddleware))
+
+	app.Use("/api/v1/events/*", fiber.Handler(eventsCorsMiddleware))
+	app.Post("/api/v1/events/pageviews", fiber.Handler(postPageViewEventHandler))
 
 	app.Use("/static", fiber.Handler(staticMiddleware))
 
