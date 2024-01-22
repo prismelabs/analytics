@@ -32,6 +32,12 @@ Configuration of the go server is done through environment variables:
 | `PRISME_PORT`| `80`           | Web server listening port. |
 | `PRISME_TRUST_PROXY`| `false` | Whether `X-Forwarded-For`, `X-Request-Id` and other proxy related headers should be trusted. |
 | `PRISME_POSTGRES_URL`| **required** | Postgres connection string. |
+| `PRISME_CLICKHOUSE_TLS`| `false` | Use a TLS connection for clickhouse. |
+| `PRISME_CLICKHOUSE_HOSTPORT`| **required** | A valid `<host>:<port>` string pointing to a clickhouse instance. |
+| `PRISME_CLICKHOUSE_DB`| `prisme` | Clickhouse database to use. |
+| `PRISME_CLICKHOUSE_USER`| **required** | Clickhouse user to use. |
+| `PRISME_CLICKHOUSE_PASSWORD`| **required** | Clickhouse password to use. |
+| `PRISME_SOURCE_REGISTRY_SOURCES`| **required** | Comma separated list (without space) of valid sources. |
 
 ## Contributing
 
