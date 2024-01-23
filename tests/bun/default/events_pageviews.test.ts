@@ -12,9 +12,9 @@ test('GET request instead of POST request', async () => {
 
 test('invalid URL in X-Prisme-Referrer header', async () => {
   const response = await fetch(PAGEVIEWS_ENDPOINT, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "X-Prisme-Referrer": "not an url",
+      'X-Prisme-Referrer': 'not an url'
     }
   })
   expect(response.status).toBe(400)
@@ -22,9 +22,9 @@ test('invalid URL in X-Prisme-Referrer header', async () => {
 
 test('invalid URL in Referer header', async () => {
   const response = await fetch(PAGEVIEWS_ENDPOINT, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Referer": "not an url",
+      Referer: 'not an url'
     }
   })
   expect(response.status).toBe(400)
@@ -32,9 +32,9 @@ test('invalid URL in Referer header', async () => {
 
 test('non registered domain in X-Prisme-Referrer header is rejected', async () => {
   const response = await fetch(PAGEVIEWS_ENDPOINT, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "X-Prisme-Referrer": "https://example.com/foo?bar=baz#qux",
+      'X-Prisme-Referrer': 'https://example.com/foo?bar=baz#qux'
     }
   })
   expect(response.status).toBe(400)
@@ -42,9 +42,9 @@ test('non registered domain in X-Prisme-Referrer header is rejected', async () =
 
 test('non registered domain in Referer header is rejected', async () => {
   const response = await fetch(PAGEVIEWS_ENDPOINT, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Referer": "https://example.com/foo?bar=baz#qux",
+      Referer: 'https://example.com/foo?bar=baz#qux'
     }
   })
   expect(response.status).toBe(400)
@@ -52,9 +52,9 @@ test('non registered domain in Referer header is rejected', async () => {
 
 test('valid URL with registered domain in X-Prisme-Referrer header is accepted', async () => {
   const response = await fetch(PAGEVIEWS_ENDPOINT, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "X-Prisme-Referrer": "http://mywebsite.localhost/foo?bar=baz#qux"
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/foo?bar=baz#qux'
     }
   })
   expect(response.status).toBe(200)
@@ -63,32 +63,32 @@ test('valid URL with registered domain in X-Prisme-Referrer header is accepted',
   Bun.sleepSync(1000)
 
   const client = createClient({
-    host: "http://clickhouse.localhost:8123",
-    username: "clickhouse",
-    password: "password",
-    database: "prisme",
+    host: 'http://clickhouse.localhost:8123',
+    username: 'clickhouse',
+    password: 'password',
+    database: 'prisme'
   })
 
   const rows = await client.query({
-    query: `SELECT * FROM prisme.events_pageviews ORDER BY timestamp DESC LIMIT 1;`
+    query: 'SELECT * FROM prisme.events_pageviews ORDER BY timestamp DESC LIMIT 1;'
   })
   const data = await rows.json().then((r: any) => r.data[0])
 
   expect(data).toMatchObject({
     timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-    domain: "mywebsite.localhost",
-    path: "/foo",
-    operating_system: "Other",
-    browser_family: "Other",
-    device: "Other",
+    domain: 'mywebsite.localhost',
+    path: '/foo',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other'
   })
 })
 
 test('valid URL with registered domain in Referer header is accepted', async () => {
   const response = await fetch(PAGEVIEWS_ENDPOINT, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Referer": "http://foo.mywebsite.localhost/another/foo?bar=baz#qux"
+      Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux'
     }
   })
   expect(response.status).toBe(200)
@@ -97,33 +97,33 @@ test('valid URL with registered domain in Referer header is accepted', async () 
   Bun.sleepSync(1000)
 
   const client = createClient({
-    host: "http://clickhouse.localhost:8123",
-    username: "clickhouse",
-    password: "password",
-    database: "prisme",
+    host: 'http://clickhouse.localhost:8123',
+    username: 'clickhouse',
+    password: 'password',
+    database: 'prisme'
   })
 
   const rows = await client.query({
-    query: `SELECT * FROM prisme.events_pageviews ORDER BY timestamp DESC LIMIT 1;`
+    query: 'SELECT * FROM prisme.events_pageviews ORDER BY timestamp DESC LIMIT 1;'
   })
   const data = await rows.json().then((r: any) => r.data[0])
 
   expect(data).toMatchObject({
     timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-    domain: "foo.mywebsite.localhost",
-    path: "/another/foo",
-    operating_system: "Other",
-    browser_family: "Other",
-    device: "Other",
+    domain: 'foo.mywebsite.localhost',
+    path: '/another/foo',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other'
   })
 })
 
 test('valid pageview with Windows + Chrome user agent', async () => {
   const response = await fetch(PAGEVIEWS_ENDPOINT, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Referer": "http://foo.mywebsite.localhost/another/foo?bar=baz#qux",
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3"
+      Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3'
     }
   })
   expect(response.status).toBe(200)
@@ -132,23 +132,23 @@ test('valid pageview with Windows + Chrome user agent', async () => {
   Bun.sleepSync(1000)
 
   const client = createClient({
-    host: "http://clickhouse.localhost:8123",
-    username: "clickhouse",
-    password: "password",
-    database: "prisme",
+    host: 'http://clickhouse.localhost:8123',
+    username: 'clickhouse',
+    password: 'password',
+    database: 'prisme'
   })
 
   const rows = await client.query({
-    query: `SELECT * FROM prisme.events_pageviews ORDER BY timestamp DESC LIMIT 1;`
+    query: 'SELECT * FROM prisme.events_pageviews ORDER BY timestamp DESC LIMIT 1;'
   })
   const data = await rows.json().then((r: any) => r.data[0])
 
   expect(data).toMatchObject({
     timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-    domain: "foo.mywebsite.localhost",
-    path: "/another/foo",
-    operating_system: "Windows",
-    browser_family: "Chrome",
-    device: "Other",
+    domain: 'foo.mywebsite.localhost',
+    path: '/another/foo',
+    operating_system: 'Windows',
+    browser_family: 'Chrome',
+    device: 'Other'
   })
 })
