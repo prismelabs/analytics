@@ -38,6 +38,8 @@ Configuration of the go server is done through environment variables:
 | `PRISME_CLICKHOUSE_USER`| **required** | Clickhouse user to use. |
 | `PRISME_CLICKHOUSE_PASSWORD`| **required** | Clickhouse password to use. |
 | `PRISME_SOURCE_REGISTRY_SOURCES`| **required** | Comma separated list (without space) of valid sources. |
+| `PRISME_EVENTSTORE_MAX_BATCH_SIZE`| `4096` | Maximum size of batch send to event store. |
+| `PRISME_EVENTSTORE_MAX_BATCH_TIMEOUT`| `1m` | Maximum duration before a batch is sent to event store. |
 
 ## Contributing
 
