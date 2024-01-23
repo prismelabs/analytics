@@ -11,6 +11,6 @@ type Postgres struct {
 // This function panics if required environment variables are missing.
 func PostgresFromEnv() Postgres {
 	return Postgres{
-		Url: secret.New(mustGetEnv("PRISME_POSTGRES_URL")),
+		Url: secret.New(MustGetEnv("PRISME_POSTGRES_URL")),
 	}
 }

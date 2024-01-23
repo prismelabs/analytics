@@ -17,10 +17,10 @@ type Clickhouse struct {
 // This function panics if required environment variables are missing.
 func ClickhouseFromEnv() Clickhouse {
 	return Clickhouse{
-		TlsEnabled: getEnvOrDefault("PRISME_CLICKHOUSE_TLS", "false") != "false",
-		HostPort:   mustGetEnv("PRISME_CLICKHOUSE_HOSTPORT"),
-		Database:   getEnvOrDefault("PRISME_CLICKHOUSE_DB", "prisme"),
-		User:       secret.New(mustGetEnv("PRISME_CLICKHOUSE_USER")),
-		Password:   secret.New(mustGetEnv("PRISME_CLICKHOUSE_PASSWORD")),
+		TlsEnabled: GetEnvOrDefault("PRISME_CLICKHOUSE_TLS", "false") != "false",
+		HostPort:   MustGetEnv("PRISME_CLICKHOUSE_HOSTPORT"),
+		Database:   GetEnvOrDefault("PRISME_CLICKHOUSE_DB", "prisme"),
+		User:       secret.New(MustGetEnv("PRISME_CLICKHOUSE_USER")),
+		Password:   secret.New(MustGetEnv("PRISME_CLICKHOUSE_PASSWORD")),
 	}
 }

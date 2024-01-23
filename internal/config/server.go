@@ -15,9 +15,9 @@ type Server struct {
 // ServerFromEnv loads server related options from environment variables.
 func ServerFromEnv() Server {
 	return Server{
-		AccessLog:  getEnvOrDefault("PRISME_ACCESS_LOG", "/dev/stdout"),
-		Debug:      getEnvOrDefault("PRISME_DEBUG", "false") != "false",
-		Port:       uint16(parseUintEnvOrDefault("PRISME_PORT", 80, 16)),
-		TrustProxy: getEnvOrDefault("PRISME_TRUST_PROXY", "false") != "false",
+		AccessLog:  GetEnvOrDefault("PRISME_ACCESS_LOG", "/dev/stdout"),
+		Debug:      GetEnvOrDefault("PRISME_DEBUG", "false") != "false",
+		Port:       uint16(ParseUintEnvOrDefault("PRISME_PORT", 80, 16)),
+		TrustProxy: GetEnvOrDefault("PRISME_TRUST_PROXY", "false") != "false",
 	}
 }

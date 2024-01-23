@@ -28,8 +28,16 @@ func TestEnvVarService(t *testing.T) {
 			})
 		})
 
-		t.Run("PRISME_SOURCE_REGISTRY_SOURCES/Set", func(t *testing.T) {
-			os.Setenv("PRISME_SOURCE_REGISTRY_SOURCES", "")
+		t.Run("PRISME_SOURCE_REGISTRY_SOURCES/Set/EmptyString", func(t *testing.T) {
+			require.Panics(t, func() {
+				os.Setenv("PRISME_SOURCE_REGISTRY_SOURCES", "")
+				logger := log.NewLogger("env_var_service_test", io.Discard, false)
+				ProvideEnvVarService(logger)
+			})
+		})
+
+		t.Run("PRISME_SOURCE_REGISTRY_SOURCES/Set/NonEmptyString", func(t *testing.T) {
+			os.Setenv("PRISME_SOURCE_REGISTRY_SOURCES", "example.com")
 			logger := log.NewLogger("env_var_service_test", io.Discard, false)
 			ProvideEnvVarService(logger)
 		})
@@ -40,7 +48,7 @@ func TestEnvVarService(t *testing.T) {
 		logger := log.NewLogger("env_var_service_test", io.Discard, false)
 
 		t.Run("NonRegistered", func(t *testing.T) {
-			os.Setenv("PRISME_SOURCE_REGISTRY_SOURCES", "")
+			os.Setenv("PRISME_SOURCE_REGISTRY_SOURCES", "notexample.com")
 			service := ProvideEnvVarService(logger)
 
 			isRegistered, err := service.IsSourceRegistered(ctx, staticSource{"example.com"})
