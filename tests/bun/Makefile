@@ -1,5 +1,5 @@
 .PHONY: all
-all: all/default all/trusted-proxy all/untrusted-proxy
+all: all/default all/events all/trusted-proxy all/untrusted-proxy
 	@true
 
 all/%: start/% test/% clean/%

@@ -1,6 +1,12 @@
 import { expect, test } from 'bun:test'
+import { faker } from '@faker-js/faker'
+
 import { createClient } from '@clickhouse/client-web'
 import { PRISME_PAGEVIEWS_URL, TIMESTAMP_REGEX } from '../const'
+
+const seed = new Date().getTime()
+console.log('faker seed', seed)
+faker.seed(seed)
 
 test('GET request instead of POST request', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL)
@@ -11,6 +17,7 @@ test('invalid URL in X-Prisme-Referrer header', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'X-Forwarded-For': faker.internet.ip(),
       'X-Prisme-Referrer': 'not an url'
     }
   })
@@ -21,6 +28,7 @@ test('invalid URL in Referer header', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'X-Forwarded-For': faker.internet.ip(),
       Referer: 'not an url'
     }
   })
@@ -31,6 +39,7 @@ test('non registered domain in X-Prisme-Referrer header is rejected', async () =
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'X-Forwarded-For': faker.internet.ip(),
       'X-Prisme-Referrer': 'https://example.com/foo?bar=baz#qux'
     }
   })
@@ -41,6 +50,7 @@ test('non registered domain in Referer header is rejected', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'X-Forwarded-For': faker.internet.ip(),
       Referer: 'https://example.com/foo?bar=baz#qux'
     }
   })
@@ -51,6 +61,7 @@ test('valid URL with registered domain in X-Prisme-Referrer header is accepted',
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'X-Forwarded-For': faker.internet.ip(),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/foo?bar=baz#qux'
     }
   })
@@ -85,6 +96,7 @@ test('valid URL with registered domain in Referer header is accepted', async () 
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'X-Forwarded-For': faker.internet.ip(),
       Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux'
     }
   })
@@ -119,6 +131,7 @@ test('valid pageview with Windows + Chrome user agent', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'X-Forwarded-For': faker.internet.ip(),
       Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux',
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3'
     }

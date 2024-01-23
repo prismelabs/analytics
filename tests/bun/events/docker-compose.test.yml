@@ -1,0 +1,8 @@
+version: '3'
+services:
+  bun:
+    image: docker.io/oven/bun
+    command: sh -c "bun install && cd ./events && exec bun test"
+    working_dir: /data
+    volumes:
+      - ..:/data

@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { PRISME_URL } from './utils'
+import { PRISME_URL } from '../const'
 
 test('anonymous request is redirected to /sign_in', async () => {
   const response = await fetch(PRISME_URL, {
