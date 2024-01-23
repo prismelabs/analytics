@@ -2,8 +2,9 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 import { JSDOM } from 'jsdom'
 
-import { PRISME_URL, postForm } from './utils'
+import { postForm } from './utils'
 import { signUp } from './client'
+import { PRISME_URL } from '../const'
 
 const seed = new Date().getTime()
 console.log('faker seed', seed)

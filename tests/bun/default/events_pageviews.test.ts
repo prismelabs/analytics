@@ -1,17 +1,14 @@
 import { expect, test } from 'bun:test'
-import { PRISME_URL } from './utils'
 import { createClient } from '@clickhouse/client-web'
-import { TIMESTAMP_REGEX } from './matchers'
-
-const PAGEVIEWS_ENDPOINT = PRISME_URL + '/api/v1/events/pageviews'
+import { PRISME_PAGEVIEWS_URL, TIMESTAMP_REGEX } from '../const'
 
 test('GET request instead of POST request', async () => {
-  const response = await fetch(PAGEVIEWS_ENDPOINT)
+  const response = await fetch(PRISME_PAGEVIEWS_URL)
   expect(response.status).toBe(404)
 })
 
 test('invalid URL in X-Prisme-Referrer header', async () => {
-  const response = await fetch(PAGEVIEWS_ENDPOINT, {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
       'X-Prisme-Referrer': 'not an url'
@@ -21,7 +18,7 @@ test('invalid URL in X-Prisme-Referrer header', async () => {
 })
 
 test('invalid URL in Referer header', async () => {
-  const response = await fetch(PAGEVIEWS_ENDPOINT, {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
       Referer: 'not an url'
@@ -31,7 +28,7 @@ test('invalid URL in Referer header', async () => {
 })
 
 test('non registered domain in X-Prisme-Referrer header is rejected', async () => {
-  const response = await fetch(PAGEVIEWS_ENDPOINT, {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
       'X-Prisme-Referrer': 'https://example.com/foo?bar=baz#qux'
@@ -41,7 +38,7 @@ test('non registered domain in X-Prisme-Referrer header is rejected', async () =
 })
 
 test('non registered domain in Referer header is rejected', async () => {
-  const response = await fetch(PAGEVIEWS_ENDPOINT, {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
       Referer: 'https://example.com/foo?bar=baz#qux'
@@ -51,7 +48,7 @@ test('non registered domain in Referer header is rejected', async () => {
 })
 
 test('valid URL with registered domain in X-Prisme-Referrer header is accepted', async () => {
-  const response = await fetch(PAGEVIEWS_ENDPOINT, {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
       'X-Prisme-Referrer': 'http://mywebsite.localhost/foo?bar=baz#qux'
@@ -85,7 +82,7 @@ test('valid URL with registered domain in X-Prisme-Referrer header is accepted',
 })
 
 test('valid URL with registered domain in Referer header is accepted', async () => {
-  const response = await fetch(PAGEVIEWS_ENDPOINT, {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
       Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux'
@@ -119,7 +116,7 @@ test('valid URL with registered domain in Referer header is accepted', async () 
 })
 
 test('valid pageview with Windows + Chrome user agent', async () => {
-  const response = await fetch(PAGEVIEWS_ENDPOINT, {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
       Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux',

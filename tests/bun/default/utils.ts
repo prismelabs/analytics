@@ -1,4 +1,4 @@
-export const PRISME_URL = 'http://prisme.localhost'
+import { PRISME_URL } from '../const'
 
 export async function postForm (path: string, body: Record<string, any>): Promise<ReturnType<typeof fetch>> {
   const response = await fetch(`${PRISME_URL}${path}`, {
