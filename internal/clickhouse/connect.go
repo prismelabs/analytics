@@ -96,14 +96,19 @@ func connectSql(logger log.Logger, cfg config.Clickhouse, maxRetry int) *sql.DB 
 			cfg.User.ExposeSecret(),
 			cfg.Password.ExposeSecret(),
 		)
+		if cfg.TlsEnabled {
+			connectionString += "&secure=true"
+		}
 
 		db, err = sql.Open("clickhouse", connectionString)
 		if err != nil {
+			println(err.Error())
 			continue
 		}
 
 		err = db.Ping()
 		if err != nil {
+			println(err.Error())
 			continue
 		}
 

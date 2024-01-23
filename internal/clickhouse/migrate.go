@@ -19,6 +19,7 @@ func migrate(logger log.Logger, db *sql.DB) {
 
 	driver, err := clickhouse.WithInstance(db, &clickhouse.Config{
 		MigrationsTable:       "migrations",
+		MigrationsTableEngine: "MergeTree",
 		MultiStatementEnabled: true,
 	})
 	if err != nil {
