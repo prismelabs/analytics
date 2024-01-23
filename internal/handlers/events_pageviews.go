@@ -6,8 +6,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/prismeanalytics/internal/event"
-	"github.com/prismelabs/prismeanalytics/internal/log"
-	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 	"github.com/prismelabs/prismeanalytics/internal/services/eventstore"
 	"github.com/prismelabs/prismeanalytics/internal/services/sourceregistry"
 	"github.com/prismelabs/prismeanalytics/internal/services/uaparser"
@@ -50,12 +48,8 @@ func ProvidePostEventsPageViews(
 
 		// Source is not registered.
 		if !isRegistered {
-			logger := c.Locals(middlewares.LoggerKey{}).(log.Logger)
-			logger.Debug().Str("source", pageview.DomainName.SourceString()).
-				Msg("source not registered")
-
 			c.Response().SetStatusCode(fiber.StatusBadRequest)
-			return nil
+			return fmt.Errorf("source %q not registered", pageview.DomainName.SourceString())
 		}
 
 		// Store event.
