@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -94,6 +95,31 @@ func TestMustParseUrlEnv(t *testing.T) {
 		os.Setenv("MY_ENV_VAR", expected)
 		actual := MustParseUrlEnv("MY_ENV_VAR")
 		require.NotNil(t, actual)
+		require.Equal(t, expected, actual.String())
+	})
+}
+
+func TestParseDurationEnvOrDefault(t *testing.T) {
+	os.Clearenv()
+	t.Run("UndefinedVar", func(t *testing.T) {
+		expected := time.Second
+		actual := ParseDurationEnvOrDefault("MY_ENV_VAR", expected)
+
+		require.Equal(t, expected, actual)
+	})
+
+	t.Run("DefinedVar/InvalidDuration", func(t *testing.T) {
+		os.Setenv("MY_ENV_VAR", "not a duration")
+		require.Panics(t, func() {
+			_ = ParseDurationEnvOrDefault("MY_ENV_VAR", time.Second)
+		})
+	})
+
+	os.Clearenv()
+	t.Run("DefinedVar/ValidDuration", func(t *testing.T) {
+		expected := "16s"
+		os.Setenv("MY_ENV_VAR", expected)
+		actual := ParseDurationEnvOrDefault("MY_ENV_VAR", time.Second)
 		require.Equal(t, expected, actual.String())
 	})
 }
