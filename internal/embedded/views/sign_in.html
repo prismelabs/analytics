@@ -7,7 +7,7 @@
 	{{ template "partials/tailwindcss" }}
 </head>
 
-<body class="{{ .bodyClass }}">
+<body class='{{ template "partials/class/body" }}'>
 	<div
 		class="absolute h-full w-full flex flex-col justify-between bg-cover bg-center bg-gradient-to-br from-orange-100 via-purple-100 to-sky-600 overflow-auto"
 		style="background-size: 150% 150%">
@@ -24,21 +24,22 @@
 				{{- end -}}
 				<div class="max-w-md px-4 pb-8 mx-auto">
 					<div class="mb-4 flex flex-col justify-center">
-						<label for="email" class="text-xs mb-1">Email</label><br />
+						<label for="email" class="text-xs mb-1">Email</label>
 						<input type="email" id="email" name="email" placeholder="Your email" required
-							class="border dark:border-slate-600 rounded-sm text-sm px-2 py-1 w-full dark:bg-slate-800" />
+							class='{{ template "partials/class/input" }}' />
 					</div>
 					<div class="flex flex-col justify-center">
-						<label for="password" class="text-xs mb-1">Password</label><br />
+						<label for="password" class="text-xs mb-1">Password</label>
 						<input type="password" id="password" name="password" placeholder="Your password" required minlength="6"
-							class="border dark:border-slate-600 rounded-sm text-sm px-2 py-1 w-full dark:bg-slate-800" />
+							class='{{ template "partials/class/input" }}' />
 					</div>
 					<div class="flex flex-col justify-center">
-						<button type="submit"
-							class="w-full mt-4 bg-purple-500 text-slate-50 rounded-sm text-sm p-2 w-full active:bg-purple-600">
-							Sign up
+						<button type="submit" class='mt-4 {{ template "partials/class/button" }}'>
+							Sign in
 						</button>
 					</div>
+					<p class="text-center mt-4 text-xs">Don't have an account? <a href="/sign_up" class="underline">Create one</a>
+					</p>
 				</div>
 			</form>
 		</main>
