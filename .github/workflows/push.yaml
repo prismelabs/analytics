@@ -25,7 +25,7 @@ jobs:
       - name: Docker build
         run: REMOVE_RESULT=0 nix develop --command make docker/build
       - name: End to end tests
-        run: nix develop --command make test/e2e
+        run: nix develop --command make -j test/e2e
       - name: Store docker image as artifact
         uses: actions/upload-artifact@v3
         with:

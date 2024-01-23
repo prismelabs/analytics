@@ -2,7 +2,7 @@
 all: all/default all/events all/trusted-proxy all/untrusted-proxy
 	@true
 
-all/%: start/% test/% clean/%
+all/%: start/% .WAIT test/% .WAIT clean/%
 	@true
 
 start/%:
