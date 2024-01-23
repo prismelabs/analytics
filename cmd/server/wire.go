@@ -41,6 +41,7 @@ func initialize(logger BootstrapLogger) App {
 		middlewares.ProvideWithSession,
 		middlewares.ProvideFavicon,
 		middlewares.ProvideEventsCors,
+		middlewares.ProvideEventsRateLimiter,
 		handlers.ProvideGetSignUp,
 		handlers.ProvidePostSignUp,
 		handlers.ProvideGetSignIn,

@@ -34,6 +34,7 @@ func initialize(logger BootstrapLogger) App {
 	withSession := middlewares.ProvideWithSession(service)
 	eventsCors := middlewares.ProvideEventsCors()
 	favicon := middlewares.ProvideFavicon()
+	eventsRateLimiter := middlewares.ProvideEventsRateLimiter(server)
 	getSignUp := handlers.ProvideGetSignUp()
 	configPostgres := config.Postgres
 	pg := postgres.ProvidePg(logLogger, configPostgres)
@@ -50,7 +51,7 @@ func initialize(logger BootstrapLogger) App {
 	sourceregistryService := sourceregistry.ProvideEnvVarService(logLogger)
 	uaparserService := uaparser.ProvideService()
 	postPageViewEvent := handlers.ProvidePostEventsPageViews(eventstoreService, sourceregistryService, uaparserService)
-	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static, withSession, eventsCors, favicon, getSignUp, postSignUp, getSignIn, postSignIn, getIndex, notFound, postPageViewEvent)
+	app := ProvideFiber(config, views, middlewaresLogger, accessLog, requestId, static, withSession, eventsCors, favicon, eventsRateLimiter, getSignUp, postSignUp, getSignIn, postSignIn, getIndex, notFound, postPageViewEvent)
 	mainApp := ProvideApp(config, app, logLogger)
 	return mainApp
 }

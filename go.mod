@@ -28,11 +28,13 @@ require (
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/paulmach/orb v0.10.0 // indirect
+	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
+	github.com/tinylib/msgp v1.1.8 // indirect
 	go.opentelemetry.io/otel v1.19.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

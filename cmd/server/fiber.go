@@ -18,6 +18,7 @@ func ProvideFiber(
 	withSessionMiddleware middlewares.WithSession,
 	eventsCorsMiddleware middlewares.EventsCors,
 	faviconMiddleware middlewares.Favicon,
+	eventsRateLimiterMiddleware middlewares.EventsRateLimiter,
 	getSignUpHandler handlers.GetSignUp,
 	postSignUpHander handlers.PostSignUp,
 	getSignInHandler handlers.GetSignIn,
@@ -55,7 +56,10 @@ func ProvideFiber(
 	// Public endpoints.
 	app.Use(fiber.Handler(faviconMiddleware))
 
-	app.Use("/api/v1/events/*", fiber.Handler(eventsCorsMiddleware))
+	app.Use("/api/v1/events/*",
+		fiber.Handler(eventsCorsMiddleware),
+		fiber.Handler(eventsRateLimiterMiddleware),
+	)
 	app.Post("/api/v1/events/pageviews", fiber.Handler(postPageViewEventHandler))
 
 	app.Use("/static", fiber.Handler(staticMiddleware))
