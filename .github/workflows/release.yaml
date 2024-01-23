@@ -18,12 +18,13 @@ jobs:
       - uses: dawidd6/action-download-artifact@v3
         with:
           name: docker-image
-          workflow: push.yml
+          workflow: push.yaml
       - run: docker load < result
       - name: Publish server to docker hub
         run: |
+          set -x;
           for tag in $(.github/scripts/tags.sh $GITHUB_REF_NAME); do
-            docker tag "prismeanalytics" "docker.io/negrel/prismeanalytics:$tag"
+          docker tag "prismelabs/analytics:dev" "docker.io/negrel/prismeanalytics:$tag"
             docker push "docker.io/negrel/prismeanalytics:$tag"
           done
 
