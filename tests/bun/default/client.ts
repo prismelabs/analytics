@@ -1,7 +1,7 @@
 import { expect } from 'bun:test'
 
 import { parseSetCookie, postForm } from './utils'
-import { UUID_V4_REGEX } from './matchers'
+import { UUID_V4_REGEX } from '../const'
 
 export interface SignUpRequest {
   name: string
