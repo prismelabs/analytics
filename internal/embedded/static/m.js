@@ -6,7 +6,8 @@
   fetch(ps.concat("://", pd, "/api/v1/events/pageviews"), {
     method: "POST",
     headers: {
-      "X-Prisme-Referrer": s.concat('//', d, location.pathname)
+      "X-Prisme-Referrer": s.concat('//', d, location.pathname),
+      "X-Prisme-Document-Referrer": document.referrer
     },
     referrerPolicy: "no-referrer-when-downgrade"
   });

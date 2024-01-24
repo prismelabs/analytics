@@ -20,20 +20,22 @@ func ProvidePostEventsPageViews(
 	uaParserService uaparser.Service,
 ) PostPageViewEvent {
 	return func(c *fiber.Ctx) error {
-		referrer := string(peekReferrerHeader(c))
-
-		// Parse URI.
-		uri, err := url.ParseRequestURI(referrer)
+		// Referrer of the POST request, that is the viewed page.
+		pageReferrer := string(peekReferrerHeader(c))
+		pageUrl, err := url.ParseRequestURI(pageReferrer)
 		if err != nil {
 			c.Response().SetStatusCode(fiber.StatusBadRequest)
-			return err
+			return fmt.Errorf("invalid referrer: %w", err)
 		}
+
+		// Website from which viewer comes from.
+		referrer := string(c.Request().Header.Peek("X-Prisme-Document-Referrer"))
 
 		// Parse user agent.
 		cli := uaParserService.ParseUserAgent(string(c.Request().Header.UserAgent()))
 
 		// Create pageview.
-		pageview, err := event.NewPageView(uri, cli)
+		pageview, err := event.NewPageView(pageUrl, cli, referrer)
 		if err != nil {
 			c.Response().SetStatusCode(fiber.StatusBadRequest)
 			return fmt.Errorf("invalid pageview event: %w", err)

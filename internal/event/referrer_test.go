@@ -6,14 +6,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParseDomainName(t *testing.T) {
+func TestParseReferrerDomain(t *testing.T) {
 	t.Run("Invalid", func(t *testing.T) {
 		invalidDomains := []string{
 			"mydomain*com",
 			"123domain!",
 			"_invalid-domain.com",
 			"space domain.com",
-			"special@character.com",
 			"my domain .com",
 			"domain#invalid.com",
 			"-hyphenstart.com",
@@ -22,17 +21,11 @@ func TestParseDomainName(t *testing.T) {
 
 		for _, domain := range invalidDomains {
 			t.Run(domain, func(t *testing.T) {
-				domainName, err := ParseDomainName(domain)
+				referrerDomain, err := ParseReferrerDomain("http://" + domain + "/foo")
 				require.Error(t, err)
-				require.Equal(t, DomainName{}, domainName)
+				require.Equal(t, ReferrerDomain{}, referrerDomain)
 			})
 		}
-
-		t.Run("Empty", func(t *testing.T) {
-			domainName, err := ParseDomainName("")
-			require.Error(t, err)
-			require.Equal(t, DomainName{}, domainName)
-		})
 	})
 
 	t.Run("Valid", func(t *testing.T) {
@@ -52,19 +45,25 @@ func TestParseDomainName(t *testing.T) {
 
 		for _, domain := range validDomains {
 			t.Run(domain, func(t *testing.T) {
-				domainName, err := ParseDomainName(domain)
+				referrerDomain, err := ParseReferrerDomain("http://" + domain + "/foo")
 				require.NoError(t, err)
-				require.NotEqual(t, DomainName{}, domainName)
-				require.Equal(t, domain, domainName.String())
+				require.NotEqual(t, ReferrerDomain{}, referrerDomain)
+				require.Equal(t, domain, referrerDomain.String())
 			})
 		}
 
 		t.Run("🏹.to", func(t *testing.T) {
-			domain := "🏹.to"
-			domainName, err := ParseDomainName(domain)
+			url := "http://🏹.to/"
+			referrer, err := ParseReferrerDomain(url)
 			require.NoError(t, err)
-			require.NotEqual(t, DomainName{}, domainName)
-			require.Equal(t, "xn--kn8h.to", domainName.String())
+			require.NotEqual(t, ReferrerDomain{}, referrer)
+			require.Equal(t, "xn--kn8h.to", referrer.String())
+		})
+
+		t.Run("Direct", func(t *testing.T) {
+			referrerDomain, err := ParseReferrerDomain("")
+			require.NoError(t, err)
+			require.Equal(t, "direct", referrerDomain.String())
 		})
 	})
 }

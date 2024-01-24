@@ -2,8 +2,13 @@ package event
 
 import (
 	"encoding/json"
+	"errors"
 
 	"golang.org/x/net/idna"
+)
+
+var (
+	errValueIsEmpty = errors.New("value is empty")
 )
 
 // DomainName define a valid domain name according to RFC 5891. DomainName are
@@ -15,6 +20,10 @@ type DomainName struct {
 // ParseDomainName parses the given value as a domain name and returns it.
 // If the value is considered invalid, an error is returned.
 func ParseDomainName(value string) (DomainName, error) {
+	if value == "" {
+		return DomainName{}, errValueIsEmpty
+	}
+
 	domain, err := idna.Lookup.ToASCII(value)
 	if err != nil {
 		return DomainName{}, err
