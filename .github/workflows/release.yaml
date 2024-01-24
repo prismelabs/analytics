@@ -24,8 +24,8 @@ jobs:
         run: |
           set -x;
           for tag in $(.github/scripts/tags.sh $GITHUB_REF_NAME); do
-          docker tag "prismelabs/analytics:dev" "docker.io/negrel/prismeanalytics:$tag"
-            docker push "docker.io/negrel/prismeanalytics:$tag"
+          docker tag "prismelabs/analytics:dev" "docker.io/prismelabs/analytics:$tag"
+            docker push "docker.io/prismelabs/analytics:$tag"
           done
 
 
