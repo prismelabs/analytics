@@ -1,4 +1,4 @@
-package main
+package wired
 
 import (
 	"io/fs"
@@ -11,14 +11,14 @@ import (
 	"github.com/prismelabs/prismeanalytics/internal/embedded"
 )
 
-func ProvideFiberViewsEngine(cfg config.Config) fiber.Views {
+func ProvideFiberViewsEngine(cfg config.Server) fiber.Views {
 	viewsFs, err := fs.Sub(embedded.Views, "views")
 	if err != nil {
 		panic(err)
 	}
 	engine := html.NewFileSystem(http.FS(viewsFs), ".html")
 
-	if cfg.Server.Debug {
+	if cfg.Debug {
 		engine = html.New("internal/embedded/views", ".html")
 		engine.Reload(true)
 		engine.Debug(true)

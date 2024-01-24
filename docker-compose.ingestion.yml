@@ -1,0 +1,24 @@
+version: '3'
+services:
+  clickhouse:
+    image: "docker.io/clickhouse/clickhouse-server:23.9.1-alpine"
+    # ports:
+    #   - 8123:8123 # HTTP interface
+    ulimits:
+      nofile: 262144
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
+    volumes:
+      - "./migrations:/docker-entrypoint-initdb.d:ro"
+      - "clickhouse_data:/var/lib/clickhouse"
+    environment:
+      CLICKHOUSE_USER: "clickhouse"
+      CLICKHOUSE_PASSWORD: "password"
+      CLICKHOUSE_DB: "${PRISME_DATABASE:-prisme}"
+    networks:
+      default:
+        aliases:
+          - "clickhouse.localhost"
+
+volumes:
+  clickhouse_data:

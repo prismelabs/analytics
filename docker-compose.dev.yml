@@ -3,6 +3,8 @@ services:
   prisme:
     image: "prismelabs/analytics:dev"
     env_file: "./.env"
+    environment:
+      PRISME_MODE: "${PRISME_MODE:-default}"
     working_dir: "/app"
     command: "/app/server"
     volumes:

@@ -1,12 +1,12 @@
 //go:build wireinject
 // +build wireinject
 
-package main
+package full
 
 import (
 	"github.com/google/wire"
+	"github.com/prismelabs/prismeanalytics/cmd/server/wired"
 	"github.com/prismelabs/prismeanalytics/internal/clickhouse"
-	"github.com/prismelabs/prismeanalytics/internal/config"
 	"github.com/prismelabs/prismeanalytics/internal/handlers"
 	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 	"github.com/prismelabs/prismeanalytics/internal/postgres"
@@ -18,39 +18,39 @@ import (
 	"github.com/prismelabs/prismeanalytics/internal/services/users"
 )
 
-func initialize(logger BootstrapLogger) App {
+func Initialize(logger wired.BootstrapLogger) wired.App {
 	wire.Build(
-		ProvideConfig,
-		wire.FieldsOf(new(config.Config), "Server"),
-		wire.FieldsOf(new(config.Config), "Postgres"),
-		wire.FieldsOf(new(config.Config), "Clickhouse"),
-		postgres.ProvidePg,
-		clickhouse.ProvideCh,
-		sessions.ProvideService,
-		users.ProvideService,
+		ProvideFiber,
 		auth.ProvideService,
+		clickhouse.ProvideCh,
 		eventstore.ProvideClickhouseService,
-		sourceregistry.ProvideEnvVarService,
-		uaparser.ProvideService,
-		ProvideLogger,
-		ProvideFiberViewsEngine,
-		middlewares.ProvideStatic,
-		middlewares.ProvideRequestId,
-		middlewares.ProvideAccessLog,
-		middlewares.ProvideLogger,
-		middlewares.ProvideWithSession,
-		middlewares.ProvideFavicon,
-		middlewares.ProvideEventsCors,
-		middlewares.ProvideEventsRateLimiter,
-		handlers.ProvideGetSignUp,
-		handlers.ProvidePostSignUp,
-		handlers.ProvideGetSignIn,
-		handlers.ProvidePostSignIn,
 		handlers.ProvideGetIndex,
+		handlers.ProvideGetSignIn,
+		handlers.ProvideGetSignUp,
 		handlers.ProvideNotFound,
 		handlers.ProvidePostEventsPageViews,
-		ProvideFiber,
-		ProvideApp,
+		handlers.ProvidePostSignIn,
+		handlers.ProvidePostSignUp,
+		middlewares.ProvideAccessLog,
+		middlewares.ProvideEventsCors,
+		middlewares.ProvideEventsRateLimiter,
+		middlewares.ProvideFavicon,
+		middlewares.ProvideLogger,
+		middlewares.ProvideRequestId,
+		middlewares.ProvideStatic,
+		middlewares.ProvideWithSession,
+		postgres.ProvidePg,
+		sessions.ProvideService,
+		sourceregistry.ProvideEnvVarService,
+		uaparser.ProvideService,
+		users.ProvideService,
+		wired.ProvideApp,
+		wired.ProvideClickhouseConfig,
+		wired.ProvideFiberViewsEngine,
+		wired.ProvideLogger,
+		wired.ProvideMinimalFiber,
+		wired.ProvidePostgresConfig,
+		wired.ProvideServerConfig,
 	)
-	return App{}
+	return wired.App{}
 }

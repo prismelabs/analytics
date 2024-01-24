@@ -1,4 +1,4 @@
-package main
+package wired
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -7,16 +7,16 @@ import (
 )
 
 type App struct {
-	cfg    config.Config
-	fiber  *fiber.App
-	logger log.Logger
+	Config config.Server
+	Fiber  *fiber.App
+	Logger log.Logger
 }
 
 // ProvideApp is a wire provider for App.
-func ProvideApp(cfg config.Config, app *fiber.App, logger log.Logger) App {
+func ProvideApp(cfg config.Server, app *fiber.App, logger log.Logger) App {
 	return App{
-		cfg:    cfg,
-		fiber:  app,
-		logger: logger,
+		Config: cfg,
+		Fiber:  app,
+		Logger: logger,
 	}
 }

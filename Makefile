@@ -9,35 +9,38 @@ GENENV_FILE ?= ./config/genenv.local.sh
 start: .env codegen
 	source ./.env && go build ./cmd/server
 	$(DOCKER_COMPOSE) \
-		-f ./docker-compose.yml \
-		up --wait -d
+		-f ./docker-compose.$${PRISME_MODE:-default}.yml \
+		up --wait
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
 		down
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
-		up --wait -d --force-recreate
+		up --wait --force-recreate
 	docker logs -f $(notdir $(CURDIR))-prisme-1 |& bunyan
 
 .PHONY: stop
 stop:
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
-		-f ./docker-compose.yml \
+		-f ./docker-compose.default.yml \
+		-f ./docker-compose.ingestion.yml \
 		stop
 
 .PHONY: down
 down:
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
-		-f ./docker-compose.yml \
+		-f ./docker-compose.default.yml \
+		-f ./docker-compose.ingestion.yml \
 		down
 
 .PHONY: clean
 clean:
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
-		-f ./docker-compose.yml \
+		-f ./docker-compose.default.yml \
+		-f ./docker-compose.ingestion.yml \
 		 down --volumes --remove-orphans
 	rm -f .env
 

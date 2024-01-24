@@ -1,4 +1,4 @@
-package main
+package wired
 
 import (
 	"os"
@@ -10,8 +10,8 @@ import (
 type BootstrapLogger log.Logger
 
 // ProvideLogger is a wire provider for StandardLogger.
-func ProvideLogger(cfg config.Config) log.Logger {
-	logger := log.NewLogger("app", os.Stderr, cfg.Server.Debug)
+func ProvideLogger(cfg config.Server) log.Logger {
+	logger := log.NewLogger("app", os.Stderr, cfg.Debug)
 	log.TestLoggers(logger)
 
 	return logger
