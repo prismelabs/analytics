@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/prismelabs/prismeanalytics/internal/services/ipgeolocator"
 	"github.com/prismelabs/prismeanalytics/internal/services/uaparser"
 )
 
@@ -17,10 +18,14 @@ type PageView struct {
 	PathName       string
 	Client         uaparser.Client
 	ReferrerDomain ReferrerDomain
+	CountryCode    ipgeolocator.CountryCode
 }
 
 // NewPageView creates a new PageView event.
-func NewPageView(pvUrl *url.URL, cli uaparser.Client, pageReferrer string) (PageView, error) {
+func NewPageView(pvUrl *url.URL,
+	cli uaparser.Client,
+	pageReferrer string,
+	countryCode ipgeolocator.CountryCode) (PageView, error) {
 	domain, err := ParseDomainName(pvUrl.Hostname())
 	if err != nil {
 		return PageView{}, err
@@ -37,5 +42,6 @@ func NewPageView(pvUrl *url.URL, cli uaparser.Client, pageReferrer string) (Page
 		PathName:       pvUrl.Path,
 		Client:         cli,
 		ReferrerDomain: referrerDomain,
+		CountryCode:    countryCode,
 	}, nil
 }

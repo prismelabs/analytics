@@ -12,6 +12,7 @@ import (
 	"github.com/prismelabs/prismeanalytics/internal/postgres"
 	"github.com/prismelabs/prismeanalytics/internal/services/auth"
 	"github.com/prismelabs/prismeanalytics/internal/services/eventstore"
+	"github.com/prismelabs/prismeanalytics/internal/services/ipgeolocator"
 	"github.com/prismelabs/prismeanalytics/internal/services/sessions"
 	"github.com/prismelabs/prismeanalytics/internal/services/sourceregistry"
 	"github.com/prismelabs/prismeanalytics/internal/services/uaparser"
@@ -31,6 +32,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		handlers.ProvidePostEventsPageViews,
 		handlers.ProvidePostSignIn,
 		handlers.ProvidePostSignUp,
+		ipgeolocator.ProvideMmdbService,
 		middlewares.ProvideAccessLog,
 		middlewares.ProvideEventsCors,
 		middlewares.ProvideEventsRateLimiter,

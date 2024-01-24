@@ -77,7 +77,7 @@ $(GENENV_FILE):
 
 .PHONY: test/unit
 test/unit: codegen
-	go test -v ./...
+	go test -v -bench=./... ./...
 
 .PHONY: test/e2e
 test/e2e:

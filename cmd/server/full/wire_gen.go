@@ -14,6 +14,7 @@ import (
 	"github.com/prismelabs/prismeanalytics/internal/postgres"
 	"github.com/prismelabs/prismeanalytics/internal/services/auth"
 	"github.com/prismelabs/prismeanalytics/internal/services/eventstore"
+	"github.com/prismelabs/prismeanalytics/internal/services/ipgeolocator"
 	"github.com/prismelabs/prismeanalytics/internal/services/sessions"
 	"github.com/prismelabs/prismeanalytics/internal/services/sourceregistry"
 	"github.com/prismelabs/prismeanalytics/internal/services/uaparser"
@@ -43,7 +44,8 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	service := eventstore.ProvideClickhouseService(ch, logLogger)
 	sourceregistryService := sourceregistry.ProvideEnvVarService(logLogger)
 	uaparserService := uaparser.ProvideService()
-	postPageViewEvent := handlers.ProvidePostEventsPageViews(service, sourceregistryService, uaparserService)
+	ipgeolocatorService := ipgeolocator.ProvideMmdbService(logLogger)
+	postPageViewEvent := handlers.ProvidePostEventsPageViews(service, sourceregistryService, uaparserService, ipgeolocatorService)
 	configPostgres := wired.ProvidePostgresConfig(logger)
 	pg := postgres.ProvidePg(logLogger, configPostgres)
 	usersService := users.ProvideService(pg)

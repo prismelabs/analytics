@@ -57,7 +57,7 @@ func batchPageViewLoop(logger log.Logger,
 		if batch == nil {
 			batch, err = conn.PrepareBatch(
 				context.Background(),
-				"INSERT INTO events_pageviews VALUES ($1, $2, $3, $4, $5, $6; $7)",
+				"INSERT INTO events_pageviews VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
 			)
 			if err != nil {
 				logger.Err(err).Msg("failed to prepare batch")
@@ -77,6 +77,7 @@ func batchPageViewLoop(logger log.Logger,
 			ev.Client.BrowserFamily,
 			ev.Client.Device,
 			ev.ReferrerDomain,
+			ev.CountryCode,
 		)
 		if err != nil {
 			logger.Err(err).Msg("failed to append to pageview batch")

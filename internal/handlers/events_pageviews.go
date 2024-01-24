@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/prismeanalytics/internal/event"
 	"github.com/prismelabs/prismeanalytics/internal/services/eventstore"
+	"github.com/prismelabs/prismeanalytics/internal/services/ipgeolocator"
 	"github.com/prismelabs/prismeanalytics/internal/services/sourceregistry"
 	"github.com/prismelabs/prismeanalytics/internal/services/uaparser"
 )
@@ -18,6 +19,7 @@ func ProvidePostEventsPageViews(
 	eventStore eventstore.Service,
 	sourceRegistry sourceregistry.Service,
 	uaParserService uaparser.Service,
+	ipgeolocatorService ipgeolocator.Service,
 ) PostPageViewEvent {
 	return func(c *fiber.Ctx) error {
 		// Referrer of the POST request, that is the viewed page.
@@ -34,8 +36,11 @@ func ProvidePostEventsPageViews(
 		// Parse user agent.
 		cli := uaParserService.ParseUserAgent(string(c.Request().Header.UserAgent()))
 
+		// Find country code for given IP.
+		countryCode := ipgeolocatorService.FindCountryCodeForIP(c.IP())
+
 		// Create pageview.
-		pageview, err := event.NewPageView(pageUrl, cli, referrer)
+		pageview, err := event.NewPageView(pageUrl, cli, referrer, countryCode)
 		if err != nil {
 			c.Response().SetStatusCode(fiber.StatusBadRequest)
 			return fmt.Errorf("invalid pageview event: %w", err)

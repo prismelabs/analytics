@@ -12,6 +12,7 @@ import (
 	"github.com/prismelabs/prismeanalytics/internal/handlers"
 	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 	"github.com/prismelabs/prismeanalytics/internal/services/eventstore"
+	"github.com/prismelabs/prismeanalytics/internal/services/ipgeolocator"
 	"github.com/prismelabs/prismeanalytics/internal/services/sourceregistry"
 	"github.com/prismelabs/prismeanalytics/internal/services/uaparser"
 )
@@ -34,7 +35,8 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	service := eventstore.ProvideClickhouseService(ch, logLogger)
 	sourceregistryService := sourceregistry.ProvideEnvVarService(logLogger)
 	uaparserService := uaparser.ProvideService()
-	postPageViewEvent := handlers.ProvidePostEventsPageViews(service, sourceregistryService, uaparserService)
+	ipgeolocatorService := ipgeolocator.ProvideMmdbService(logLogger)
+	postPageViewEvent := handlers.ProvidePostEventsPageViews(service, sourceregistryService, uaparserService, ipgeolocatorService)
 	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, postPageViewEvent)
 	wiredApp := wired.ProvideApp(server, app, logLogger)
 	return wiredApp

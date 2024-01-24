@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { PRISME_PAGEVIEWS_URL, TIMESTAMP_REGEX } from '../const'
+import { COUNTRY_CODE_REGEX, PRISME_PAGEVIEWS_URL, TIMESTAMP_REGEX } from '../const'
 
 const seed = new Date().getTime()
 console.log('faker seed', seed)
@@ -77,7 +77,8 @@ test('valid URL with registered domain in X-Prisme-Referrer header is accepted',
     operating_system: 'Other',
     browser_family: 'Other',
     device: 'Other',
-    referrer_domain: 'www.example.com'
+    referrer_domain: 'www.example.com',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX)
   })
 })
 
@@ -100,7 +101,9 @@ test('valid URL with registered domain in Referer header is accepted', async () 
     path: '/another/foo',
     operating_system: 'Other',
     browser_family: 'Other',
-    device: 'Other'
+    device: 'Other',
+    referrer_domain: 'www.example.com',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX)
   })
 })
 
@@ -125,7 +128,8 @@ test('valid pageview with Windows + Chrome user agent', async () => {
     operating_system: 'Windows',
     browser_family: 'Chrome',
     device: 'Other',
-    referrer_domain: 'www.example.com'
+    referrer_domain: 'www.example.com',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX)
   })
 })
 
@@ -148,7 +152,32 @@ test('valid pageview without X-Prisme-Document-Referrer', async () => {
     operating_system: 'Other',
     browser_family: 'Other',
     device: 'Other',
-    referrer_domain: 'direct'
+    referrer_domain: 'direct',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX)
+  })
+})
+
+test('valid pageview with US IP address', async () => {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers: {
+      'X-Forwarded-For': '8.8.8.8', // Google public DNS
+      Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux'
+    }
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestPageview()
+
+  expect(data).toMatchObject({
+    timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+    domain: 'foo.mywebsite.localhost',
+    path: '/another/foo',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: 'US'
   })
 })
 

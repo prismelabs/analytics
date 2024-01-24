@@ -10,30 +10,32 @@ import (
 	"github.com/prismelabs/prismeanalytics/internal/handlers"
 	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 	"github.com/prismelabs/prismeanalytics/internal/services/eventstore"
+	"github.com/prismelabs/prismeanalytics/internal/services/ipgeolocator"
 	"github.com/prismelabs/prismeanalytics/internal/services/sourceregistry"
 	"github.com/prismelabs/prismeanalytics/internal/services/uaparser"
 )
 
 func Initialize(logger wired.BootstrapLogger) wired.App {
 	wire.Build(
-		wired.ProvideServerConfig,
-		wired.ProvideClickhouseConfig,
-		wired.ProvideLogger,
 		ProvideFiber,
-		wired.ProvideApp,
-		wired.ProvideFiberViewsEngine, // not used.
-		wired.ProvideMinimalFiber,
-		middlewares.ProvideLogger,
-		middlewares.ProvideStatic,
+		clickhouse.ProvideCh,
+		eventstore.ProvideClickhouseService,
+		handlers.ProvidePostEventsPageViews,
+		ipgeolocator.ProvideMmdbService,
 		middlewares.ProvideAccessLog,
-		middlewares.ProvideRequestId,
 		middlewares.ProvideEventsCors,
 		middlewares.ProvideEventsRateLimiter,
-		handlers.ProvidePostEventsPageViews,
-		eventstore.ProvideClickhouseService,
+		middlewares.ProvideLogger,
+		middlewares.ProvideRequestId,
+		middlewares.ProvideStatic,
 		sourceregistry.ProvideEnvVarService,
-		clickhouse.ProvideCh,
 		uaparser.ProvideService,
+		wired.ProvideApp,
+		wired.ProvideClickhouseConfig,
+		wired.ProvideFiberViewsEngine, // not used.
+		wired.ProvideLogger,
+		wired.ProvideMinimalFiber,
+		wired.ProvideServerConfig,
 	)
 	return wired.App{}
 }
