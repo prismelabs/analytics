@@ -82,13 +82,27 @@ func batchPageViewLoop(logger log.Logger,
 		}
 
 		if uint64(batch.Rows()) >= maxBatchSize || time.Since(batchCreationDate) > 3*time.Second {
-			err := batch.Send()
-			if err != nil {
-				logger.Err(err).Msg("failed to send pageview batch")
-			} else {
-				logger.Debug().Msg("pageviews batch successfully sent")
-			}
+			go sendBatch(logger, batch)
 			batch = nil
 		}
+	}
+}
+
+func sendBatch(logger log.Logger, batch driver.Batch) {
+	// Retry if an error occurred. This can happen on clickhouse cloud if instance
+	// goes to idle state.
+	var err error
+	for i := 0; i < 5; i++ {
+		err = batch.Send()
+		if err != nil {
+			time.Sleep(time.Duration(i) * time.Second)
+		} else {
+			logger.Debug().Msg("pageviews batch successfully sent")
+			break
+		}
+	}
+
+	if err != nil {
+		logger.Err(err).Msg("failed to send pageview batch")
 	}
 }
