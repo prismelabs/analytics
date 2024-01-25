@@ -13,6 +13,8 @@
 
 # :gem: `prismeanalytics` - An Open Source, privacy-focused and progressive analytics service.
 
+![grafana dashboard](.github/images/builtin-dashboard.jpg)
+
 ## Configuration
 
 Prisme Analytics server comes with different mode:
