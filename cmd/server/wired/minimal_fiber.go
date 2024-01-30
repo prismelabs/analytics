@@ -32,7 +32,7 @@ func ProvideMinimalFiber(
 	}
 	if cfg.TrustProxy {
 		fiberCfg.EnableIPValidation = false
-		fiberCfg.ProxyHeader = fiber.HeaderXForwardedFor
+		fiberCfg.ProxyHeader = cfg.ProxyHeader
 	} else {
 		fiberCfg.EnableIPValidation = true
 		fiberCfg.ProxyHeader = ""

@@ -31,6 +31,7 @@ Both server use environment variables for configuration.
 | `PRISME_DEBUG`| `false`       | Sets log level to debug. |
 | `PRISME_PORT`| `80`           | Web server listening port. |
 | `PRISME_TRUST_PROXY`| `false` | Whether `X-Forwarded-For`, `X-Request-Id` and other proxy related headers should be trusted. |
+| `PRISME_PROXY_HEADER`| `X-Forwarded-For` | Proxy header to use to determine client IP (only if TRUST_PROXY is `true`). |
 | `PRISME_POSTGRES_URL`| **required** | Postgres connection string. |
 | `PRISME_CLICKHOUSE_TLS`| `false` | Use a TLS connection for clickhouse. |
 | `PRISME_CLICKHOUSE_HOSTPORT`| **required** | A valid `<host>:<port>` string pointing to a clickhouse instance. |
@@ -49,6 +50,7 @@ Both server use environment variables for configuration.
 | `PRISME_DEBUG`| `false`       | Sets log level to debug. |
 | `PRISME_PORT`| `80`           | Web server listening port. |
 | `PRISME_TRUST_PROXY`| `false` | Whether `X-Forwarded-For`, `X-Request-Id` and other proxy related headers should be trusted. |
+| `PRISME_PROXY_HEADER`| `X-Forwarded-For` | Proxy header to use to determine client IP (only if TRUST_PROXY is `true`). |
 | `PRISME_CLICKHOUSE_TLS`| `false` | Use a TLS connection for clickhouse. |
 | `PRISME_CLICKHOUSE_HOSTPORT`| **required** | A valid `<host>:<port>` string pointing to a clickhouse instance. |
 | `PRISME_CLICKHOUSE_DB`| `prisme` | Clickhouse database to use. |
