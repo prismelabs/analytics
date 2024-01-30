@@ -8,7 +8,7 @@ export COMPOSE_PROJECT_NAME := prisme-bun-untrusted-proxy
 start:
 	source $(CURDIR)/prisme.env && \
 	$(DOCKER_COMPOSE) \
-		-f $(repository_root)/docker-compose.default.yml \
+		-f ../docker-compose.yml \
 		-f ./docker-compose.env.yml \
 		up --wait -d
 
@@ -23,7 +23,7 @@ test:
 .PHONY: clean
 clean:
 	$(DOCKER_COMPOSE) \
-		-f $(repository_root)/docker-compose.default.yml \
+		-f ../docker-compose.yml \
 		-f ./docker-compose.env.yml \
 		-f ./docker-compose.test.yml \
 		down --volumes --remove-orphans
