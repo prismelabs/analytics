@@ -157,6 +157,30 @@ test('valid pageview without X-Prisme-Document-Referrer', async () => {
   })
 })
 
+test('valid pageview without trailing slash in referrer', async () => {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers: {
+      'X-Forwarded-For': faker.internet.ip(),
+      Referer: 'http://foo.mywebsite.localhost' // No / after localhost
+    }
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestPageview()
+
+  expect(data).toMatchObject({
+    timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+    domain: 'foo.mywebsite.localhost',
+    path: '/', // path contains /
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: 'US'
+  })
+})
+
 test('valid pageview with US IP address', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
