@@ -22,6 +22,8 @@ jobs:
         run: nix develop --command make lint
       - name: Unit tests
         run: nix develop --command make test/unit
+      - name: Integration tests
+        run: nix develop --command make test/integ
       - name: Docker build
         run: REMOVE_RESULT=0 nix develop --command make docker/build
       - name: End to end tests

@@ -77,7 +77,18 @@ $(GENENV_FILE):
 
 .PHONY: test/unit
 test/unit: codegen
-	go test -v -bench=./... ./...
+	go test -v -short -bench=./... ./...
+
+.PHONY: test/integ
+test/integ: .env
+	source ./.env && go build ./cmd/server
+	$(DOCKER_COMPOSE) \
+		-f ./docker-compose.default.yml \
+		up --wait
+	source ./.env && go test -v -run TestInteg ./...
+	$(DOCKER_COMPOSE) \
+		-f ./docker-compose.default.yml \
+		down --volumes --remove-orphans
 
 .PHONY: test/e2e
 test/e2e:
