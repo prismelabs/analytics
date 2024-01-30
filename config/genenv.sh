@@ -25,3 +25,8 @@ setenv PRISME_CLICKHOUSE_PASSWORD "password"
 
 # Source registry options.
 setenv PRISME_SOURCE_REGISTRY_SOURCES "localhost,mywebsite.localhost,foo.mywebsite.localhost"
+
+# Grafana related options.
+setenv PRISME_GRAFANA_URL "http://grafana.localhost:3000"
+setenv PRISME_GRAFANA_USER "admin"
+setenv PRISME_GRAFANA_PASSWORD "admin"
