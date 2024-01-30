@@ -36,10 +36,15 @@ func NewPageView(pvUrl *url.URL,
 		return PageView{}, err
 	}
 
+	path := pvUrl.Path
+	if path == "" {
+		path = "/"
+	}
+
 	return PageView{
 		Timestamp:      time.Now(),
 		DomainName:     domain,
-		PathName:       pvUrl.Path,
+		PathName:       path,
 		Client:         cli,
 		ReferrerDomain: referrerDomain,
 		CountryCode:    countryCode,
