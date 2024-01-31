@@ -10,7 +10,7 @@ faker.seed(seed)
 
 test('GET request instead of POST request', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL)
-  expect(response.status).toBe(404)
+  expect(response.status).toBe(405)
 })
 
 test('invalid URL in X-Prisme-Referrer header', async () => {

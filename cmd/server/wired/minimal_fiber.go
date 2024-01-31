@@ -13,7 +13,6 @@ type MinimalFiber *fiber.App
 // with no route.
 func ProvideMinimalFiber(
 	cfg config.Server,
-	viewsEngine fiber.Views,
 	loggerMiddleware middlewares.Logger,
 	accessLogMiddleware middlewares.AccessLog,
 	requestIdMiddleware middlewares.RequestId,
@@ -29,8 +28,6 @@ func ProvideMinimalFiber(
 			// Errors are handled manually by a middleware.
 			return nil
 		},
-		Views:       viewsEngine,
-		ViewsLayout: "layouts/empty",
 	}
 	if cfg.TrustProxy {
 		fiberCfg.EnableIPValidation = false

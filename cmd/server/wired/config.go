@@ -16,17 +16,6 @@ func ProvideClickhouseConfig(bootstrapLogger BootstrapLogger) config.Clickhouse 
 	return cfg
 }
 
-// ProvidePostgresConfig is a wire provider for config.Postgres.
-func ProvidePostgresConfig(bootstrapLogger BootstrapLogger) config.Postgres {
-	logger := log.Logger(bootstrapLogger)
-
-	logger.Info().Msg("loading postgres configuration...")
-	cfg := config.PostgresFromEnv()
-	logger.Info().Any("config", cfg).Msg("postgres configuration successfully loaded.")
-
-	return cfg
-}
-
 // ProvideServerConfig is a wire provider for config.Server.
 func ProvideServerConfig(bootstrapLogger BootstrapLogger) config.Server {
 	logger := log.Logger(bootstrapLogger)
