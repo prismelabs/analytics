@@ -73,6 +73,31 @@ func TestParseUintEnvOrDefault(t *testing.T) {
 	})
 }
 
+func TestParseIntEnvOrDefault(t *testing.T) {
+	os.Clearenv()
+	t.Run("UndefinedVar", func(t *testing.T) {
+		expected := int64(42)
+		actual := ParseIntEnvOrDefault("MY_ENV_VAR", expected, 64)
+
+		require.Equal(t, expected, actual)
+	})
+
+	os.Clearenv()
+	t.Run("DefinedVar/NaN", func(t *testing.T) {
+		os.Setenv("MY_ENV_VAR", "NaN")
+		require.Panics(t, func() {
+			ParseIntEnvOrDefault("MY_ENV_VAR", 42, 64)
+		})
+	})
+
+	os.Clearenv()
+	t.Run("DefinedVar/ValidUint", func(t *testing.T) {
+		os.Setenv("MY_ENV_VAR", "16")
+		actual := ParseIntEnvOrDefault("MY_ENV_VAR", 42, 64)
+		require.Equal(t, int64(16), actual)
+	})
+}
+
 func TestMustParseUrlEnv(t *testing.T) {
 	os.Clearenv()
 	t.Run("UndefinedVar", func(t *testing.T) {

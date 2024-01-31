@@ -49,6 +49,23 @@ func ParseUintEnvOrDefault(name string, defaultValue uint64, bitSize int) uint64
 	return defaultValue
 }
 
+// ParseIntEnvOrDefault reads environment variable with the given name and parses it
+// as an signed integer.
+// If variable is not set, defaultValue is returned.
+// If variable value is not a valid signed integer, this function panics.
+func ParseIntEnvOrDefault(name string, defaultValue int64, bitSize int) int64 {
+	if env, envDefined := os.LookupEnv(name); envDefined {
+		value, err := strconv.ParseInt(env, 10, bitSize)
+		if err != nil {
+			panic(fmt.Errorf("%v environment is not a valid int%d", name, bitSize))
+		}
+
+		return value
+	}
+
+	return defaultValue
+}
+
 // MustParseUrlEnv reads and environment variable with the given name and
 // parses it as an URL.
 // If variable is not set, this function panics.

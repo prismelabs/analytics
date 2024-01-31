@@ -7,6 +7,7 @@ type Grafana struct {
 	Url      string
 	User     secret.Secret[string]
 	Password secret.Secret[string]
+	OrgId    int64
 }
 
 // GrafanaFromEnv loads grafana related options from environment variables.
@@ -16,5 +17,6 @@ func GrafanaFromEnv() Grafana {
 		Url:      MustGetEnv("PRISME_GRAFANA_URL"),
 		User:     secret.New(MustGetEnv("PRISME_GRAFANA_USER")),
 		Password: secret.New(MustGetEnv("PRISME_GRAFANA_PASSWORD")),
+		OrgId:    ParseIntEnvOrDefault("PRISME_GRAFANA_ORG_ID", 1, 64),
 	}
 }
