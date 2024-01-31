@@ -39,7 +39,8 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	accessLog := middlewares.ProvideAccessLog(server, logLogger)
 	requestId := middlewares.ProvideRequestId(server)
 	static := middlewares.ProvideStatic(server)
-	minimalFiber := wired.ProvideMinimalFiber(server, views, middlewaresLogger, accessLog, requestId, static)
+	healhCheck := handlers.ProvideHealthCheck()
+	minimalFiber := wired.ProvideMinimalFiber(server, views, middlewaresLogger, accessLog, requestId, static, healhCheck)
 	notFound := handlers.ProvideNotFound()
 	configClickhouse := wired.ProvideClickhouseConfig(logger)
 	ch := clickhouse.ProvideCh(logLogger, configClickhouse)
@@ -60,7 +61,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	configGrafana := wired.ProvideGrafanaConfig(logger)
 	client := grafana.ProvideClient(configGrafana)
 	grafanaService := grafana2.ProvideService(client, configClickhouse)
-	setup := ProvideSetup(logLogger, grafanaService)
+	setup := ProvideSetup(logLogger, client, grafanaService)
 	wiredApp := wired.ProvideApp(server, app, logLogger, setup)
 	return wiredApp
 }

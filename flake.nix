@@ -62,9 +62,9 @@
 
               prisme-healthcheck = pkgs.writeShellApplication {
                 name = "prisme-healthcheck";
-                runtimeInputs = with pkgs; [ bash wget ];
+                runtimeInputs = with pkgs; [ wget ];
                 text = ''
-                  wget --no-verbose --tries=1 --spider "http://localhost:''${PORT:-8000}/health_check" || exit 1
+                  wget --no-verbose --tries=1 --spider "http://localhost:''${PRISME_PORT:-80}/api/v1/healthcheck" || exit 1
                 '';
               };
             };

@@ -3,6 +3,7 @@ package wired
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/prismeanalytics/internal/config"
+	"github.com/prismelabs/prismeanalytics/internal/handlers"
 	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 )
 
@@ -17,6 +18,7 @@ func ProvideMinimalFiber(
 	accessLogMiddleware middlewares.AccessLog,
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
+	healthcheckHandler handlers.HealhCheck,
 ) MinimalFiber {
 	fiberCfg := fiber.Config{
 		ServerHeader:          "prisme",
@@ -45,6 +47,8 @@ func ProvideMinimalFiber(
 	app.Use(fiber.Handler(loggerMiddleware))
 
 	app.Use("/static", fiber.Handler(staticMiddleware))
+
+	app.Use("/api/v1/healthcheck", fiber.Handler(healthcheckHandler))
 
 	return app
 }
