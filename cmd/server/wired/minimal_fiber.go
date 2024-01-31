@@ -12,12 +12,13 @@ type MinimalFiber *fiber.App
 // ProvideMinimalFiber is a wire provider for a minimally configured fiber.App
 // with no route.
 func ProvideMinimalFiber(
-	cfg config.Server,
-	loggerMiddleware middlewares.Logger,
 	accessLogMiddleware middlewares.AccessLog,
+	cfg config.Server,
+	errorHandlerMiddleware middlewares.ErrorHandler,
+	healthcheckHandler handlers.HealhCheck,
+	loggerMiddleware middlewares.Logger,
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
-	healthcheckHandler handlers.HealhCheck,
 ) MinimalFiber {
 	fiberCfg := fiber.Config{
 		ServerHeader:          "prisme",
@@ -25,7 +26,8 @@ func ProvideMinimalFiber(
 		AppName:               "Prisme Analytics",
 		DisableStartupMessage: true,
 		ErrorHandler: func(_ *fiber.Ctx, _ error) error {
-			// Errors are handled manually by a middleware.
+			// Errors are handled by errorHandlerMiddleware so access log
+			// contains right status code.
 			return nil
 		},
 	}
@@ -42,6 +44,7 @@ func ProvideMinimalFiber(
 	app.Use(fiber.Handler(requestIdMiddleware))
 	app.Use(fiber.Handler(accessLogMiddleware))
 	app.Use(fiber.Handler(loggerMiddleware))
+	app.Use(fiber.Handler(errorHandlerMiddleware))
 
 	app.Use("/static", fiber.Handler(staticMiddleware))
 
