@@ -1,5 +1,5 @@
 .PHONY: all
-all: setup .WAIT all/default all/events all/trusted-proxy all/untrusted-proxy
+all: setup .WAIT all/default all/events all/trusted-proxy all/trusted-proxy-custom-header all/untrusted-proxy
 	@true
 
 all/%: start/% .WAIT test/% .WAIT clean/%
