@@ -81,7 +81,6 @@ test/unit: codegen
 
 .PHONY: test/integ
 test/integ: .env
-	source ./.env && go build ./cmd/server
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.default.yml \
 		up --wait

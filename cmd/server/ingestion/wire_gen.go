@@ -38,6 +38,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(logLogger)
 	postPageViewEvent := handlers.ProvidePostEventsPageViews(service, sourceregistryService, uaparserService, ipgeolocatorService)
 	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, postPageViewEvent)
-	wiredApp := wired.ProvideApp(server, app, logLogger)
+	setup := wired.ProvideSetup()
+	wiredApp := wired.ProvideApp(server, app, logLogger, setup)
 	return wiredApp
 }

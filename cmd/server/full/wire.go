@@ -7,11 +7,13 @@ import (
 	"github.com/google/wire"
 	"github.com/prismelabs/prismeanalytics/cmd/server/wired"
 	"github.com/prismelabs/prismeanalytics/internal/clickhouse"
+	grafanaCli "github.com/prismelabs/prismeanalytics/internal/grafana"
 	"github.com/prismelabs/prismeanalytics/internal/handlers"
 	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 	"github.com/prismelabs/prismeanalytics/internal/postgres"
 	"github.com/prismelabs/prismeanalytics/internal/services/auth"
 	"github.com/prismelabs/prismeanalytics/internal/services/eventstore"
+	"github.com/prismelabs/prismeanalytics/internal/services/grafana"
 	"github.com/prismelabs/prismeanalytics/internal/services/ipgeolocator"
 	"github.com/prismelabs/prismeanalytics/internal/services/sessions"
 	"github.com/prismelabs/prismeanalytics/internal/services/sourceregistry"
@@ -22,9 +24,12 @@ import (
 func Initialize(logger wired.BootstrapLogger) wired.App {
 	wire.Build(
 		ProvideFiber,
+		ProvideSetup,
 		auth.ProvideService,
 		clickhouse.ProvideCh,
 		eventstore.ProvideClickhouseService,
+		grafana.ProvideService,
+		grafanaCli.ProvideClient,
 		handlers.ProvideGetIndex,
 		handlers.ProvideGetSignIn,
 		handlers.ProvideGetSignUp,
@@ -49,6 +54,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		wired.ProvideApp,
 		wired.ProvideClickhouseConfig,
 		wired.ProvideFiberViewsEngine,
+		wired.ProvideGrafanaConfig,
 		wired.ProvideLogger,
 		wired.ProvideMinimalFiber,
 		wired.ProvidePostgresConfig,

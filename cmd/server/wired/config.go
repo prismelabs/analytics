@@ -37,3 +37,14 @@ func ProvideServerConfig(bootstrapLogger BootstrapLogger) config.Server {
 
 	return cfg
 }
+
+// ProvideGrafanaConfig is a wire provider for config.Server.
+func ProvideGrafanaConfig(bootstrapLogger BootstrapLogger) config.Grafana {
+	logger := log.Logger(bootstrapLogger)
+
+	logger.Info().Msg("loading grafana configuration...")
+	cfg := config.GrafanaFromEnv()
+	logger.Info().Any("config", cfg).Msg("grafana configuration successfully loaded.")
+
+	return cfg
+}

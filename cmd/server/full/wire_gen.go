@@ -9,11 +9,13 @@ package full
 import (
 	"github.com/prismelabs/prismeanalytics/cmd/server/wired"
 	"github.com/prismelabs/prismeanalytics/internal/clickhouse"
+	"github.com/prismelabs/prismeanalytics/internal/grafana"
 	"github.com/prismelabs/prismeanalytics/internal/handlers"
 	"github.com/prismelabs/prismeanalytics/internal/middlewares"
 	"github.com/prismelabs/prismeanalytics/internal/postgres"
 	"github.com/prismelabs/prismeanalytics/internal/services/auth"
 	"github.com/prismelabs/prismeanalytics/internal/services/eventstore"
+	grafana2 "github.com/prismelabs/prismeanalytics/internal/services/grafana"
 	"github.com/prismelabs/prismeanalytics/internal/services/ipgeolocator"
 	"github.com/prismelabs/prismeanalytics/internal/services/sessions"
 	"github.com/prismelabs/prismeanalytics/internal/services/sourceregistry"
@@ -55,6 +57,10 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	postSignUp := handlers.ProvidePostSignUp(usersService, sessionsService)
 	withSession := middlewares.ProvideWithSession(sessionsService)
 	app := ProvideFiber(eventsCors, eventsRateLimiter, favicon, getIndex, getSignIn, getSignUp, minimalFiber, notFound, postPageViewEvent, postSignIn, postSignUp, withSession)
-	wiredApp := wired.ProvideApp(server, app, logLogger)
+	configGrafana := wired.ProvideGrafanaConfig(logger)
+	client := grafana.ProvideClient(configGrafana)
+	grafanaService := grafana2.ProvideService(client, configClickhouse)
+	setup := ProvideSetup(logLogger, grafanaService)
+	wiredApp := wired.ProvideApp(server, app, logLogger, setup)
 	return wiredApp
 }
