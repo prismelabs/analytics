@@ -9,6 +9,10 @@
     <a href="https://github.com/prismelabs/analytics/raw/master/LICENSE">
         <img src="https://img.shields.io/github/license/prismelabs/analytics">
     </a>
+    <a href="https://hub.docker.com/r/prismelabs/analytics">
+        <img alt="Docker Image Size (tag)" src="https://img.shields.io/docker/image-size/prismelabs/analytics/latest">
+    </a>
+    <img alt="GitHub go.mod Go version" src="https://img.shields.io/github/go-mod/go-version/prismelabs/analytics">
 </p>
 
 # :gem: `prismeanalytics` - An Open Source, privacy-focused and progressive analytics service.
