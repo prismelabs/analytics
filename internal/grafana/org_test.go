@@ -12,7 +12,7 @@ import (
 
 func TestIntegCreateOrganization(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()
@@ -41,7 +41,7 @@ func TestIntegCreateOrganization(t *testing.T) {
 
 func TestIntegGetOrgByID(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()
@@ -66,7 +66,7 @@ func TestIntegGetOrgByID(t *testing.T) {
 
 func TestIntegFindByName(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()
@@ -93,7 +93,7 @@ func TestIntegFindByName(t *testing.T) {
 
 func TestIntegGetOrCreateOrg(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()
@@ -121,7 +121,7 @@ func TestIntegGetOrCreateOrg(t *testing.T) {
 
 func TestIntegUpdateOrgName(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()
@@ -152,7 +152,7 @@ func TestIntegUpdateOrgName(t *testing.T) {
 
 func TestIntegListOrgUsers(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()

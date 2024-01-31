@@ -13,7 +13,7 @@ import (
 
 func TestIntegCreateFolder(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()
@@ -48,7 +48,7 @@ func TestIntegCreateFolder(t *testing.T) {
 
 func TestIntegListFolders(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()
@@ -160,7 +160,7 @@ func TestIntegListFolders(t *testing.T) {
 
 func TestIntegListFolderPermissins(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()
@@ -259,7 +259,7 @@ func TestIntegListFolderPermissins(t *testing.T) {
 
 func TestIntegSetFolderPermissions(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()
@@ -401,7 +401,7 @@ func TestIntegSetFolderPermissions(t *testing.T) {
 
 func TestIntegDeleteFolder(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()

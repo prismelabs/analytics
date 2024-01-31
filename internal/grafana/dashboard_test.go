@@ -14,7 +14,7 @@ import (
 
 func TestIntegCreateUpdateDashboard(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.SkipNow()
 	}
 
 	cfg := config.GrafanaFromEnv()
