@@ -40,7 +40,6 @@ clean:
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
 		-f ./docker-compose.default.yml \
-		-f ./docker-compose.ingestion.yml \
 		 down --volumes --remove-orphans
 	rm -f .env
 
