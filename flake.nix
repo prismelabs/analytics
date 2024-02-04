@@ -31,7 +31,19 @@
               };
             };
             packages = rec {
-              default = docker;
+              default = pkgs.buildGoModule {
+                pname = "prisme";
+                version = "0.8.0";
+                vendorHash = "sha256-VeWHMpeJPtQxDB+EZMR0enrNrbxk1Q9KIXVLlTbPrOI=";
+
+                src = ./.;
+                # Skip go test.
+                doCheck = false;
+
+                postBuild = ''
+                  mv "$GOPATH/bin/server" "$GOPATH/bin/prisme"
+                '';
+              };
 
               docker = pkgs.dockerTools.buildImage {
                 name = "prismelabs/analytics";
@@ -45,19 +57,9 @@
                 '';
 
                 config = {
-                  Cmd = [ "${self.packages.${system}.prisme-bin}/bin/server" ];
+                  Cmd = [ "${self.packages.${system}.default}/bin/prisme" ];
                   WorkingDir = "/app";
                 };
-              };
-
-              prisme-bin = pkgs.buildGoModule {
-                pname = "prisme";
-                version = "0.1.0";
-                vendorHash = "sha256-VeWHMpeJPtQxDB+EZMR0enrNrbxk1Q9KIXVLlTbPrOI=";
-
-                src = ./.;
-                # Skip go test.
-                doCheck = false;
               };
 
               prisme-healthcheck = pkgs.writeShellApplication {
