@@ -25,5 +25,5 @@ lint/fix:
 setup: node_modules
 
 node_modules:
-	docker run --rm -v $$PWD:/app -w /app docker.io/oven/bun bun install
+	$(DOCKER) run --rm -v $$PWD:/app -w /app docker.io/oven/bun bun install
 

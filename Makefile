@@ -17,7 +17,7 @@ start: .env codegen
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
 		up --wait --force-recreate
-	docker logs -f $(notdir $(CURDIR))-prisme-1 |& bunyan
+	$(DOCKER) logs -f $(notdir $(CURDIR))-prisme-1 |& bunyan
 
 .PHONY: stop
 stop:
@@ -71,7 +71,7 @@ $(GENENV_FILE):
 	@chmod +x $(GENENV_FILE)
 	@echo "$(GENENV_FILE) generated, you can edit it!"
 
-.env: $(GENENV_FILES) $(GENENV_FILES)
+.env: $(GENENV_FILES) $(GENENV_FILE)
 	bash $(GENENV_FILE) > .env; \
 
 .PHONY: test/unit
