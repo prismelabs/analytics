@@ -1,6 +1,6 @@
 package config
 
-import "github.com/prismelabs/prismeanalytics/pkg/secret"
+import "github.com/prismelabs/analytics/pkg/secret"
 
 // Grafana related options.
 type Grafana struct {

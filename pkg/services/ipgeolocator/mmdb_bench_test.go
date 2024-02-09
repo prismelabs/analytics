@@ -7,7 +7,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/prismelabs/prismeanalytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/log"
 )
 
 func randIpv4Str() string {

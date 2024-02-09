@@ -1,8 +1,8 @@
 package wired
 
 import (
-	"github.com/prismelabs/prismeanalytics/pkg/config"
-	"github.com/prismelabs/prismeanalytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/log"
 )
 
 // ProvideClickhouseConfig is a wire provider for config.Clickhouse.

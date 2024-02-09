@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/prismelabs/prismeanalytics/pkg/config"
-	"github.com/prismelabs/prismeanalytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/rs/zerolog"
 )
 

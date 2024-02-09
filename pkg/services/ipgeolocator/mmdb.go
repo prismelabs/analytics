@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/oschwald/maxminddb-golang"
-	"github.com/prismelabs/prismeanalytics/pkg/embedded"
-	"github.com/prismelabs/prismeanalytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/embedded"
+	"github.com/prismelabs/analytics/pkg/log"
 )
 
 // ProvideMmdbService is a wire provider for mmdb based ip geolocator service.

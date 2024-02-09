@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/prismelabs/prismeanalytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/stretchr/testify/require"
 )
 

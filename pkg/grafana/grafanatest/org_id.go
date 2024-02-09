@@ -3,7 +3,7 @@ package grafanatest
 import (
 	"math/rand"
 
-	"github.com/prismelabs/prismeanalytics/pkg/grafana"
+	"github.com/prismelabs/analytics/pkg/grafana"
 )
 
 func NewGrafanaOrgID() grafana.OrgId {

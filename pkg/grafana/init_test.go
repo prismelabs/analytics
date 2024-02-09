@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/prismelabs/prismeanalytics/pkg/config"
-	"github.com/prismelabs/prismeanalytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/log"
 )
 
 func init() {

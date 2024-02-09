@@ -7,14 +7,14 @@
 package ingestion
 
 import (
-	"github.com/prismelabs/prismeanalytics/pkg/clickhouse"
-	"github.com/prismelabs/prismeanalytics/pkg/handlers"
-	"github.com/prismelabs/prismeanalytics/pkg/middlewares"
-	"github.com/prismelabs/prismeanalytics/pkg/services/eventstore"
-	"github.com/prismelabs/prismeanalytics/pkg/services/ipgeolocator"
-	"github.com/prismelabs/prismeanalytics/pkg/services/sourceregistry"
-	"github.com/prismelabs/prismeanalytics/pkg/services/uaparser"
-	"github.com/prismelabs/prismeanalytics/pkg/wired"
+	"github.com/prismelabs/analytics/pkg/clickhouse"
+	"github.com/prismelabs/analytics/pkg/handlers"
+	"github.com/prismelabs/analytics/pkg/middlewares"
+	"github.com/prismelabs/analytics/pkg/services/eventstore"
+	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
+	"github.com/prismelabs/analytics/pkg/services/sourceregistry"
+	"github.com/prismelabs/analytics/pkg/services/uaparser"
+	"github.com/prismelabs/analytics/pkg/wired"
 )
 
 // Injectors from wire.go:

@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	"github.com/prismelabs/prismeanalytics/pkg/clickhouse"
-	"github.com/prismelabs/prismeanalytics/pkg/config"
-	"github.com/prismelabs/prismeanalytics/pkg/event"
-	"github.com/prismelabs/prismeanalytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/clickhouse"
+	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/log"
 )
 
 // ClickhouseService define a clickhouse based event storage service.

@@ -4,9 +4,9 @@ import (
 	"io"
 	"testing"
 
-	"github.com/prismelabs/prismeanalytics/pkg/config"
-	"github.com/prismelabs/prismeanalytics/pkg/log"
-	"github.com/prismelabs/prismeanalytics/pkg/secret"
+	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/secret"
 	"github.com/stretchr/testify/require"
 )
 

@@ -3,7 +3,7 @@ package eventstore
 import (
 	"context"
 
-	"github.com/prismelabs/prismeanalytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/event"
 )
 
 // Service define an event storage service.

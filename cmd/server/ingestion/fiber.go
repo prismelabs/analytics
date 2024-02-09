@@ -2,9 +2,9 @@ package ingestion
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/prismelabs/prismeanalytics/pkg/handlers"
-	"github.com/prismelabs/prismeanalytics/pkg/middlewares"
-	"github.com/prismelabs/prismeanalytics/pkg/wired"
+	"github.com/prismelabs/analytics/pkg/handlers"
+	"github.com/prismelabs/analytics/pkg/middlewares"
+	"github.com/prismelabs/analytics/pkg/wired"
 )
 
 // ProvideFiber is a wire provider for fiber.App.

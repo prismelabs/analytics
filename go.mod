@@ -1,4 +1,4 @@
-module github.com/prismelabs/prismeanalytics
+module github.com/prismelabs/analytics
 
 go 1.20
 

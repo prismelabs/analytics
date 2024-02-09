@@ -5,11 +5,11 @@ import (
 	"net/url"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/prismelabs/prismeanalytics/pkg/event"
-	"github.com/prismelabs/prismeanalytics/pkg/services/eventstore"
-	"github.com/prismelabs/prismeanalytics/pkg/services/ipgeolocator"
-	"github.com/prismelabs/prismeanalytics/pkg/services/sourceregistry"
-	"github.com/prismelabs/prismeanalytics/pkg/services/uaparser"
+	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/services/eventstore"
+	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
+	"github.com/prismelabs/analytics/pkg/services/sourceregistry"
+	"github.com/prismelabs/analytics/pkg/services/uaparser"
 )
 
 type PostPageViewEvent fiber.Handler

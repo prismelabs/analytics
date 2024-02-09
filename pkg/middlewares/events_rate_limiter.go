@@ -5,7 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
-	"github.com/prismelabs/prismeanalytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/config"
 )
 
 type EventsRateLimiter fiber.Handler

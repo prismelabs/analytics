@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/prismelabs/prismeanalytics/pkg/secret"
+	"github.com/prismelabs/analytics/pkg/secret"
 )
 
 // Clickhouse connection options.

@@ -6,8 +6,8 @@ import (
 	gomigrate "github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/clickhouse"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
-	"github.com/prismelabs/prismeanalytics/pkg/embedded"
-	"github.com/prismelabs/prismeanalytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/embedded"
+	"github.com/prismelabs/analytics/pkg/log"
 )
 
 // migrate starts migrating a clickhouse instance to the latest version.

@@ -11,9 +11,9 @@ import (
 	"net"
 	"text/template"
 
-	"github.com/prismelabs/prismeanalytics/pkg/config"
-	"github.com/prismelabs/prismeanalytics/pkg/embedded"
-	"github.com/prismelabs/prismeanalytics/pkg/grafana"
+	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/embedded"
+	"github.com/prismelabs/analytics/pkg/grafana"
 )
 
 // Service define a Grafana ressources management service.

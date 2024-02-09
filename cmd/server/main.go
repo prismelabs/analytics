@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/prismelabs/prismeanalytics/cmd/server/full"
-	"github.com/prismelabs/prismeanalytics/cmd/server/ingestion"
-	"github.com/prismelabs/prismeanalytics/pkg/config"
-	"github.com/prismelabs/prismeanalytics/pkg/log"
-	"github.com/prismelabs/prismeanalytics/pkg/wired"
+	"github.com/prismelabs/analytics/cmd/server/full"
+	"github.com/prismelabs/analytics/cmd/server/ingestion"
+	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/wired"
 )
 
 func main() {

@@ -4,8 +4,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/prismelabs/prismeanalytics/pkg/services/ipgeolocator"
-	"github.com/prismelabs/prismeanalytics/pkg/services/uaparser"
+	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
+	"github.com/prismelabs/analytics/pkg/services/uaparser"
 )
 
 // OperatingSystem define client operating system.

@@ -3,7 +3,7 @@ package middlewares
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
-	"github.com/prismelabs/prismeanalytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/config"
 )
 
 type RequestId fiber.Handler

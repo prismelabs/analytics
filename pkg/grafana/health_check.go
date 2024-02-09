@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/prismelabs/prismeanalytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/valyala/fasthttp"
 )
 
