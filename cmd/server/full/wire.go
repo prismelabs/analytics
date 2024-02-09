@@ -6,15 +6,15 @@ package full
 import (
 	"github.com/google/wire"
 	"github.com/prismelabs/prismeanalytics/cmd/server/wired"
-	"github.com/prismelabs/prismeanalytics/internal/clickhouse"
-	grafanaCli "github.com/prismelabs/prismeanalytics/internal/grafana"
-	"github.com/prismelabs/prismeanalytics/internal/handlers"
-	"github.com/prismelabs/prismeanalytics/internal/middlewares"
-	"github.com/prismelabs/prismeanalytics/internal/services/eventstore"
-	"github.com/prismelabs/prismeanalytics/internal/services/grafana"
-	"github.com/prismelabs/prismeanalytics/internal/services/ipgeolocator"
-	"github.com/prismelabs/prismeanalytics/internal/services/sourceregistry"
-	"github.com/prismelabs/prismeanalytics/internal/services/uaparser"
+	"github.com/prismelabs/prismeanalytics/pkg/clickhouse"
+	grafanaCli "github.com/prismelabs/prismeanalytics/pkg/grafana"
+	"github.com/prismelabs/prismeanalytics/pkg/handlers"
+	"github.com/prismelabs/prismeanalytics/pkg/middlewares"
+	"github.com/prismelabs/prismeanalytics/pkg/services/eventstore"
+	"github.com/prismelabs/prismeanalytics/pkg/services/grafana"
+	"github.com/prismelabs/prismeanalytics/pkg/services/ipgeolocator"
+	"github.com/prismelabs/prismeanalytics/pkg/services/sourceregistry"
+	"github.com/prismelabs/prismeanalytics/pkg/services/uaparser"
 )
 
 func Initialize(logger wired.BootstrapLogger) wired.App {

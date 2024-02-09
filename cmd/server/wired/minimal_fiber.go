@@ -2,9 +2,9 @@ package wired
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/prismelabs/prismeanalytics/internal/config"
-	"github.com/prismelabs/prismeanalytics/internal/handlers"
-	"github.com/prismelabs/prismeanalytics/internal/middlewares"
+	"github.com/prismelabs/prismeanalytics/pkg/config"
+	"github.com/prismelabs/prismeanalytics/pkg/handlers"
+	"github.com/prismelabs/prismeanalytics/pkg/middlewares"
 )
 
 type MinimalFiber *fiber.App

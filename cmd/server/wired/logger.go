@@ -3,8 +3,8 @@ package wired
 import (
 	"os"
 
-	"github.com/prismelabs/prismeanalytics/internal/config"
-	"github.com/prismelabs/prismeanalytics/internal/log"
+	"github.com/prismelabs/prismeanalytics/pkg/config"
+	"github.com/prismelabs/prismeanalytics/pkg/log"
 )
 
 type BootstrapLogger log.Logger

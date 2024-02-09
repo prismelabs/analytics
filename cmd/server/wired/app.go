@@ -2,8 +2,8 @@ package wired
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/prismelabs/prismeanalytics/internal/config"
-	"github.com/prismelabs/prismeanalytics/internal/log"
+	"github.com/prismelabs/prismeanalytics/pkg/config"
+	"github.com/prismelabs/prismeanalytics/pkg/log"
 )
 
 type App struct {

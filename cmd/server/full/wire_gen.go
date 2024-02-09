@@ -8,15 +8,15 @@ package full
 
 import (
 	"github.com/prismelabs/prismeanalytics/cmd/server/wired"
-	"github.com/prismelabs/prismeanalytics/internal/clickhouse"
-	"github.com/prismelabs/prismeanalytics/internal/grafana"
-	"github.com/prismelabs/prismeanalytics/internal/handlers"
-	"github.com/prismelabs/prismeanalytics/internal/middlewares"
-	"github.com/prismelabs/prismeanalytics/internal/services/eventstore"
-	grafana2 "github.com/prismelabs/prismeanalytics/internal/services/grafana"
-	"github.com/prismelabs/prismeanalytics/internal/services/ipgeolocator"
-	"github.com/prismelabs/prismeanalytics/internal/services/sourceregistry"
-	"github.com/prismelabs/prismeanalytics/internal/services/uaparser"
+	"github.com/prismelabs/prismeanalytics/pkg/clickhouse"
+	"github.com/prismelabs/prismeanalytics/pkg/grafana"
+	"github.com/prismelabs/prismeanalytics/pkg/handlers"
+	"github.com/prismelabs/prismeanalytics/pkg/middlewares"
+	"github.com/prismelabs/prismeanalytics/pkg/services/eventstore"
+	grafana2 "github.com/prismelabs/prismeanalytics/pkg/services/grafana"
+	"github.com/prismelabs/prismeanalytics/pkg/services/ipgeolocator"
+	"github.com/prismelabs/prismeanalytics/pkg/services/sourceregistry"
+	"github.com/prismelabs/prismeanalytics/pkg/services/uaparser"
 )
 
 // Injectors from wire.go:

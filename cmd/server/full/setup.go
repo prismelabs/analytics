@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/prismelabs/prismeanalytics/cmd/server/wired"
-	grafanaCli "github.com/prismelabs/prismeanalytics/internal/grafana"
-	"github.com/prismelabs/prismeanalytics/internal/log"
-	"github.com/prismelabs/prismeanalytics/internal/services/grafana"
+	grafanaCli "github.com/prismelabs/prismeanalytics/pkg/grafana"
+	"github.com/prismelabs/prismeanalytics/pkg/log"
+	"github.com/prismelabs/prismeanalytics/pkg/services/grafana"
 )
 
 // ProvideSetup is a wire provider that performs setup of full server.
