@@ -7,7 +7,6 @@
 package ingestion
 
 import (
-	"github.com/prismelabs/prismeanalytics/cmd/server/wired"
 	"github.com/prismelabs/prismeanalytics/pkg/clickhouse"
 	"github.com/prismelabs/prismeanalytics/pkg/handlers"
 	"github.com/prismelabs/prismeanalytics/pkg/middlewares"
@@ -15,6 +14,7 @@ import (
 	"github.com/prismelabs/prismeanalytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/prismeanalytics/pkg/services/sourceregistry"
 	"github.com/prismelabs/prismeanalytics/pkg/services/uaparser"
+	"github.com/prismelabs/prismeanalytics/pkg/wired"
 )
 
 // Injectors from wire.go:

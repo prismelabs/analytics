@@ -6,9 +6,9 @@ import (
 
 	"github.com/prismelabs/prismeanalytics/cmd/server/full"
 	"github.com/prismelabs/prismeanalytics/cmd/server/ingestion"
-	"github.com/prismelabs/prismeanalytics/cmd/server/wired"
 	"github.com/prismelabs/prismeanalytics/pkg/config"
 	"github.com/prismelabs/prismeanalytics/pkg/log"
+	"github.com/prismelabs/prismeanalytics/pkg/wired"
 )
 
 func main() {

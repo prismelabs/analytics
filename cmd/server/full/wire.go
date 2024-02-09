@@ -5,7 +5,6 @@ package full
 
 import (
 	"github.com/google/wire"
-	"github.com/prismelabs/prismeanalytics/cmd/server/wired"
 	"github.com/prismelabs/prismeanalytics/pkg/clickhouse"
 	grafanaCli "github.com/prismelabs/prismeanalytics/pkg/grafana"
 	"github.com/prismelabs/prismeanalytics/pkg/handlers"
@@ -15,6 +14,7 @@ import (
 	"github.com/prismelabs/prismeanalytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/prismeanalytics/pkg/services/sourceregistry"
 	"github.com/prismelabs/prismeanalytics/pkg/services/uaparser"
+	"github.com/prismelabs/prismeanalytics/pkg/wired"
 )
 
 func Initialize(logger wired.BootstrapLogger) wired.App {

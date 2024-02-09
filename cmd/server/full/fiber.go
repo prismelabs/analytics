@@ -2,9 +2,9 @@ package full
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/prismelabs/prismeanalytics/cmd/server/wired"
 	"github.com/prismelabs/prismeanalytics/pkg/handlers"
 	"github.com/prismelabs/prismeanalytics/pkg/middlewares"
+	"github.com/prismelabs/prismeanalytics/pkg/wired"
 )
 
 // ProvideFiber is a wire provider for fiber.App.

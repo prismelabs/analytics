@@ -94,7 +94,7 @@ test/e2e:
 
 .PHONY: build
 build:
-	nix build -L .#prisme-bin
+	nix build -L .#default
 
 .PHONY: docker/build
 docker/build:
