@@ -14,8 +14,12 @@ func ProvideErrorHandler() ErrorHandler {
 		err := c.Next()
 
 		var fiberErr *fiber.Error
-		if err != nil && errors.As(err, &fiberErr) {
-			c.Response().SetStatusCode(fiberErr.Code)
+		if err != nil {
+			if errors.As(err, &fiberErr) {
+				c.Response().SetStatusCode(fiberErr.Code)
+			} else if c.Response().StatusCode() == fiber.StatusOK {
+				c.Response().SetStatusCode(fiber.StatusInternalServerError)
+			}
 		}
 
 		return err
