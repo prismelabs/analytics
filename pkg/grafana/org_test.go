@@ -64,7 +64,53 @@ func TestIntegGetOrgByID(t *testing.T) {
 	})
 }
 
-func TestIntegFindByName(t *testing.T) {
+func TestIntegFindOrg(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
+	cfg := config.GrafanaFromEnv()
+	cli := ProvideClient(cfg)
+
+	t.Run("NonExistentOrganization", func(t *testing.T) {
+		orgs, err := cli.FindOrg(context.Background(), "non-existent")
+		require.NoError(t, err)
+		require.Len(t, orgs, 0)
+	})
+	t.Run("ExistentOrganization", func(t *testing.T) {
+		orgName := fmt.Sprintf("findorg-test-%v", rand.Int())
+		_, err := cli.CreateOrg(context.Background(), orgName)
+		require.NoError(t, err)
+
+		t.Run("Literal", func(t *testing.T) {
+			orgs, err := cli.FindOrg(context.Background(), orgName)
+			require.NoError(t, err)
+			require.Len(t, orgs, 1)
+		})
+
+		t.Run("Prefix", func(t *testing.T) {
+			// Grafana automatically add a '%' at end of query.
+			orgs, err := cli.FindOrg(context.Background(), "findorg-test")
+			require.NoError(t, err)
+			require.Len(t, orgs, 1)
+		})
+
+		t.Run("PatternSingle", func(t *testing.T) {
+			pattern := "_" + orgName[1:]
+			orgs, err := cli.FindOrg(context.Background(), pattern)
+			require.NoError(t, err)
+			require.Len(t, orgs, 1)
+		})
+
+		t.Run("PatternMultiple", func(t *testing.T) {
+			orgs, err := cli.FindOrg(context.Background(), "find%-test%")
+			require.NoError(t, err)
+			require.GreaterOrEqual(t, len(orgs), 1)
+		})
+	})
+}
+
+func TestIntegFindOrgByName(t *testing.T) {
 	if testing.Short() {
 		t.SkipNow()
 	}

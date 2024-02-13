@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/valyala/fasthttp"
@@ -18,6 +19,11 @@ var (
 
 // OrgId define a grafana organization id.
 type OrgId int64
+
+type FindOrgResult struct {
+	Id   OrgId  `json:"id"`
+	Name string `json:"name"`
+}
 
 type OrgUser struct {
 	User
@@ -116,6 +122,41 @@ func (c Client) GetOrgByID(ctx context.Context, orgId OrgId) (string, error) {
 	return respBody.Name, nil
 }
 
+// FindOrg retrieves organization id using given query.
+// If it fails an error is returned. An empty slice and a nil error is returned
+// if no orgs was found.
+func (c Client) FindOrg(ctx context.Context, query string) ([]FindOrgResult, error) {
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+
+	req.Header.SetMethod("GET")
+	req.SetRequestURI(fmt.Sprintf("%v/api/orgs?query=%v", c.cfg.Url, url.QueryEscape(query)))
+
+	c.addAuthorizationHeader(req)
+
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+
+	err := c.do(ctx, req, resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query grafana to find an organization by query: %w", err)
+	}
+
+	if resp.StatusCode() == 404 {
+		return nil, ErrGrafanaOrgNotFound
+	} else if resp.StatusCode() != 200 {
+		return nil, fmt.Errorf("failed to find grafana organization by query: %v %v", resp.StatusCode(), string(resp.Body()))
+	}
+
+	respBody := []FindOrgResult{}
+	err = json.Unmarshal(resp.Body(), &respBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse find grafana organization by query response: %w", err)
+	}
+
+	return respBody, nil
+}
+
 // FindOrgByName retrieves organization id using it's name.
 // If it fails an error is returned. ErrGrafanaOrgNotFound is returned
 // if no organization has the given name.
@@ -142,16 +183,13 @@ func (c Client) FindOrgByName(ctx context.Context, name string) (OrgId, error) {
 		return 0, fmt.Errorf("failed to find grafana organization by name: %v %v", resp.StatusCode(), string(resp.Body()))
 	}
 
-	type lookupOrgResp struct {
-		Id OrgId `json:"id"`
-	}
-	respBody := lookupOrgResp{}
-	err = json.Unmarshal(resp.Body(), &respBody)
+	result := FindOrgResult{}
+	err = json.Unmarshal(resp.Body(), &result)
 	if err != nil {
 		return 0, fmt.Errorf("failed to parse find grafana organization by name response: %w", err)
 	}
 
-	return respBody.Id, nil
+	return result.Id, nil
 }
 
 // GetOrCreateOrg retrieve organization id with the given name or create it.
