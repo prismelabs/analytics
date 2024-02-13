@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"net"
 	"text/template"
@@ -104,25 +103,6 @@ func (s service) SetupDatasourceAndDashboards(ctx context.Context, orgId grafana
 		}
 	}
 
-	// Load static home.json dashboard.
-	var homeDashboardJSON map[string]any
-	{
-		// Load Home dashboard JSON.
-		homeDashboardFile, err := s.staticDashboards.Open("grafana_dashboards/home.json")
-		if err != nil {
-			panic(err)
-		}
-		homeDashboardBuf, err := io.ReadAll(homeDashboardFile)
-		if err != nil {
-			panic(err)
-		}
-
-		err = json.Unmarshal(homeDashboardBuf, &homeDashboardJSON)
-		if err != nil {
-			panic(err)
-		}
-	}
-
 	// Setup Built in folder.
 	var folderId grafana.FolderID
 	{
@@ -162,14 +142,6 @@ func (s service) SetupDatasourceAndDashboards(ctx context.Context, orgId grafana
 		_, err := s.cli.CreateUpdateDashboard(ctx, orgId, folderId, generalDashboardJSON, true)
 		if err != nil {
 			return fmt.Errorf("failed to create/update general grafana dashboard: %w", err)
-		}
-	}
-
-	// Setup home dashboard.
-	{
-		_, err := s.cli.CreateUpdateDashboard(ctx, orgId, folderId, homeDashboardJSON, true)
-		if err != nil {
-			return fmt.Errorf("failed to create/update built-in home grafana dashboard: %w", err)
 		}
 	}
 

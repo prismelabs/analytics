@@ -37,8 +37,7 @@ func TestIntegService(t *testing.T) {
 		// Check dashboards were created.
 		dashboards, err := cli.SearchDashboards(ctx, orgId, 100, 0)
 		require.NoError(t, err)
-		require.Len(t, dashboards, 2)
+		require.Len(t, dashboards, 1)
 		require.Equal(t, dashboards[0].Title, "General")
-		require.Equal(t, dashboards[1].Title, "Home")
 	})
 }

@@ -9,9 +9,6 @@ var (
 	ErrGrafanaUserNotFound = errors.New("grafana user not found")
 )
 
-// UserId define a grafana user id.
-type UserId int64
-
 // User define a grafana user.
 type User struct {
 	Id                             UserId    `json:"id"`
@@ -22,4 +19,8 @@ type User struct {
 	IsGrafanaAdminExternallySynced bool      `json:"isGrafanaAdminExternallySynced"`
 	Name                           string    `json:"name"`
 	Email                          string    `json:"email"`
+	OrgId                          OrgId     `json:"orgId"`
 }
+
+// UserId define a grafana user id.
+type UserId int64
