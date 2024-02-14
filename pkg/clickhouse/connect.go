@@ -14,9 +14,9 @@ import (
 	"github.com/prismelabs/analytics/pkg/log"
 )
 
-// connect connects to clickhouse and returns a driver.Conn.
-// This function panics if `maxRetry` connect attempt fails.
-func connect(logger log.Logger, cfg config.Clickhouse, maxRetry int) (conn driver.Conn) {
+// Connect connects to clickhouse and returns a driver.Conn.
+// This function panics if `maxRetry` Connect attempt fails.
+func Connect(logger log.Logger, cfg config.Clickhouse, maxRetry int) (conn driver.Conn) {
 	// Build clickhouse options.
 	var clickHouseTls *tls.Config = nil
 	if cfg.TlsEnabled {

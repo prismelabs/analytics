@@ -18,7 +18,7 @@ func ProvideCh(logger log.Logger, cfg config.Clickhouse, source source.Driver) C
 	migrate(logger, db, source)
 
 	// Connect using native interface.
-	conn := connect(logger, cfg, 5)
+	conn := Connect(logger, cfg, 5)
 
 	return Ch{conn}
 }

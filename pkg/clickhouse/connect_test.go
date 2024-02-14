@@ -23,7 +23,7 @@ func TestClickhouseConnect(t *testing.T) {
 		}
 
 		require.Panics(t, func() {
-			_ = connect(logger, cfg, 1)
+			_ = Connect(logger, cfg, 1)
 		})
 	})
 
