@@ -5,18 +5,12 @@ import (
 
 	gomigrate "github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/clickhouse"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
-	"github.com/prismelabs/analytics/pkg/embedded"
+	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/prismelabs/analytics/pkg/log"
 )
 
 // migrate starts migrating a clickhouse instance to the latest version.
-func migrate(logger log.Logger, db *sql.DB) {
-	source, err := iofs.New(embedded.ChMigrations, "ch_migrations")
-	if err != nil {
-		logger.Panic().Msgf("failed to retrieve clickhouse migration source: %v", err.Error())
-	}
-
+func migrate(logger log.Logger, db *sql.DB, source source.Driver) {
 	driver, err := clickhouse.WithInstance(db, &clickhouse.Config{
 		MigrationsTable:       "migrations",
 		MigrationsTableEngine: "MergeTree",

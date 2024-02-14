@@ -19,6 +19,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	wire.Build(
 		ProvideFiber,
 		clickhouse.ProvideCh,
+		clickhouse.ProvideEmbeddedSourceDriver,
 		eventstore.ProvideClickhouseService,
 		handlers.ProvideHealthCheck,
 		handlers.ProvidePostEventsPageViews,

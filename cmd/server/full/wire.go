@@ -22,6 +22,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		ProvideFiber,
 		ProvideSetup,
 		clickhouse.ProvideCh,
+		clickhouse.ProvideEmbeddedSourceDriver,
 		eventstore.ProvideClickhouseService,
 		grafana.ProvideService,
 		grafanaCli.ProvideClient,
