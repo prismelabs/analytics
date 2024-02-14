@@ -171,7 +171,7 @@ func TestIntegListFolderPermissins(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		perms, err := cli.GetFolderPermissions(context.Background(), orgId, FolderID(uuid.New()))
+		perms, err := cli.GetFolderPermissions(context.Background(), orgId, FolderId(uuid.New()))
 		require.Error(t, err)
 		require.ErrorIs(t, err, ErrGrafanaFolderNotFound)
 		require.Len(t, perms, 0)
@@ -412,7 +412,7 @@ func TestIntegDeleteFolder(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		err = cli.DeleteFolder(context.Background(), orgId, FolderID(uuid.New()))
+		err = cli.DeleteFolder(context.Background(), orgId, FolderId(uuid.New()))
 		require.Error(t, err)
 		require.ErrorIs(t, err, ErrGrafanaFolderNotFound)
 	})

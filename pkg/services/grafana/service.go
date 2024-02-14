@@ -79,18 +79,18 @@ func (s service) SetupDatasourceAndDashboards(ctx context.Context, orgId grafana
 	if err != nil {
 		return fmt.Errorf("failed create/get clickhouse datasource in grafana: %w", err)
 	}
-	dsId := ds.UID
+	dsId := ds.Uid
 
 	// Generate dahsboard.json from template.
 	var generalDashboardJSON map[string]any
 	{
 		type GeneralTemplateData struct {
-			DatasourceClickhouseUID grafana.DatasourceID
+			DatasourceClickhouseUid grafana.DatasourceId
 		}
 
 		buf := bytes.Buffer{}
 		err := s.tmpl.ExecuteTemplate(&buf, "general.json", GeneralTemplateData{
-			DatasourceClickhouseUID: dsId,
+			DatasourceClickhouseUid: dsId,
 		})
 		if err != nil {
 			panic(fmt.Sprintf("failed to execute dashboard template: %v", err.Error()))
@@ -104,7 +104,7 @@ func (s service) SetupDatasourceAndDashboards(ctx context.Context, orgId grafana
 	}
 
 	// Setup Built in folder.
-	var folderId grafana.FolderID
+	var folderId grafana.FolderId
 	{
 		folderName := "Prisme Analytics"
 

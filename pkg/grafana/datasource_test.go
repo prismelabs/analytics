@@ -28,8 +28,8 @@ func TestIntegCreateDatasource(t *testing.T) {
 		ds, err := cli.CreateDatasource(context.Background(), orgId, dsName, "grafana-clickhouse-datasource", false)
 		require.NoError(t, err)
 
-		require.NotEqual(t, DatasourceID{}, ds.UID)
-		ds.UID = DatasourceID{}
+		require.NotEqual(t, DatasourceId{}, ds.Uid)
+		ds.Uid = DatasourceId{}
 
 		require.NotEqual(t, int64(0), ds.Id)
 		ds.Id = 0
@@ -47,7 +47,7 @@ func TestIntegCreateDatasource(t *testing.T) {
 			Type:        "grafana-clickhouse-datasource",
 			TypeLogoUrl: "/public/plugins/grafana-clickhouse-datasource/img/logo.svg",
 			TypeName:    "",
-			UID:         DatasourceID{},
+			Uid:         DatasourceId{},
 			URL:         "",
 			User:        "",
 			Version:     1,
@@ -64,8 +64,8 @@ func TestIntegCreateDatasource(t *testing.T) {
 		ds, err := cli.CreateDatasource(context.Background(), orgId, dsName, "non-existent-datasource", false)
 		require.NoError(t, err)
 
-		require.NotEqual(t, DatasourceID{}, ds.UID)
-		ds.UID = DatasourceID{}
+		require.NotEqual(t, DatasourceId{}, ds.Uid)
+		ds.Uid = DatasourceId{}
 
 		require.NotEqual(t, int64(0), ds.Id)
 		ds.Id = 0
@@ -83,7 +83,7 @@ func TestIntegCreateDatasource(t *testing.T) {
 			Type:        "non-existent-datasource",
 			TypeLogoUrl: "public/img/icn-datasource.svg",
 			TypeName:    "",
-			UID:         DatasourceID{},
+			Uid:         DatasourceId{},
 			URL:         "",
 			User:        "",
 			Version:     1,
@@ -137,7 +137,7 @@ func TestIntegListDatasourcesForCurrentOrg(t *testing.T) {
 		datasources, err := cli.ListDatasources(context.Background(), orgId)
 		require.NoError(t, err)
 		require.Len(t, datasources, 1)
-		require.Equal(t, ds.UID.String(), datasources[0].UID.String())
+		require.Equal(t, ds.Uid.String(), datasources[0].Uid.String())
 	})
 	t.Run("MultipleDatasources", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -161,7 +161,7 @@ func TestIntegListDatasourcesForCurrentOrg(t *testing.T) {
 		for _, expected := range expectedDatasources {
 			found := false
 			for _, actual := range datasources {
-				if actual.UID.String() == expected.UID.String() {
+				if actual.Uid.String() == expected.Uid.String() {
 					found = true
 				}
 			}
@@ -198,7 +198,7 @@ func TestIntegUpdateDatasource(t *testing.T) {
 			Type:        "",
 			TypeLogoUrl: "",
 			TypeName:    "",
-			UID:         [16]byte{},
+			Uid:         [16]byte{},
 			URL:         "",
 			User:        "",
 			Version:     0,
@@ -226,7 +226,7 @@ func TestIntegUpdateDatasource(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, datasources, 1)
 			require.Equal(t, "custom-name", datasources[0].Name)
-			require.Equal(t, ds.UID.String(), datasources[0].UID.String())
+			require.Equal(t, ds.Uid.String(), datasources[0].Uid.String())
 		})
 
 		t.Run("ChangeType", func(t *testing.T) {
@@ -247,7 +247,7 @@ func TestIntegUpdateDatasource(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, datasources, 1)
 			require.Equal(t, "non-existent-datasource", datasources[0].Type)
-			require.Equal(t, ds.UID.String(), datasources[0].UID.String())
+			require.Equal(t, ds.Uid.String(), datasources[0].Uid.String())
 		})
 	})
 }

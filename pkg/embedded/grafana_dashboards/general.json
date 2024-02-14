@@ -37,7 +37,7 @@
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUID }}"
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"description": "",
 			"fieldConfig": {
@@ -129,7 +129,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -160,7 +160,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -197,7 +197,7 @@
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUID }}"
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"description": "",
 			"fieldConfig": {
@@ -289,7 +289,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -320,7 +320,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -370,7 +370,7 @@
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUID }}"
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -455,7 +455,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -494,7 +494,7 @@
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUID }}"
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"description": "",
 			"fieldConfig": {
@@ -575,7 +575,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -661,7 +661,7 @@
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUID }}"
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -715,7 +715,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -758,7 +758,7 @@
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUID }}"
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -815,7 +815,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -858,7 +858,7 @@
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUID }}"
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -982,7 +982,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -1007,7 +1007,7 @@
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUID }}"
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -1064,7 +1064,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -1132,7 +1132,7 @@
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUID }}"
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -1189,7 +1189,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -1242,7 +1242,7 @@
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUID }}"
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -1296,7 +1296,7 @@
 				{
 					"datasource": {
 						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUID }}"
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
 					"editorType": "sql",
 					"format": 1,
@@ -1375,7 +1375,7 @@
 				},
 				"datasource": {
 					"type": "grafana-clickhouse-datasource",
-					"uid": "{{ .DatasourceClickhouseUID }}"
+					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
 				"definition": "SELECT DISTINCT(domain) FROM prisme.events_pageviews\nWHERE $__timeFilter(timestamp)\nAND timestamp >= $__fromTime\nAND timestamp <= $__toTime",
 				"description": "Website domain",
@@ -1404,7 +1404,7 @@
 				},
 				"datasource": {
 					"type": "grafana-clickhouse-datasource",
-					"uid": "{{ .DatasourceClickhouseUID }}"
+					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
 				"definition": "SELECT DISTINCT(path) FROM prisme.events_pageviews\nWHERE $__timeFilter(timestamp)\nAND timestamp >= $__fromTime\nAND timestamp <= $__toTime\nAND domain IN (${domains:sqlstring})",
 				"description": "URL path names",
@@ -1433,7 +1433,7 @@
 				},
 				"datasource": {
 					"type": "grafana-clickhouse-datasource",
-					"uid": "{{ .DatasourceClickhouseUID }}"
+					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
 				"definition": "SELECT DISTINCT(operating_system) FROM prisme.events_pageviews WHERE $__timeFilter(timestamp)\nAND timestamp >= $__fromTime\nAND timestamp <= $__toTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\n\n",
 				"description": "Visitors operating systems",
@@ -1462,7 +1462,7 @@
 				},
 				"datasource": {
 					"type": "grafana-clickhouse-datasource",
-					"uid": "{{ .DatasourceClickhouseUID }}"
+					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
 				"definition": "SELECT DISTINCT(browser_family) FROM prisme.events_pageviews WHERE $__timeFilter(timestamp)\nAND timestamp >= $__fromTime\nAND timestamp <= $__toTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\n",
 				"description": "Visitors browsers",
@@ -1491,7 +1491,7 @@
 				},
 				"datasource": {
 					"type": "grafana-clickhouse-datasource",
-					"uid": "{{ .DatasourceClickhouseUID }}"
+					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
 				"definition": "SELECT DISTINCT(referrer_domain) FROM prisme.events_pageviews\nWHERE $__timeFilter(timestamp)\nAND timestamp >= $__fromTime\nAND timestamp <= $__toTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\n",
 				"hide": 0,
@@ -1519,7 +1519,7 @@
 				},
 				"datasource": {
 					"type": "grafana-clickhouse-datasource",
-					"uid": "{{ .DatasourceClickhouseUID }}"
+					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
 				"definition": "SELECT DISTINCT(country_code) as country_code FROM prisme.events_pageviews\nWHERE $__timeFilter(timestamp)\nAND timestamp >= $__fromTime\nAND timestamp <= $__toTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\n",
 				"hide": 0,

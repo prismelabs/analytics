@@ -25,10 +25,10 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{}, false)
+		dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{}, false)
 		require.Error(t, err)
 		require.Regexp(t, "Dashboard title cannot be empty", err.Error())
-		require.Equal(t, DashboardID{}, dashboardId)
+		require.Equal(t, DashboardId{}, dashboardId)
 	})
 
 	t.Run("NonExistentTitle", func(t *testing.T) {
@@ -36,9 +36,9 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": "Dashboard 1"}, false)
+		dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": "Dashboard 1"}, false)
 		require.NoError(t, err)
-		require.NotEqual(t, DashboardID{}, dashboardId)
+		require.NotEqual(t, DashboardId{}, dashboardId)
 	})
 
 	t.Run("AlreadyExistentTitle", func(t *testing.T) {
@@ -48,22 +48,22 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 			require.NoError(t, err)
 
 			dashboardId, err := cli.CreateUpdateDashboard(
-				context.Background(), orgId, FolderID{},
+				context.Background(), orgId, FolderId{},
 				map[string]any{"title": "Dashboard 1"},
 				false,
 			)
 			require.NoError(t, err)
-			require.NotEqual(t, DashboardID{}, dashboardId)
+			require.NotEqual(t, DashboardId{}, dashboardId)
 
 			// Update.
 			updateDashboardId, err := cli.CreateUpdateDashboard(
-				context.Background(), orgId, FolderID{},
+				context.Background(), orgId, FolderId{},
 				map[string]any{"title": "Dashboard 1 v2", "uid": dashboardId.String()},
 				false,
 			)
 			require.Error(t, err)
 			require.Regexp(t, "The dashboard has been changed by someone else", err.Error())
-			require.Equal(t, DashboardID{}, updateDashboardId)
+			require.Equal(t, DashboardId{}, updateDashboardId)
 		})
 
 		t.Run("WithCorrectVersionField", func(t *testing.T) {
@@ -72,20 +72,20 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 			require.NoError(t, err)
 
 			dashboardId, err := cli.CreateUpdateDashboard(
-				context.Background(), orgId, FolderID{},
+				context.Background(), orgId, FolderId{},
 				map[string]any{"title": "Dashboard 1", "version": 1},
 				false,
 			)
 			require.NoError(t, err)
-			require.NotEqual(t, DashboardID{}, dashboardId)
+			require.NotEqual(t, DashboardId{}, dashboardId)
 
 			// Get version.
-			dashboard, err := cli.GetDashboardByUID(context.Background(), orgId, dashboardId)
+			dashboard, err := cli.GetDashboardByUid(context.Background(), orgId, dashboardId)
 			require.NoError(t, err)
 
 			// Update.
 			updateDashboardId, err := cli.CreateUpdateDashboard(
-				context.Background(), orgId, FolderID{},
+				context.Background(), orgId, FolderId{},
 				map[string]any{"title": "Dashboard 1 v2", "uid": dashboardId.String(), "version": dashboard.Metadata.Version},
 				false,
 			)
@@ -95,19 +95,19 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 			t.Run("SecondUpdate/SameVersion", func(t *testing.T) {
 				// Update again.
 				updateDashboardId, err := cli.CreateUpdateDashboard(
-					context.Background(), orgId, FolderID{},
+					context.Background(), orgId, FolderId{},
 					map[string]any{"title": "Dashboard 1 v2", "uid": dashboardId.String(), "version": dashboard.Metadata.Version},
 					false,
 				)
 				require.Error(t, err)
 				require.Regexp(t, "The dashboard has been changed by someone else", err.Error())
-				require.Equal(t, DashboardID{}, updateDashboardId)
+				require.Equal(t, DashboardId{}, updateDashboardId)
 			})
 
 			t.Run("SecondUpdate/IncrementVersion", func(t *testing.T) {
 				// Update again.
 				updateDashboardId, err := cli.CreateUpdateDashboard(
-					context.Background(), orgId, FolderID{},
+					context.Background(), orgId, FolderId{},
 					map[string]any{"title": "Dashboard 1 v2", "uid": dashboardId.String(), "version": dashboard.Metadata.Version + 1},
 					false,
 				)
@@ -122,22 +122,22 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 			require.NoError(t, err)
 
 			dashboardId, err := cli.CreateUpdateDashboard(
-				context.Background(), orgId, FolderID{},
+				context.Background(), orgId, FolderId{},
 				map[string]any{"title": "Dashboard 1", "version": 1},
 				false,
 			)
 			require.NoError(t, err)
-			require.NotEqual(t, DashboardID{}, dashboardId)
+			require.NotEqual(t, DashboardId{}, dashboardId)
 
 			// Update.
 			updateDashboardId, err := cli.CreateUpdateDashboard(
-				context.Background(), orgId, FolderID{},
+				context.Background(), orgId, FolderId{},
 				map[string]any{"title": "Dashboard 1 v2", "uid": dashboardId.String(), "version": 10},
 				false,
 			)
 			require.Error(t, err)
 			require.Regexp(t, "The dashboard has been changed by someone else", err.Error())
-			require.Equal(t, DashboardID{}, updateDashboardId)
+			require.Equal(t, DashboardId{}, updateDashboardId)
 		})
 	})
 
@@ -147,9 +147,9 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 			orgId, err := cli.CreateOrg(context.Background(), orgName)
 			require.NoError(t, err)
 
-			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": "Dashboard 1"}, true)
+			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": "Dashboard 1"}, true)
 			require.NoError(t, err)
-			require.NotEqual(t, DashboardID{}, dashboardId)
+			require.NotEqual(t, DashboardId{}, dashboardId)
 		})
 
 		t.Run("ExistentDashboard/WithoutVersion/WithUID", func(t *testing.T) {
@@ -157,11 +157,11 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 			orgId, err := cli.CreateOrg(context.Background(), orgName)
 			require.NoError(t, err)
 
-			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": "Dashboard 1"}, true)
+			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": "Dashboard 1"}, true)
 			require.NoError(t, err)
-			require.NotEqual(t, DashboardID{}, dashboardId)
+			require.NotEqual(t, DashboardId{}, dashboardId)
 
-			updateDashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": "Dashboard 1 v2", "uid": dashboardId.String()}, true)
+			updateDashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": "Dashboard 1 v2", "uid": dashboardId.String()}, true)
 			require.NoError(t, err)
 			require.Equal(t, dashboardId, updateDashboardId)
 		})
@@ -171,11 +171,11 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 			orgId, err := cli.CreateOrg(context.Background(), orgName)
 			require.NoError(t, err)
 
-			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": "Dashboard 1"}, true)
+			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": "Dashboard 1"}, true)
 			require.NoError(t, err)
-			require.NotEqual(t, DashboardID{}, dashboardId)
+			require.NotEqual(t, DashboardId{}, dashboardId)
 
-			updateDashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": "Dashboard 1"}, true)
+			updateDashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": "Dashboard 1"}, true)
 			require.NoError(t, err)
 			require.Equal(t, dashboardId, updateDashboardId)
 		})
@@ -195,7 +195,7 @@ func TestIntegGetDashboardByUID(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		dashboard, err := cli.GetDashboardByUID(context.Background(), orgId, DashboardID{})
+		dashboard, err := cli.GetDashboardByUid(context.Background(), orgId, DashboardId{})
 		require.Error(t, err)
 		require.ErrorIs(t, err, ErrGrafanaDashboardNotFound)
 		require.Equal(t, Dashboard{}, dashboard)
@@ -206,10 +206,10 @@ func TestIntegGetDashboardByUID(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		dashboardID, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": "Dashboard 1"}, false)
+		dashboardID, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": "Dashboard 1"}, false)
 		require.NoError(t, err)
 
-		dashboard, err := cli.GetDashboardByUID(context.Background(), orgId, dashboardID)
+		dashboard, err := cli.GetDashboardByUid(context.Background(), orgId, dashboardID)
 		require.NoError(t, err)
 
 		require.IsType(t, float64(0), dashboard.Dashboard["id"])
@@ -218,7 +218,7 @@ func TestIntegGetDashboardByUID(t *testing.T) {
 		require.IsType(t, float64(0), dashboard.Dashboard["version"])
 		delete(dashboard.Dashboard, "version")
 
-		_, err = ParseDashboardID(dashboard.Dashboard["uid"].(string))
+		_, err = ParseDashboardId(dashboard.Dashboard["uid"].(string))
 		require.NoError(t, err)
 		delete(dashboard.Dashboard, "uid")
 
@@ -254,7 +254,7 @@ func TestIntegGetDashboardByUID(t *testing.T) {
 				Expires:                time.Time{},
 				FolderId:               0,
 				FolderTitle:            "General",
-				FolderUid:              FolderID{},
+				FolderUid:              FolderId{},
 				FolderUrl:              "",
 				HasAcl:                 false,
 				IsFolder:               false,
@@ -288,7 +288,7 @@ func TestIntegDeleteDashboard(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		err = cli.DeleteDashboardByUID(context.Background(), orgId, DashboardID(uuid.New()))
+		err = cli.DeleteDashboardByUid(context.Background(), orgId, DashboardId(uuid.New()))
 		require.Error(t, err)
 		require.ErrorIs(t, err, ErrGrafanaDashboardNotFound)
 	})
@@ -298,11 +298,11 @@ func TestIntegDeleteDashboard(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": "Dashboard 1"}, true)
+		dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": "Dashboard 1"}, true)
 		require.NoError(t, err)
-		require.NotEqual(t, DashboardID{}, dashboardId)
+		require.NotEqual(t, DashboardId{}, dashboardId)
 
-		err = cli.DeleteDashboardByUID(context.Background(), orgId, dashboardId)
+		err = cli.DeleteDashboardByUid(context.Background(), orgId, dashboardId)
 		require.NoError(t, err)
 	})
 }
@@ -330,7 +330,7 @@ func TestIntegSearchDashboards(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": "Dashboard 1"}, true)
+		dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": "Dashboard 1"}, true)
 		require.NoError(t, err)
 
 		results, err := cli.SearchDashboards(context.Background(), orgId, 100, 1)
@@ -348,7 +348,7 @@ func TestIntegSearchDashboards(t *testing.T) {
 		var expectedSearchResults []SearchDashboardResult
 		for i := 0; i < 10; i++ {
 			dashboardTitle := fmt.Sprintf("Dashboard %v", i)
-			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": dashboardTitle}, true)
+			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": dashboardTitle}, true)
 			require.NoError(t, err)
 
 			expectedSearchResults = append(expectedSearchResults, SearchDashboardResult{dashboardId, dashboardTitle})
@@ -368,7 +368,7 @@ func TestIntegSearchDashboards(t *testing.T) {
 		var expectedSearchResults []SearchDashboardResult
 		for i := 0; i < 10; i++ {
 			dashboardTitle := fmt.Sprintf("Dashboard %v", i)
-			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": dashboardTitle}, true)
+			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": dashboardTitle}, true)
 			require.NoError(t, err)
 
 			expectedSearchResults = append(expectedSearchResults, SearchDashboardResult{dashboardId, dashboardTitle})
@@ -396,7 +396,7 @@ func TestIntegSearchDashboards(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		_, err = cli.CreateUpdateDashboard(context.Background(), orgId, FolderID{}, map[string]any{"title": "Dashboard 1"}, true)
+		_, err = cli.CreateUpdateDashboard(context.Background(), orgId, FolderId{}, map[string]any{"title": "Dashboard 1"}, true)
 		require.NoError(t, err)
 
 		results, err := cli.SearchDashboards(context.Background(), orgId, 100, 9)

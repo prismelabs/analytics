@@ -17,27 +17,27 @@ var (
 	ErrGrafanaDatasourceNotFound      = errors.New("grafana datasource not found")
 )
 
-// DatasourceID define a unique dashboard identifier.
-type DatasourceID uuid.UUID
+// DatasourceId define a unique dashboard identifier.
+type DatasourceId uuid.UUID
 
-// ParseDatasourceID parses the given string and return a DatasourceID if its valid.
-// A valid DatasourceID is a valid UUID v4.
-func ParseDatasourceID(datasourceID string) (DatasourceID, error) {
+// ParseDatasourceId parses the given string and return a DatasourceId if its valid.
+// A valid DatasourceId is a valid UUID v4.
+func ParseDatasourceId(datasourceID string) (DatasourceId, error) {
 	id, err := uuid.Parse(datasourceID)
 	if err != nil {
-		return DatasourceID{}, err
+		return DatasourceId{}, err
 	}
 
-	return DatasourceID(id), nil
+	return DatasourceId(id), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (did *DatasourceID) UnmarshalJSON(rawJSON []byte) error {
+func (did *DatasourceId) UnmarshalJSON(rawJSON []byte) error {
 	rawJSON = bytes.TrimPrefix(rawJSON, []byte(`"`))
 	rawJSON = bytes.TrimSuffix(rawJSON, []byte(`"`))
 
 	var err error
-	*did, err = ParseDatasourceID(string(rawJSON))
+	*did, err = ParseDatasourceId(string(rawJSON))
 	if err != nil {
 		return err
 	}
@@ -46,12 +46,12 @@ func (did *DatasourceID) UnmarshalJSON(rawJSON []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (did DatasourceID) MarshalJSON() ([]byte, error) {
+func (did DatasourceId) MarshalJSON() ([]byte, error) {
 	return json.Marshal(uuid.UUID(did))
 }
 
 // String implements fmt.Stringer.
-func (did DatasourceID) String() string {
+func (did DatasourceId) String() string {
 	return uuid.UUID(did).String()
 }
 
@@ -70,7 +70,7 @@ type Datasource struct {
 	Type           string         `json:"type,omitempty"`
 	TypeLogoUrl    string         `json:"typeLogoUrl,omitempty"`
 	TypeName       string         `json:"typeName,omitempty"`
-	UID            DatasourceID   `json:"uid,omitempty"`
+	Uid            DatasourceId   `json:"uid,omitempty"`
 	URL            string         `json:"url,omitempty"`
 	User           string         `json:"user,omitempty"`
 	Version        uint           `json:"version,omitempty"`
@@ -153,7 +153,7 @@ func (c Client) UpdateDatasource(ctx context.Context, orgId OrgId, datasource Da
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("PUT")
-	req.SetRequestURI(fmt.Sprintf("%v/api/datasources/uid/%v", c.cfg.Url, datasource.UID))
+	req.SetRequestURI(fmt.Sprintf("%v/api/datasources/uid/%v", c.cfg.Url, datasource.Uid))
 
 	jsonBody, err := json.Marshal(datasource)
 	if err != nil {

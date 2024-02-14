@@ -17,22 +17,22 @@ var (
 	ErrGrafanaFolderNotFound      = errors.New("folder not found")
 )
 
-// FolderID define a unique dashboard identifier.
-type FolderID uuid.UUID
+// FolderId define a unique dashboard identifier.
+type FolderId uuid.UUID
 
-// ParseFolderID parses the given string and return a FolderID if its valid.
-// A valid FolderID is a valid UUID v4.
-func ParseFolderID(folderID string) (FolderID, error) {
-	id, err := uuid.Parse(folderID)
+// ParseFolderId parses the given string and return a FolderId if its valid.
+// A valid FolderId is a valid UUID v4.
+func ParseFolderId(folderId string) (FolderId, error) {
+	id, err := uuid.Parse(folderId)
 	if err != nil {
-		return FolderID{}, err
+		return FolderId{}, err
 	}
 
-	return FolderID(id), nil
+	return FolderId(id), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (fid *FolderID) UnmarshalJSON(rawJSON []byte) error {
+func (fid *FolderId) UnmarshalJSON(rawJSON []byte) error {
 	rawJSON = bytes.TrimPrefix(rawJSON, []byte(`"`))
 	rawJSON = bytes.TrimSuffix(rawJSON, []byte(`"`))
 
@@ -41,7 +41,7 @@ func (fid *FolderID) UnmarshalJSON(rawJSON []byte) error {
 	}
 
 	var err error
-	*fid, err = ParseFolderID(string(rawJSON))
+	*fid, err = ParseFolderId(string(rawJSON))
 	if err != nil {
 		return err
 	}
@@ -50,12 +50,12 @@ func (fid *FolderID) UnmarshalJSON(rawJSON []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (fid FolderID) MarshalJSON() ([]byte, error) {
+func (fid FolderId) MarshalJSON() ([]byte, error) {
 	return json.Marshal(uuid.UUID(fid))
 }
 
 // String implements fmt.Stringer.
-func (fid FolderID) String() string {
+func (fid FolderId) String() string {
 	return uuid.UUID(fid).String()
 }
 
@@ -63,7 +63,7 @@ type Folder struct {
 	Id        int64     `json:"id"`
 	ParentUid uuid.UUID `json:"parentUid"`
 	Title     string    `json:"title"`
-	Uid       FolderID  `json:"uid"`
+	Uid       FolderId  `json:"uid"`
 }
 
 type FolderPermission struct {
@@ -188,9 +188,9 @@ func (c Client) ListFolders(ctx context.Context, orgId OrgId, limit int, page in
 }
 
 // GetFolderPermissions gets permissions associated to folder with the given
-// FolderID.
+// FolderId.
 // This method rely on user context and therefor, client mutex.
-func (c Client) GetFolderPermissions(ctx context.Context, orgId OrgId, folderId FolderID) ([]FolderPermission, error) {
+func (c Client) GetFolderPermissions(ctx context.Context, orgId OrgId, folderId FolderId) ([]FolderPermission, error) {
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	err := c.changeCurrentOrg(ctx, orgId)
@@ -229,10 +229,10 @@ func (c Client) GetFolderPermissions(ctx context.Context, orgId OrgId, folderId 
 }
 
 // SetFolderPermissions sets permissions associated to folder with the given
-// FolderID. This operation will remove existing permissions if they're not included
+// FolderId. This operation will remove existing permissions if they're not included
 // in the request.
 // This method rely on user context and therefor, client mutex.
-func (c Client) SetFolderPermissions(ctx context.Context, orgId OrgId, folderId FolderID, permissions ...FolderPermission) error {
+func (c Client) SetFolderPermissions(ctx context.Context, orgId OrgId, folderId FolderId, permissions ...FolderPermission) error {
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	err := c.changeCurrentOrg(ctx, orgId)
@@ -276,9 +276,9 @@ func (c Client) SetFolderPermissions(ctx context.Context, orgId OrgId, folderId 
 	return nil
 }
 
-// DeleteFolder deletes folder with the given FolderID.
+// DeleteFolder deletes folder with the given FolderId.
 // This method rely on user context and therefor, client mutex.
-func (c Client) DeleteFolder(ctx context.Context, orgId OrgId, folderId FolderID) error {
+func (c Client) DeleteFolder(ctx context.Context, orgId OrgId, folderId FolderId) error {
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	err := c.changeCurrentOrg(ctx, orgId)

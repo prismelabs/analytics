@@ -18,27 +18,27 @@ var (
 	ErrGrafanaDashboardNotFound      = errors.New("grafana dashboard not found")
 )
 
-// DashboardID define a unique dashboard identifier.
-type DashboardID uuid.UUID
+// DashboardId define a unique dashboard identifier.
+type DashboardId uuid.UUID
 
-// ParseDashboardID parses the given string and return a DashboardID if its valid.
-// A valid DashboardID is a valid UUID v4.
-func ParseDashboardID(dashboardID string) (DashboardID, error) {
+// ParseDashboardId parses the given string and return a DashboardId if its valid.
+// A valid DashboardId is a valid UUID v4.
+func ParseDashboardId(dashboardID string) (DashboardId, error) {
 	id, err := uuid.Parse(dashboardID)
 	if err != nil {
-		return DashboardID{}, err
+		return DashboardId{}, err
 	}
 
-	return DashboardID(id), nil
+	return DashboardId(id), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (uid *DashboardID) UnmarshalJSON(rawJSON []byte) error {
+func (uid *DashboardId) UnmarshalJSON(rawJSON []byte) error {
 	rawJSON = bytes.TrimPrefix(rawJSON, []byte(`"`))
 	rawJSON = bytes.TrimSuffix(rawJSON, []byte(`"`))
 
 	var err error
-	*uid, err = ParseDashboardID(string(rawJSON))
+	*uid, err = ParseDashboardId(string(rawJSON))
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (uid *DashboardID) UnmarshalJSON(rawJSON []byte) error {
 }
 
 // String implements fmt.Stringer.
-func (uid DashboardID) String() string {
+func (uid DashboardId) String() string {
 	return uuid.UUID(uid).String()
 }
 
@@ -74,7 +74,7 @@ type DashboardMetadata struct {
 	Expires                time.Time
 	FolderId               int64
 	FolderTitle            string
-	FolderUid              FolderID
+	FolderUid              FolderId
 	FolderUrl              string
 	HasAcl                 bool
 	IsFolder               bool
@@ -98,7 +98,7 @@ type Dashboard struct {
 }
 
 type SearchDashboardResult struct {
-	Uid   DashboardID `json:"uid"`
+	Uid   DashboardId `json:"uid"`
 	Title string      `json:"title"`
 }
 
@@ -108,12 +108,12 @@ type SearchDashboardResult struct {
 // If overwrite is sets to true, "version" field is optional.
 //
 // This method rely on user context and therefor, client mutex.
-func (c Client) CreateUpdateDashboard(ctx context.Context, orgId OrgId, folder FolderID, dashboardJson map[string]any, overwrite bool) (DashboardID, error) {
+func (c Client) CreateUpdateDashboard(ctx context.Context, orgId OrgId, folder FolderId, dashboardJson map[string]any, overwrite bool) (DashboardId, error) {
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	err := c.changeCurrentOrg(ctx, orgId)
 	if err != nil {
-		return DashboardID{}, fmt.Errorf("failed to change current org: %w", err)
+		return DashboardId{}, fmt.Errorf("failed to change current org: %w", err)
 	}
 
 	req := fasthttp.AcquireRequest()
@@ -149,30 +149,30 @@ func (c Client) CreateUpdateDashboard(ctx context.Context, orgId OrgId, folder F
 
 	err = c.do(ctx, req, resp)
 	if err != nil {
-		return DashboardID{}, fmt.Errorf("failed to query grafana to create dashboard: %w", err)
+		return DashboardId{}, fmt.Errorf("failed to query grafana to create dashboard: %w", err)
 	}
 
 	if resp.StatusCode() == 412 && strings.Contains(string(resp.Body()), "A dashboard with the same name in the folder already exists") {
-		return DashboardID{}, ErrGrafanaDashboardAlreadyExists
+		return DashboardId{}, ErrGrafanaDashboardAlreadyExists
 	} else if resp.StatusCode() != 200 {
-		return DashboardID{}, fmt.Errorf("failed to create/update grafana dashboard: %v %v", resp.StatusCode(), string(resp.Body()))
+		return DashboardId{}, fmt.Errorf("failed to create/update grafana dashboard: %v %v", resp.StatusCode(), string(resp.Body()))
 	}
 
 	type responseBody struct {
-		Uid DashboardID `json:"uid"`
+		Uid DashboardId `json:"uid"`
 	}
 	respBody := responseBody{}
 	err = json.Unmarshal(resp.Body(), &respBody)
 	if err != nil {
-		return DashboardID{}, fmt.Errorf("failed to parse grafana response: %w", err)
+		return DashboardId{}, fmt.Errorf("failed to parse grafana response: %w", err)
 	}
 
 	return respBody.Uid, nil
 }
 
-// GetDashboardByUID returns dashboard with the given id within the given organization.
+// GetDashboardByUid returns dashboard with the given id within the given organization.
 // This method rely on user context and therefor, client mutex.
-func (c Client) GetDashboardByUID(ctx context.Context, orgId OrgId, dashboardID DashboardID) (Dashboard, error) {
+func (c Client) GetDashboardByUid(ctx context.Context, orgId OrgId, dashboardID DashboardId) (Dashboard, error) {
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	err := c.changeCurrentOrg(ctx, orgId)
@@ -210,10 +210,10 @@ func (c Client) GetDashboardByUID(ctx context.Context, orgId OrgId, dashboardID 
 	return respBody, nil
 }
 
-// DeleteDashboardByUID deletes a dashboard with the given ID within the given
+// DeleteDashboardByUid deletes a dashboard with the given ID within the given
 // organization.
 // This method rely on user context and therefor, client mutex.
-func (c Client) DeleteDashboardByUID(ctx context.Context, orgId OrgId, dashboardID DashboardID) error {
+func (c Client) DeleteDashboardByUid(ctx context.Context, orgId OrgId, dashboardID DashboardId) error {
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	err := c.changeCurrentOrg(ctx, orgId)
