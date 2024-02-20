@@ -13,13 +13,31 @@ type MinimalFiber *fiber.App
 // with no route.
 func ProvideMinimalFiber(
 	accessLogMiddleware middlewares.AccessLog,
-	cfg config.Server,
 	errorHandlerMiddleware middlewares.ErrorHandler,
+	fiberCfg fiber.Config,
 	healthcheckHandler handlers.HealhCheck,
 	loggerMiddleware middlewares.Logger,
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
 ) MinimalFiber {
+	app := fiber.New(fiberCfg)
+
+	app.Use(fiber.Handler(requestIdMiddleware))
+	app.Use(fiber.Handler(accessLogMiddleware))
+	app.Use(fiber.Handler(loggerMiddleware))
+	app.Use(fiber.Handler(errorHandlerMiddleware))
+
+	app.Use("/static", fiber.Handler(staticMiddleware))
+
+	app.Use("/api/v1/healthcheck", fiber.Handler(healthcheckHandler))
+
+	return app
+}
+
+// ProvideMinimalFiberConfig is a wire provider for fiber configuration.
+func ProvideMinimalFiberConfig(
+	cfg config.Server,
+) fiber.Config {
 	fiberCfg := fiber.Config{
 		ServerHeader:          "prisme",
 		StrictRouting:         true,
@@ -39,16 +57,5 @@ func ProvideMinimalFiber(
 		fiberCfg.ProxyHeader = ""
 	}
 
-	app := fiber.New(fiberCfg)
-
-	app.Use(fiber.Handler(requestIdMiddleware))
-	app.Use(fiber.Handler(accessLogMiddleware))
-	app.Use(fiber.Handler(loggerMiddleware))
-	app.Use(fiber.Handler(errorHandlerMiddleware))
-
-	app.Use("/static", fiber.Handler(staticMiddleware))
-
-	app.Use("/api/v1/healthcheck", fiber.Handler(healthcheckHandler))
-
-	return app
+	return fiberCfg
 }

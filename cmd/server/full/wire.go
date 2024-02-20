@@ -43,6 +43,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		wired.ProvideGrafanaConfig,
 		wired.ProvideLogger,
 		wired.ProvideMinimalFiber,
+		wired.ProvideMinimalFiberConfig,
 		wired.ProvideServerConfig,
 	)
 	return wired.App{}

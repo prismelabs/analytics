@@ -37,6 +37,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		wired.ProvideClickhouseConfig,
 		wired.ProvideLogger,
 		wired.ProvideMinimalFiber,
+		wired.ProvideMinimalFiberConfig,
 		wired.ProvideServerConfig,
 		wired.ProvideSetup,
 	)
