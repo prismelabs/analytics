@@ -154,7 +154,7 @@
 					},
 					"pluginVersion": "4.0.0-beta",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(*) AS \"Total page views previous period\"\nFROM \"prisme\".\"events_pageviews\"\nWHERE timestamp >= ($__fromTime - ($__toTime - $__fromTime))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\n",
+					"rawSql": "SELECT COUNT(*) AS \"Total page views previous period\"\nFROM \"prisme\".\"events_pageviews\"\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\n",
 					"refId": "A"
 				},
 				{
@@ -314,7 +314,7 @@
 					},
 					"pluginVersion": "4.0.0-beta",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(*) AS \"Total visits previous period\"\nFROM \"prisme\".\"events_pageviews\"\nWHERE timestamp >= ($__fromTime - ($__toTime - $__fromTime))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\n",
+					"rawSql": "SELECT COUNT(*) AS \"Total visits previous period\"\nFROM \"prisme\".\"events_pageviews\"\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\n",
 					"refId": "A"
 				},
 				{
