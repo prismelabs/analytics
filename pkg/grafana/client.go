@@ -4,25 +4,24 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"sync"
 
 	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/valyala/fasthttp"
 )
 
+const (
+	GrafanaOrgIdHeader = "X-Grafana-Org-Id"
+)
+
 // Client define an API client for grafana.
 type Client struct {
-	// Lock is required for request that require a specific user context.
-	// https://grafana.com/docs/grafana/latest/developers/http_api/user/#switch-user-context-for-a-specified-user
-	*sync.Mutex
 	cfg config.Grafana
 }
 
 // Provide is a wire provider for Client.
 func ProvideClient(cfg config.Grafana) Client {
 	return Client{
-		Mutex: &sync.Mutex{},
-		cfg:   cfg,
+		cfg: cfg,
 	}
 }
 

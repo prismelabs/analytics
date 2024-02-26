@@ -109,18 +109,12 @@ type SearchDashboardResult struct {
 //
 // This method rely on user context and therefor, client mutex.
 func (c Client) CreateUpdateDashboard(ctx context.Context, orgId OrgId, folder FolderId, dashboardJson map[string]any, overwrite bool) (DashboardId, error) {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return DashboardId{}, fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("POST")
 	req.SetRequestURI(fmt.Sprintf("%v/api/dashboards/db", c.cfg.Url))
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 	c.addAuthorizationHeader(req)
 
 	folderUid := folder.String()
@@ -173,24 +167,18 @@ func (c Client) CreateUpdateDashboard(ctx context.Context, orgId OrgId, folder F
 // GetDashboardByUid returns dashboard with the given id within the given organization.
 // This method rely on user context and therefor, client mutex.
 func (c Client) GetDashboardByUid(ctx context.Context, orgId OrgId, dashboardID DashboardId) (Dashboard, error) {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return Dashboard{}, fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("GET")
 	req.SetRequestURI(fmt.Sprintf("%v/api/dashboards/uid/%v", c.cfg.Url, dashboardID.String()))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	err = c.do(ctx, req, resp)
+	err := c.do(ctx, req, resp)
 	if err != nil {
 		return Dashboard{}, fmt.Errorf("failed to query grafana to get dashboard by uid: %w", err)
 	}
@@ -214,24 +202,18 @@ func (c Client) GetDashboardByUid(ctx context.Context, orgId OrgId, dashboardID 
 // organization.
 // This method rely on user context and therefor, client mutex.
 func (c Client) DeleteDashboardByUid(ctx context.Context, orgId OrgId, dashboardID DashboardId) error {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("DELETE")
 	req.SetRequestURI(fmt.Sprintf("%v/api/dashboards/uid/%v", c.cfg.Url, dashboardID.String()))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	err = c.do(ctx, req, resp)
+	err := c.do(ctx, req, resp)
 	if err != nil {
 		return fmt.Errorf("failed to query grafana to delete dashboard by uid: %w", err)
 	}
@@ -248,24 +230,18 @@ func (c Client) DeleteDashboardByUid(ctx context.Context, orgId OrgId, dashboard
 // SearchDashboards searches dashboard within the given organization.
 // This method rely on user context and therefor, client mutex.
 func (c Client) SearchDashboards(ctx context.Context, orgId OrgId, limit, page int) ([]SearchDashboardResult, error) {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("GET")
 	req.SetRequestURI(fmt.Sprintf("%v/api/search?type=dash-db&limit=%v&page=%v", c.cfg.Url, limit, page))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	err = c.do(ctx, req, resp)
+	err := c.do(ctx, req, resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query grafana to delete dashboard by uid: %w", err)
 	}

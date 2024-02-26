@@ -99,19 +99,13 @@ func (fpl FolderPermissionLevel) String() string {
 // CreateFolder creates a folder within current organization.
 // This method rely on user context and therefor, client mutex.
 func (c Client) CreateFolder(ctx context.Context, orgId OrgId, title string) (Folder, error) {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return Folder{}, fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("POST")
 	req.SetRequestURI(fmt.Sprintf("%v/api/folders", c.cfg.Url))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	type requestBody struct {
 		Title string `json:"title"`
@@ -152,24 +146,18 @@ func (c Client) CreateFolder(ctx context.Context, orgId OrgId, title string) (Fo
 // the given folder UUID.
 // This method rely on user context and therefor, client mutex.
 func (c Client) ListFolders(ctx context.Context, orgId OrgId, limit int, page int) ([]Folder, error) {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("GET")
 	req.SetRequestURI(fmt.Sprintf("%v/api/folders/?limit=%v&page=%v", c.cfg.Url, limit, page))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	err = c.do(ctx, req, resp)
+	err := c.do(ctx, req, resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query grafana to list folders: %w", err)
 	}
@@ -191,24 +179,18 @@ func (c Client) ListFolders(ctx context.Context, orgId OrgId, limit int, page in
 // FolderId.
 // This method rely on user context and therefor, client mutex.
 func (c Client) GetFolderPermissions(ctx context.Context, orgId OrgId, folderId FolderId) ([]FolderPermission, error) {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("GET")
 	req.SetRequestURI(fmt.Sprintf("%v/api/folders/%v/permissions", c.cfg.Url, folderId))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	err = c.do(ctx, req, resp)
+	err := c.do(ctx, req, resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query grafana to list folder permissions: %w", err)
 	}
@@ -233,19 +215,13 @@ func (c Client) GetFolderPermissions(ctx context.Context, orgId OrgId, folderId 
 // in the request.
 // This method rely on user context and therefor, client mutex.
 func (c Client) SetFolderPermissions(ctx context.Context, orgId OrgId, folderId FolderId, permissions ...FolderPermission) error {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("POST")
 	req.SetRequestURI(fmt.Sprintf("%v/api/folders/%v/permissions", c.cfg.Url, folderId))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	type requestBody struct {
 		Items []FolderPermission `json:"items"`
@@ -279,24 +255,18 @@ func (c Client) SetFolderPermissions(ctx context.Context, orgId OrgId, folderId 
 // DeleteFolder deletes folder with the given FolderId.
 // This method rely on user context and therefor, client mutex.
 func (c Client) DeleteFolder(ctx context.Context, orgId OrgId, folderId FolderId) error {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("DELETE")
 	req.SetRequestURI(fmt.Sprintf("%v/api/folders/%v", c.cfg.Url, folderId))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	err = c.do(ctx, req, resp)
+	err := c.do(ctx, req, resp)
 	if err != nil {
 		return fmt.Errorf("failed to query grafana to delete folder: %w", err)
 	}

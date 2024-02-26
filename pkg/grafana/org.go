@@ -68,35 +68,3 @@ func (c Client) CreateOrg(ctx context.Context, name string) (OrgId, error) {
 
 	return respBody.OrgId, nil
 }
-
-// changeCurrentOrg changes current/focused/active organization of client user.
-// This is required as some ressources are tied to an organization and doesn't take
-// an org id parameter. Grafana deduce organization ID from users current organization.
-// This method should be called with mutex locked.
-func (c Client) changeCurrentOrg(ctx context.Context, orgId OrgId) error {
-	if c.Mutex.TryLock() {
-		panic("change current org called without lock")
-	}
-
-	req := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(req)
-
-	req.Header.SetMethod("POST")
-	req.SetRequestURI(fmt.Sprintf("%v/api/user/using/%v", c.cfg.Url, orgId))
-	c.addAuthorizationHeader(req)
-
-	resp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(resp)
-
-	err := c.do(ctx, req, resp)
-	if err != nil {
-		return fmt.Errorf("failed to query grafana to change organization: %w", err)
-	}
-
-	// Handle errors.
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("failed to change grafana organization: %v %v", resp.StatusCode(), string(resp.Body()))
-	}
-
-	return nil
-}

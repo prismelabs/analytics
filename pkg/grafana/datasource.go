@@ -79,18 +79,12 @@ type Datasource struct {
 // CreateDatasource creates a datasource in the given organization. This method
 // rely on user context and therefor, client mutex.
 func (c Client) CreateDatasource(ctx context.Context, orgId OrgId, name string, srcType string, isDefault bool) (Datasource, error) {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return Datasource{}, fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("POST")
 	req.SetRequestURI(c.cfg.Url + "/api/datasources")
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	type requestBody struct {
 		Access    string `json:"access"`
@@ -142,18 +136,12 @@ func (c Client) CreateDatasource(ctx context.Context, orgId OrgId, name string, 
 // UpdateDatasource updates datasource in the given organization. This method
 // rely on user context and therefor, client mutex.
 func (c Client) UpdateDatasource(ctx context.Context, orgId OrgId, datasource Datasource) error {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("PUT")
 	req.SetRequestURI(fmt.Sprintf("%v/api/datasources/uid/%v", c.cfg.Url, datasource.Uid))
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	jsonBody, err := json.Marshal(datasource)
 	if err != nil {
@@ -189,24 +177,18 @@ func (c Client) UpdateDatasource(ctx context.Context, orgId OrgId, datasource Da
 // ListDatasources returns a list of datasource present in the given organization.
 // This method rely on user context and therefor, client mutex.
 func (c Client) ListDatasources(ctx context.Context, orgId OrgId) ([]Datasource, error) {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("GET")
 	req.SetRequestURI(fmt.Sprintf("%v/api/datasources", c.cfg.Url))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	err = c.do(ctx, req, resp)
+	err := c.do(ctx, req, resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query grafana to update a datasource: %w", err)
 	}
@@ -228,24 +210,18 @@ func (c Client) ListDatasources(ctx context.Context, orgId OrgId) ([]Datasource,
 // DeleteDatasourceByName deletes datasource with the given name inside the given organization.
 // This method rely on user context and therefor, client mutex.
 func (c Client) DeleteDatasourceByName(ctx context.Context, orgId OrgId, name string) error {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("DELETE")
 	req.SetRequestURI(fmt.Sprintf("%v/api/datasources/name/%v", c.cfg.Url, name))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	err = c.do(ctx, req, resp)
+	err := c.do(ctx, req, resp)
 	if err != nil {
 		return fmt.Errorf("failed to query grafana to update a datasource: %w", err)
 	}
@@ -263,24 +239,18 @@ func (c Client) DeleteDatasourceByName(ctx context.Context, orgId OrgId, name st
 // GetDatasourceByName retrieves datasource with the given name.
 // This method rely on user context and therefor, client mutex.
 func (c Client) GetDatasourceByName(ctx context.Context, orgId OrgId, name string) (Datasource, error) {
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	err := c.changeCurrentOrg(ctx, orgId)
-	if err != nil {
-		return Datasource{}, fmt.Errorf("failed to change current org: %w", err)
-	}
-
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("GET")
 	req.SetRequestURI(fmt.Sprintf("%v/api/datasources/name/%v", c.cfg.Url, name))
 	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 
-	err = c.do(ctx, req, resp)
+	err := c.do(ctx, req, resp)
 	if err != nil {
 		return Datasource{}, fmt.Errorf("failed to query grafana to retrieve a datasource by name: %w", err)
 	}
