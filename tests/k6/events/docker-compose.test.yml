@@ -1,0 +1,8 @@
+version: '3'
+services:
+  k6:
+    image: docker.io/grafana/k6
+    command: run /data/main.js
+    working_dir: /data
+    volumes:
+      - $PWD:/data
