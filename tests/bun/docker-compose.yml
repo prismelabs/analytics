@@ -1,21 +1,5 @@
 version: '3'
 services:
-  postgres:
-    image: "docker.io/library/postgres:15"
-    command: "-c log_statement=all"
-    healthcheck:
-      test: "/usr/bin/pg_isready"
-      timeout: "10s"
-    user: "postgres:postgres"
-    environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "password"
-      POSTGRES_DB: "${PRISME_DATABASE:-prisme}"
-    networks:
-      default:
-        aliases:
-          - "postgres.localhost"
-
   clickhouse:
     image: "docker.io/clickhouse/clickhouse-server:23.9.1-alpine"
     ulimits:

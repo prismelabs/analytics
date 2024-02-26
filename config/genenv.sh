@@ -13,9 +13,6 @@ setenv PRISME_DEBUG "true"
 setenv PRISME_PORT "8000"
 setenv PRISME_TRUST_PROXY "false"
 
-# Postgres related options.
-setenv PRISME_POSTGRES_URL "postgres://postgres:password@postgres.localhost:5432/prisme?sslmode=disable"
-
 # Clickhouse related options.
 setenv PRISME_CLICKHOUSE_TLS "false"
 setenv PRISME_CLICKHOUSE_HOSTPORT "clickhouse.localhost:9000"
