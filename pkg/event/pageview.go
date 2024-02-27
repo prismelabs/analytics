@@ -39,6 +39,8 @@ func NewPageView(pvUrl *url.URL,
 	path := pvUrl.Path
 	if path == "" {
 		path = "/"
+	} else if path[len(path)-1] == '/' && len(path) > 1 {
+		path = path[:len(path)-1]
 	}
 
 	return PageView{
