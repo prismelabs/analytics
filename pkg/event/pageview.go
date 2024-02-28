@@ -44,7 +44,7 @@ func NewPageView(pvUrl *url.URL,
 	}
 
 	return PageView{
-		Timestamp:      time.Now(),
+		Timestamp:      time.Now().UTC(),
 		DomainName:     domain,
 		PathName:       path,
 		Client:         cli,
