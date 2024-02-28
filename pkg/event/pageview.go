@@ -2,6 +2,7 @@ package event
 
 import (
 	"net/url"
+	"path"
 	"time"
 
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
@@ -22,10 +23,12 @@ type PageView struct {
 }
 
 // NewPageView creates a new PageView event.
-func NewPageView(pvUrl *url.URL,
+func NewPageView(
+	pvUrl *url.URL,
 	cli uaparser.Client,
 	pageReferrer string,
-	countryCode ipgeolocator.CountryCode) (PageView, error) {
+	countryCode ipgeolocator.CountryCode,
+) (PageView, error) {
 	domain, err := ParseDomainName(pvUrl.Hostname())
 	if err != nil {
 		return PageView{}, err
@@ -36,17 +39,15 @@ func NewPageView(pvUrl *url.URL,
 		return PageView{}, err
 	}
 
-	path := pvUrl.Path
-	if path == "" {
-		path = "/"
-	} else if path[len(path)-1] == '/' && len(path) > 1 {
-		path = path[:len(path)-1]
+	pageviewPath := pvUrl.Path
+	if pageviewPath == "" {
+		pageviewPath = "/"
 	}
 
 	return PageView{
 		Timestamp:      time.Now().UTC(),
 		DomainName:     domain,
-		PathName:       path,
+		PathName:       path.Clean(pageviewPath),
 		Client:         cli,
 		ReferrerDomain: referrerDomain,
 		CountryCode:    countryCode,

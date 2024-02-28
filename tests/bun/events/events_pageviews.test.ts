@@ -205,6 +205,30 @@ test('valid pageview with US IP address', async () => {
   })
 })
 
+test('valid pageview with dirty path', async () => {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers: {
+      'X-Forwarded-For': '8.8.8.8', // Google public DNS
+      Referer: 'http://foo.mywebsite.localhost///another/../another/foo?bar=baz#qux'
+    }
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestPageview()
+
+  expect(data).toMatchObject({
+    timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+    domain: 'foo.mywebsite.localhost',
+    path: '/another/foo',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: 'US'
+  })
+})
+
 async function getLatestPageview (): Promise<any> {
   // Wait for clickhouse to ingest batch.
   Bun.sleepSync(1000)
