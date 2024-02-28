@@ -222,9 +222,9 @@ func TestIntegGetDashboardByUID(t *testing.T) {
 		require.NoError(t, err)
 		delete(dashboard.Dashboard, "uid")
 
-		require.WithinDuration(t, time.Now(), dashboard.Metadata.Created, 2*time.Second)
+		require.WithinDuration(t, time.Now().UTC(), dashboard.Metadata.Created, 2*time.Second)
 		dashboard.Metadata.Created = time.Time{}
-		require.WithinDuration(t, time.Now(), dashboard.Metadata.Updated, 2*time.Second)
+		require.WithinDuration(t, time.Now().UTC(), dashboard.Metadata.Updated, 2*time.Second)
 		dashboard.Metadata.Updated = time.Time{}
 
 		require.Equal(t, Dashboard{
