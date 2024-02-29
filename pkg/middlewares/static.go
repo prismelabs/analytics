@@ -20,7 +20,7 @@ func ProvideStatic(cfg config.Server) Static {
 
 	if cfg.Debug {
 		fsCfg = filesystem.Config{
-			Root:       http.Dir("internal/embedded/static"),
+			Root:       http.Dir("pkg/embedded/static"),
 			PathPrefix: "",
 			Browse:     true,
 		}
