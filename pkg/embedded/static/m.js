@@ -1,6 +1,7 @@
 (function () {
-  var ps = document.currentScript.dataset.prismeScheme || "https";
-  var pd = document.currentScript.dataset.prismeDomain || "prismeanalytics.com";
+  var ssrc = new URL(document.currentScript.src)
+  var ps = document.currentScript.dataset.prismeScheme || ssrc.protocol.slice(0, -1)
+  var pd = document.currentScript.dataset.prismeDomain || ssrc.host
   var s = location.protocol;
   var d = document.currentScript.dataset.domain || location.host;
   var r = document.referrer;
