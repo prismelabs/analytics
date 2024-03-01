@@ -28,6 +28,6 @@ func TestIntegClientHealthCheck(t *testing.T) {
 
 		err := cli.HealthCheck(context.Background())
 		require.Error(t, err)
-		require.Equal(t, "failed to query grafana for health check: dial tcp4 127.0.0.1:80: connect: connection refused", err.Error())
+		require.Equal(t, "failed to query grafana for health check: dial tcp [::1]:80: connect: connection refused", err.Error())
 	})
 }

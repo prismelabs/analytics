@@ -26,7 +26,9 @@ func ProvideClient(cfg config.Grafana) Client {
 }
 
 func (c Client) do(ctx context.Context, req *fasthttp.Request, resp *fasthttp.Response) error {
-	client := fasthttp.Client{}
+	client := fasthttp.Client{
+		DialDualStack: true,
+	}
 	deadline, hasDeadline := ctx.Deadline()
 
 	var err error
