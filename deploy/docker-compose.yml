@@ -1,0 +1,73 @@
+version: '3'
+services:
+  prisme:
+    image: "docker.io/prismelabs/analytics:latest"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    ports:
+      - 8000:8000
+    environment:
+      # Configuration options are listed and explained here:
+      # https://www.prismeanalytics.com/docs/set-up/configuration/configure-server/default-mode
+      #
+      PRISME_ACCESS_LOG: '/dev/stdout'
+      PRISME_DEBUG: 'false'
+      PRISME_PORT: '8000'
+      PRISME_TRUST_PROXY: 'false'
+      PRISME_CLICKHOUSE_TLS: 'false'
+      PRISME_CLICKHOUSE_HOSTPORT: 'clickhouse.localhost:9000'
+      PRISME_CLICKHOUSE_USER: 'default'
+      PRISME_CLICKHOUSE_PASSWORD: 'password'
+      PRISME_CLICKHOUSE_DB: 'prisme'
+      PRISME_SOURCE_REGISTRY_SOURCES: 'localhost,mywebsite.localhost,foo.mywebsite.localhost'
+      PRISME_GRAFANA_URL: 'http://grafana.localhost:3000'
+      PRISME_GRAFANA_USER: 'admin'
+      PRISME_GRAFANA_PASSWORD: 'admin'
+
+  clickhouse:
+    image: "docker.io/clickhouse/clickhouse-server:24.2.1-alpine"
+    ports:
+      - 127.0.0.1:8123:8123 # HTTP interface (useful for debugging)
+      - 127.0.0.1:9000:9000 # Native interface (used by Prisme instances)
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
+    volumes:
+      - "clickhouse_data:/var/lib/clickhouse"
+    environment:
+      CLICKHOUSE_USER: "default"
+      CLICKHOUSE_PASSWORD: "password"
+      CLICKHOUSE_DB: "prisme"
+    networks:
+      default:
+        aliases:
+          - "clickhouse.localhost"
+
+  grafana:
+    image: "docker.io/grafana/grafana-oss:10.3.3"
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+      timeout: 30s
+    ports:
+      - 3000:3000
+    user: "root:root"
+    volumes:
+      - "grafana_data:/data"
+    environment:
+      # Configuration options are listed and explained here:
+      # https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/
+      #
+      # [database]
+      GF_DATABASE_TYPE: "sqlite3"
+      GF_DATABASE_PATH: "/data/grafana.db" # grafana_data volumes
+      # [security]
+      GF_SECURITY_ADMIN_USER: "admin" # grafana admin user username (password default to "admin")
+    networks:
+      default:
+        aliases:
+          - "grafana.localhost"
+
+volumes:
+  grafana_data:
+  clickhouse_data:
+
