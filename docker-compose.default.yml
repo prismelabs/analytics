@@ -33,34 +33,9 @@ services:
       # https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/
       GF_INSTALL_PLUGINS: "grafana-clickhouse-datasource"
       GF_LOG_LEVEL: "debug"
-      # [feature_toggles]
-      GF_FEATURE_TOGGLES_ENABLE: "publicDashboards"
       # [database]
       GF_DATABASE_TYPE: "sqlite3"
       GF_DATABASE_PATH: "/data/grafana.db"
-      # [security]
-      GF_SECURITY_SECRET_KEY: "grafana-secret-key"
-      # [plugins]
-      GF_PLUGINS_PLUGIN_ADMIN_ENABLED: false
-      # [unified_alerting]
-      GF_UNIFIED_ALERTING_ENABLED: false
-      # [alerting]
-      GF_ALERTING_ENABLED: false
-      # [users]
-      GF_USERS_ALLOW_SIGN_UP: true
-      GF_USERS_AUTO_ASSIGN_ORG: true
-      GF_USERS_ASSIGN_ORG_ROLE: editor
-      GF_USERS_DEFAULT_THEME: "system"
-      GF_USERS_EDITORS_CAN_ADMIN: true
-      GF_USERS_HIDDEN_USER: "admin"
-      # [auth]
-      GF_AUTH_DISABLE_LOGIN_FORM: false
-      GF_AUTH_DISABLE_SIGNOUT_MENU: true
-      # [news]
-      GF_NEWS_NEWS_FEED_ENABLED: false
-      # [snapshots]
-      GF_SNAPSHOTS_EXTERNAL_ENABLE: false
-      GF_SNAPSHOTS_PUBLIC_MODE: false
     networks:
       default:
         aliases:
@@ -68,5 +43,4 @@ services:
 
 volumes:
   grafana_data:
-  postgres_data:
   clickhouse_data:
