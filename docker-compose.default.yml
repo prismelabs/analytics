@@ -36,6 +36,8 @@ services:
       # [database]
       GF_DATABASE_TYPE: "sqlite3"
       GF_DATABASE_PATH: "/data/grafana.db"
+      # [users]
+      GF_USERS_DEFAULT_THEME: "system"
     networks:
       default:
         aliases:
