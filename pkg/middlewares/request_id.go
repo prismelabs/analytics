@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"context"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/config"
@@ -24,6 +26,7 @@ func ProvideRequestId(cfg config.Server) RequestId {
 		}
 
 		c.Locals(RequestIdKey{}, requestId)
+		c.SetUserContext(context.WithValue(c.UserContext(), RequestIdKey{}, requestId))
 
 		return c.Next()
 	}
