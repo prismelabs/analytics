@@ -12,20 +12,29 @@ import (
 
 // ProvideMmdbService is a wire provider for mmdb based ip geolocator service.
 func ProvideMmdbService(logger zerolog.Logger) Service {
+	logger = logger.With().
+		Str("service", "ipgeolocator").
+		Str("service_impl", "mmdb").
+		Str("mmdb", "embedded").
+		Logger()
+
 	reader, err := maxminddb.FromBytes(embedded.Ip2AsnDb)
 	if err != nil {
-		logger.Err(err).Msg("failed to load maxming GeoLite2 country database")
+		logger.Panic().Err(err).Msg("failed to load maxming GeoLite2 country database")
 	}
 
-	return mmdbService{reader}
+	return mmdbService{logger, reader}
 }
 
 type mmdbService struct {
+	logger zerolog.Logger
 	reader *maxminddb.Reader
 }
 
 // FindCountryCodeForIP implements Service.
 func (ms mmdbService) FindCountryCodeForIP(xForwardedFor string) CountryCode {
+	result := CountryCode{"XX"}
+
 	type (
 		mmdbRecordCountry struct {
 			ISOCode string `maxminddb:"iso_code"`
@@ -54,12 +63,17 @@ func (ms mmdbService) FindCountryCodeForIP(xForwardedFor string) CountryCode {
 
 		// Database embedded within repository returns None sometime.
 		// Official maxmind GeoLite2 database doesn't returns anything.
-		if record.Country.ISOCode == "None" {
+		if record.Country.ISOCode == "None" || record.Country.ISOCode == "" {
 			record.Country.ISOCode = "XX"
 		}
 
-		return CountryCode{record.Country.ISOCode}
+		result.value = record.Country.ISOCode
+		break
 	}
 
-	return CountryCode{"XX"}
+	ms.logger.Debug().
+		Str("ip_address", xForwardedFor).
+		Str("country_code", result.value).
+		Msg("country code found")
+	return result
 }

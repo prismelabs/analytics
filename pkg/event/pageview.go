@@ -7,6 +7,7 @@ import (
 
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
+	"github.com/rs/zerolog"
 )
 
 // OperatingSystem define client operating system.
@@ -52,4 +53,14 @@ func NewPageView(
 		ReferrerDomain: referrerDomain,
 		CountryCode:    countryCode,
 	}, nil
+}
+
+// MarshalZerologObject implements zerolog.LogObjectMarshaler.
+func (pv PageView) MarshalZerologObject(e *zerolog.Event) {
+	e.Time("timestamp", pv.Timestamp).
+		Stringer("domain_name", pv.DomainName).
+		Str("path", pv.PathName).
+		Object("client", pv.Client).
+		Stringer("referrer_domain", pv.ReferrerDomain).
+		Stringer("country_code", pv.CountryCode)
 }

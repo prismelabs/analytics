@@ -37,7 +37,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	ch := clickhouse.ProvideCh(zerologLogger, configClickhouse, driver)
 	service := eventstore.ProvideClickhouseService(ch, zerologLogger)
 	sourceregistryService := sourceregistry.ProvideEnvVarService(zerologLogger)
-	uaparserService := uaparser.ProvideService()
+	uaparserService := uaparser.ProvideService(zerologLogger)
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger)
 	postPageViewEvent := handlers.ProvidePostEventsPageViews(service, sourceregistryService, uaparserService, ipgeolocatorService)
 	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, postPageViewEvent)

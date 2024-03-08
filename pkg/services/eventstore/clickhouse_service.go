@@ -11,11 +11,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ClickhouseService define a clickhouse based event storage service.
-type ClickhouseService struct {
-	appendCh chan<- event.PageView
-}
-
 // ProvideClickhouseService is a wire provider for a clickhouse based event
 // storage service.
 func ProvideClickhouseService(ch clickhouse.Ch, logger zerolog.Logger) Service {
@@ -24,21 +19,33 @@ func ProvideClickhouseService(ch clickhouse.Ch, logger zerolog.Logger) Service {
 	batchSize := config.ParseUintEnvOrDefault("PRISME_EVENTSTORE_MAX_BATCH_SIZE", 4096, 64)
 	batchTimeout := config.ParseDurationEnvOrDefault("PRISME_EVENTSTORE_MAX_BATCH_TIMEOUT", 1*time.Minute)
 
-	logger.Info().
+	logger = logger.With().
+		Str("service", "eventstore").
+		Str("service_impl", "clickhouse").
 		Uint64("max_batch_size", batchSize).
 		Dur("max_batch_timeout", batchTimeout).
-		Msg("clickhouse based event store configured")
+		Logger()
+
+	logger.Info().Msg("clickhouse based event store configured")
 
 	go batchPageViewLoop(logger, ch.Conn, appendCh, batchSize, batchTimeout)
 
 	return &ClickhouseService{
+		logger,
 		appendCh,
 	}
+}
+
+// ClickhouseService define a clickhouse based event storage service.
+type ClickhouseService struct {
+	logger   zerolog.Logger
+	appendCh chan<- event.PageView
 }
 
 // StorePageViewEvent implements Service.
 func (cs *ClickhouseService) StorePageViewEvent(ctx context.Context, ev event.PageView) error {
 	cs.appendCh <- ev
+	cs.logger.Debug().Object("pageview_event", ev).Msg("pageview event added to batch")
 
 	return nil
 }

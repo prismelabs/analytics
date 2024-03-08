@@ -2,8 +2,10 @@ package uaparser
 
 import (
 	"fmt"
+	"io"
 	"testing"
 
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -73,7 +75,8 @@ func TestService(t *testing.T) {
 		},
 	}
 
-	service := ProvideService()
+	logger := log.NewLogger("test_logger_1", io.Discard, false)
+	service := ProvideService(logger)
 	for _, tcase := range testCases {
 		testName := fmt.Sprintf("%v/%v/%v", tcase.expectedClient.BrowserFamily, tcase.expectedClient.OperatingSystem, tcase.expectedClient.Device)
 

@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,7 +45,7 @@ func TestLogger(t *testing.T) {
 		app.Use(fiber.Handler(ProvideRequestId(config.Server{})))
 		app.Use(fiber.Handler(ProvideLogger(logger)))
 		app.Use(func(c *fiber.Ctx) error {
-			logger := c.Locals(LoggerKey{}).(log.Logger)
+			logger := c.Locals(LoggerKey{}).(zerolog.Logger)
 			logger.Info().Msg("hello from middleware")
 			return nil
 		})
