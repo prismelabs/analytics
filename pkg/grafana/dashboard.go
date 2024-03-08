@@ -106,8 +106,6 @@ type SearchDashboardResult struct {
 // dashboardJson map[string]any argument must contain a "uid" and "version" fields for updates.
 // Version field must contains version BEFORE update, that is, the current version.
 // If overwrite is sets to true, "version" field is optional.
-//
-// This method rely on user context and therefor, client mutex.
 func (c Client) CreateUpdateDashboard(ctx context.Context, orgId OrgId, folder FolderId, dashboardJson map[string]any, overwrite bool) (DashboardId, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -165,7 +163,6 @@ func (c Client) CreateUpdateDashboard(ctx context.Context, orgId OrgId, folder F
 }
 
 // GetDashboardByUid returns dashboard with the given id within the given organization.
-// This method rely on user context and therefor, client mutex.
 func (c Client) GetDashboardByUid(ctx context.Context, orgId OrgId, dashboardID DashboardId) (Dashboard, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -200,7 +197,6 @@ func (c Client) GetDashboardByUid(ctx context.Context, orgId OrgId, dashboardID 
 
 // DeleteDashboardByUid deletes a dashboard with the given ID within the given
 // organization.
-// This method rely on user context and therefor, client mutex.
 func (c Client) DeleteDashboardByUid(ctx context.Context, orgId OrgId, dashboardID DashboardId) error {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -228,7 +224,6 @@ func (c Client) DeleteDashboardByUid(ctx context.Context, orgId OrgId, dashboard
 }
 
 // SearchDashboards searches dashboard within the given organization.
-// This method rely on user context and therefor, client mutex.
 func (c Client) SearchDashboards(ctx context.Context, orgId OrgId, limit, page int) ([]SearchDashboardResult, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)

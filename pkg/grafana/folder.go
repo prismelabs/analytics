@@ -97,7 +97,6 @@ func (fpl FolderPermissionLevel) String() string {
 }
 
 // CreateFolder creates a folder within current organization.
-// This method rely on user context and therefor, client mutex.
 func (c Client) CreateFolder(ctx context.Context, orgId OrgId, title string) (Folder, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -144,7 +143,6 @@ func (c Client) CreateFolder(ctx context.Context, orgId OrgId, title string) (Fo
 
 // ListFolders lists up to the given limit, children folders of parent folder with
 // the given folder UUID.
-// This method rely on user context and therefor, client mutex.
 func (c Client) ListFolders(ctx context.Context, orgId OrgId, limit int, page int) ([]Folder, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -177,7 +175,6 @@ func (c Client) ListFolders(ctx context.Context, orgId OrgId, limit int, page in
 
 // GetFolderPermissions gets permissions associated to folder with the given
 // FolderId.
-// This method rely on user context and therefor, client mutex.
 func (c Client) GetFolderPermissions(ctx context.Context, orgId OrgId, folderId FolderId) ([]FolderPermission, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -213,7 +210,6 @@ func (c Client) GetFolderPermissions(ctx context.Context, orgId OrgId, folderId 
 // SetFolderPermissions sets permissions associated to folder with the given
 // FolderId. This operation will remove existing permissions if they're not included
 // in the request.
-// This method rely on user context and therefor, client mutex.
 func (c Client) SetFolderPermissions(ctx context.Context, orgId OrgId, folderId FolderId, permissions ...FolderPermission) error {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -253,7 +249,6 @@ func (c Client) SetFolderPermissions(ctx context.Context, orgId OrgId, folderId 
 }
 
 // DeleteFolder deletes folder with the given FolderId.
-// This method rely on user context and therefor, client mutex.
 func (c Client) DeleteFolder(ctx context.Context, orgId OrgId, folderId FolderId) error {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)

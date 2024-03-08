@@ -76,8 +76,7 @@ type Datasource struct {
 	Version        uint           `json:"version,omitempty"`
 }
 
-// CreateDatasource creates a datasource in the given organization. This method
-// rely on user context and therefor, client mutex.
+// CreateDatasource creates a datasource in the given organization.
 func (c Client) CreateDatasource(ctx context.Context, orgId OrgId, name string, srcType string, isDefault bool) (Datasource, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -133,8 +132,7 @@ func (c Client) CreateDatasource(ctx context.Context, orgId OrgId, name string, 
 	return respBody.Datasource, nil
 }
 
-// UpdateDatasource updates datasource in the given organization. This method
-// rely on user context and therefor, client mutex.
+// UpdateDatasource updates datasource in the given organization.
 func (c Client) UpdateDatasource(ctx context.Context, orgId OrgId, datasource Datasource) error {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -175,7 +173,6 @@ func (c Client) UpdateDatasource(ctx context.Context, orgId OrgId, datasource Da
 }
 
 // ListDatasources returns a list of datasource present in the given organization.
-// This method rely on user context and therefor, client mutex.
 func (c Client) ListDatasources(ctx context.Context, orgId OrgId) ([]Datasource, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -208,7 +205,6 @@ func (c Client) ListDatasources(ctx context.Context, orgId OrgId) ([]Datasource,
 }
 
 // DeleteDatasourceByName deletes datasource with the given name inside the given organization.
-// This method rely on user context and therefor, client mutex.
 func (c Client) DeleteDatasourceByName(ctx context.Context, orgId OrgId, name string) error {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -237,7 +233,6 @@ func (c Client) DeleteDatasourceByName(ctx context.Context, orgId OrgId, name st
 }
 
 // GetDatasourceByName retrieves datasource with the given name.
-// This method rely on user context and therefor, client mutex.
 func (c Client) GetDatasourceByName(ctx context.Context, orgId OrgId, name string) (Datasource, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
