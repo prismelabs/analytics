@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/rs/zerolog"
 	"github.com/valyala/fasthttp"
 )
 
@@ -34,7 +34,7 @@ func (c Client) HealthCheck(ctx context.Context) error {
 
 // WaitHealthy checks grafana instance health status using the given config.
 // This function panics if `maxRetry` attempt fails or are not healthy.
-func WaitHealthy(logger log.Logger, c Client, maxRetry int) {
+func WaitHealthy(logger zerolog.Logger, c Client, maxRetry int) {
 	var err error
 	for retry := 0; retry < maxRetry; retry++ {
 		logger.Info().

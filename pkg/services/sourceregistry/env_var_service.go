@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/prismelabs/analytics/pkg/config"
-	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/rs/zerolog"
 )
 
 type EnvVarService struct {
@@ -13,7 +13,7 @@ type EnvVarService struct {
 }
 
 // ProvideEnvVarService is a wire provider for source registry Service.
-func ProvideEnvVarService(logger log.Logger) Service {
+func ProvideEnvVarService(logger zerolog.Logger) Service {
 	rawSources := config.MustGetEnv("PRISME_SOURCE_REGISTRY_SOURCES")
 
 	sources := make(map[string]struct{})

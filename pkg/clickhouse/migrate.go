@@ -7,10 +7,11 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/clickhouse"
 	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/rs/zerolog"
 )
 
 // migrate starts migrating a clickhouse instance to the latest version.
-func migrate(logger log.Logger, db *sql.DB, source source.Driver) {
+func migrate(logger zerolog.Logger, db *sql.DB, source source.Driver) {
 	driver, err := clickhouse.WithInstance(db, &clickhouse.Config{
 		MigrationsTable:       "migrations",
 		MigrationsTableEngine: "MergeTree",
@@ -24,7 +25,7 @@ func migrate(logger log.Logger, db *sql.DB, source source.Driver) {
 	if err != nil {
 		logger.Panic().Msgf("failed to create go-migrate.Migrate instance: %v", err.Error())
 	}
-	m.Log = &logger
+	m.Log = log.GoMigrateLogger(logger)
 
 	err = m.Up()
 	if err != nil && err != gomigrate.ErrNoChange {

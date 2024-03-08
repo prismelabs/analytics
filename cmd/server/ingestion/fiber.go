@@ -16,6 +16,7 @@ func ProvideFiber(
 ) *fiber.App {
 	app := (*fiber.App)(minimalFiber)
 
+	// Public endpoints.
 	app.Use("/api/v1/events/*",
 		fiber.Handler(eventsCorsMiddleware),
 		fiber.Handler(eventsRateLimiterMiddleware),

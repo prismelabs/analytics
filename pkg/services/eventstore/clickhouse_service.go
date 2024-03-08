@@ -8,7 +8,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/prismelabs/analytics/pkg/event"
-	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/rs/zerolog"
 )
 
 // ClickhouseService define a clickhouse based event storage service.
@@ -18,7 +18,7 @@ type ClickhouseService struct {
 
 // ProvideClickhouseService is a wire provider for a clickhouse based event
 // storage service.
-func ProvideClickhouseService(ch clickhouse.Ch, logger log.Logger) Service {
+func ProvideClickhouseService(ch clickhouse.Ch, logger zerolog.Logger) Service {
 	appendCh := make(chan event.PageView, 1024)
 
 	batchSize := config.ParseUintEnvOrDefault("PRISME_EVENTSTORE_MAX_BATCH_SIZE", 4096, 64)
@@ -43,7 +43,7 @@ func (cs *ClickhouseService) StorePageViewEvent(ctx context.Context, ev event.Pa
 	return nil
 }
 
-func batchPageViewLoop(logger log.Logger,
+func batchPageViewLoop(logger zerolog.Logger,
 	conn driver.Conn,
 	appendCh <-chan event.PageView,
 	maxBatchSize uint64,
@@ -90,7 +90,7 @@ func batchPageViewLoop(logger log.Logger,
 	}
 }
 
-func sendBatch(logger log.Logger, batch driver.Batch) {
+func sendBatch(logger zerolog.Logger, batch driver.Batch) {
 	// Retry if an error occurred. This can happen on clickhouse cloud if instance
 	// goes to idle state.
 	var err error

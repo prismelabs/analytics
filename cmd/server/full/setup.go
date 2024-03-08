@@ -5,13 +5,13 @@ import (
 	"time"
 
 	grafanaCli "github.com/prismelabs/analytics/pkg/grafana"
-	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/grafana"
 	"github.com/prismelabs/analytics/pkg/wired"
+	"github.com/rs/zerolog"
 )
 
 // ProvideSetup is a wire provider that performs setup of full server.
-func ProvideSetup(logger log.Logger, cli grafanaCli.Client, grafanaService grafana.Service) wired.Setup {
+func ProvideSetup(logger zerolog.Logger, cli grafanaCli.Client, grafanaService grafana.Service) wired.Setup {
 	grafanaCli.WaitHealthy(logger, cli, 5)
 	logger.Info().Msg("setting up grafana datasource and dashboards...")
 	{

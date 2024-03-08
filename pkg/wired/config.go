@@ -2,12 +2,12 @@ package wired
 
 import (
 	"github.com/prismelabs/analytics/pkg/config"
-	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/rs/zerolog"
 )
 
 // ProvideClickhouseConfig is a wire provider for config.Clickhouse.
 func ProvideClickhouseConfig(bootstrapLogger BootstrapLogger) config.Clickhouse {
-	logger := log.Logger(bootstrapLogger)
+	logger := zerolog.Logger(bootstrapLogger)
 
 	logger.Info().Msg("loading clickhouse configuration...")
 	cfg := config.ClickhouseFromEnv()
@@ -18,7 +18,7 @@ func ProvideClickhouseConfig(bootstrapLogger BootstrapLogger) config.Clickhouse 
 
 // ProvideServerConfig is a wire provider for config.Server.
 func ProvideServerConfig(bootstrapLogger BootstrapLogger) config.Server {
-	logger := log.Logger(bootstrapLogger)
+	logger := zerolog.Logger(bootstrapLogger)
 
 	logger.Info().Msg("loading server configuration...")
 	cfg := config.ServerFromEnv()
@@ -29,7 +29,7 @@ func ProvideServerConfig(bootstrapLogger BootstrapLogger) config.Server {
 
 // ProvideGrafanaConfig is a wire provider for config.Server.
 func ProvideGrafanaConfig(bootstrapLogger BootstrapLogger) config.Grafana {
-	logger := log.Logger(bootstrapLogger)
+	logger := zerolog.Logger(bootstrapLogger)
 
 	logger.Info().Msg("loading grafana configuration...")
 	cfg := config.GrafanaFromEnv()

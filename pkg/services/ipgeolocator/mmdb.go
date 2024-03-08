@@ -7,11 +7,11 @@ import (
 
 	"github.com/oschwald/maxminddb-golang"
 	"github.com/prismelabs/analytics/pkg/embedded"
-	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/rs/zerolog"
 )
 
 // ProvideMmdbService is a wire provider for mmdb based ip geolocator service.
-func ProvideMmdbService(logger log.Logger) Service {
+func ProvideMmdbService(logger zerolog.Logger) Service {
 	reader, err := maxminddb.FromBytes(embedded.Ip2AsnDb)
 	if err != nil {
 		logger.Err(err).Msg("failed to load maxming GeoLite2 country database")

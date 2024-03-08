@@ -13,7 +13,7 @@ import (
 type AccessLog fiber.Handler
 
 // ProvideAccessLog define a wire provider for AccessLog middleware.
-func ProvideAccessLog(cfg config.Server, logger log.Logger) AccessLog {
+func ProvideAccessLog(cfg config.Server, logger zerolog.Logger) AccessLog {
 	// Open access log file.
 	accessLogFile, err := os.OpenFile(cfg.AccessLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
@@ -26,7 +26,7 @@ func ProvideAccessLog(cfg config.Server, logger log.Logger) AccessLog {
 	return accessLog(accessLogger)
 }
 
-func accessLog(logger log.Logger) fiber.Handler {
+func accessLog(logger zerolog.Logger) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		start := time.Now()
 

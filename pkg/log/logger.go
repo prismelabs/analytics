@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	gomigrate "github.com/golang-migrate/migrate/v4"
 	"github.com/rs/zerolog"
 )
 
@@ -26,11 +27,8 @@ func init() {
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
 }
 
-type Logger struct {
-	zerolog.Logger
-}
-
-func NewLogger(name string, w io.Writer, debug bool) Logger {
+// NewLogger creates a new configured zerolog logger.
+func NewLogger(name string, w io.Writer, debug bool) zerolog.Logger {
 	pid := os.Getpid()
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -52,17 +50,12 @@ func NewLogger(name string, w io.Writer, debug bool) Logger {
 		logger = logger.Level(zerolog.InfoLevel)
 	}
 
-	return Logger{
-		Logger: logger,
-	}
+	return logger
 }
 
-// Verbose implements migrate.Logger.
-func (l *Logger) Verbose() bool {
-	return l.Logger.GetLevel() <= zerolog.DebugLevel
-}
+func TestLoggers(logger ...zerolog.Logger) {
+	initialErrorHandler := zerolog.ErrorHandler
 
-func TestLoggers(logger ...Logger) {
 	zerolog.ErrorHandler = func(err error) {
 		panic(err)
 	}
@@ -71,11 +64,25 @@ func TestLoggers(logger ...Logger) {
 		l.Log().Msgf("logger ready")
 	}
 
-	zerolog.ErrorHandler = nil
+	zerolog.ErrorHandler = initialErrorHandler
 }
 
 type bunyanLevelHook struct{}
 
 func (blh bunyanLevelHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
 	e.Int("level", zerologToBunyanLevels[level])
+}
+
+// GoMigrateLogger wraps the given logger to implements gomigrate.Logger.
+func GoMigrateLogger(logger zerolog.Logger) gomigrate.Logger {
+	return &goMigrateLogger{logger}
+}
+
+type goMigrateLogger struct {
+	zerolog.Logger
+}
+
+// Verbose implements migrate.Logger.
+func (gml *goMigrateLogger) Verbose() bool {
+	return gml.Logger.GetLevel() <= zerolog.DebugLevel
 }
