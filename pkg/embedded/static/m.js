@@ -4,7 +4,7 @@
   var pd = document.currentScript.dataset.prismeDomain || ssrc.host
   var s = location.protocol;
   var d = document.currentScript.dataset.domain || location.host;
-  var r = document.referrer;
+  var r = document.referrer.replace(location.host, d);
 
   function pageview() {
     var u = s.concat('//', d, location.pathname)
