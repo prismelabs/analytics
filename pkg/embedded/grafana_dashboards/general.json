@@ -184,8 +184,8 @@
 			},
 			"gridPos": {
 				"h": 7,
-				"w": 18,
-				"x": 3,
+				"w": 22,
+				"x": 1,
 				"y": 0
 			},
 			"id": 10,
@@ -307,7 +307,7 @@
 					},
 					"pluginVersion": "4.0.3",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(*) AS \"Total visits previous period\"\nFROM \"prisme\".\"events_pageviews\"\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\n",
+					"rawSql": "SELECT COUNT(*) AS \"Total visits previous period\"\nFROM \"prisme\".\"events_pageviews\"\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\n",
 					"refId": "Total visits previous period"
 				},
 				{
@@ -330,7 +330,7 @@
 					},
 					"pluginVersion": "4.0.3",
 					"queryType": "table",
-					"rawSql": "SELECT $__timeInterval(timestamp) as time, COUNT(*) AS \"Total visits\"\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\nGROUP BY time\nORDER BY time\n",
+					"rawSql": "SELECT $__timeInterval(timestamp) as time, COUNT(*) AS \"Total visits\"\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\nGROUP BY time\nORDER BY time\n",
 					"refId": "Visits over time"
 				},
 				{
@@ -500,8 +500,8 @@
 			},
 			"gridPos": {
 				"h": 12,
-				"w": 18,
-				"x": 3,
+				"w": 22,
+				"x": 1,
 				"y": 7
 			},
 			"id": 6,
@@ -560,8 +560,8 @@
 			},
 			"gridPos": {
 				"h": 13,
-				"w": 9,
-				"x": 3,
+				"w": 8,
+				"x": 1,
 				"y": 19
 			},
 			"id": 13,
@@ -634,6 +634,206 @@
 				"type": "grafana-clickhouse-datasource",
 				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"fixedColor": "purple",
+						"mode": "shades"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": [],
+					"unitScale": true
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "internal Internal"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "semi-dark-blue",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "direct Direct"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#7253cf",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "External"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "semi-dark-purple",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"__systemRef": "hideSeriesFrom",
+						"matcher": {
+							"id": "byNames",
+							"options": {
+								"mode": "exclude",
+								"names": [
+									"internal Internal",
+									"direct Direct",
+									"external External",
+									"Direct"
+								],
+								"prefix": "All except:",
+								"readOnly": true
+							}
+						},
+						"properties": [
+							{
+								"id": "custom.hideFrom",
+								"value": {
+									"legend": false,
+									"tooltip": false,
+									"viz": true
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 13,
+				"w": 7,
+				"x": 9,
+				"y": 19
+			},
+			"id": 19,
+			"options": {
+				"displayLabels": [
+					"percent",
+					"name"
+				],
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true,
+					"values": []
+				},
+				"pieType": "pie",
+				"reduceOptions": {
+					"calcs": [
+						"lastNotNull"
+					],
+					"fields": "",
+					"values": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"editorType": "sql",
+					"format": 1,
+					"meta": {
+						"builderOptions": {
+							"columns": [],
+							"database": "",
+							"limit": 1000,
+							"mode": "list",
+							"queryType": "table",
+							"table": ""
+						}
+					},
+					"pluginVersion": "4.0.3",
+					"queryType": "table",
+					"rawSql": "SELECT COUNT() AS Internal\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain = domain\nAND country_code IN (${locations:sqlstring})",
+					"refId": "internal"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"editorType": "sql",
+					"format": 1,
+					"hide": false,
+					"meta": {
+						"builderOptions": {
+							"columns": [],
+							"database": "",
+							"limit": 1000,
+							"mode": "list",
+							"queryType": "table",
+							"table": ""
+						}
+					},
+					"pluginVersion": "4.0.3",
+					"queryType": "table",
+					"rawSql": "SELECT COUNT(*) AS Direct\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain = 'direct'\nAND country_code IN (${locations:sqlstring})",
+					"refId": "direct"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"editorType": "sql",
+					"format": 1,
+					"hide": false,
+					"meta": {
+						"builderOptions": {
+							"columns": [],
+							"database": "",
+							"limit": 1000,
+							"mode": "list",
+							"queryType": "table",
+							"table": ""
+						}
+					},
+					"pluginVersion": "4.0.3",
+					"queryType": "table",
+					"rawSql": "SELECT COUNT(*) AS External\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != 'direct' AND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})",
+					"refId": "external"
+				}
+			],
+			"title": "Traffic sources",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-clickhouse-datasource",
+				"uid": "{{ .DatasourceClickhouseUid }}"
+			},
 			"description": "Top 10 of most visited pages.",
 			"fieldConfig": {
 				"defaults": {
@@ -661,8 +861,8 @@
 			},
 			"gridPos": {
 				"h": 13,
-				"w": 9,
-				"x": 12,
+				"w": 7,
+				"x": 16,
 				"y": 19
 			},
 			"id": 14,
@@ -765,8 +965,8 @@
 			},
 			"gridPos": {
 				"h": 13,
-				"w": 9,
-				"x": 3,
+				"w": 15,
+				"x": 1,
 				"y": 32
 			},
 			"id": 15,
@@ -803,7 +1003,7 @@
 									"field": "pageview",
 									"fixed": 5,
 									"max": 15,
-									"min": 2
+									"min": 3
 								},
 								"symbol": {
 									"fixed": "img/icons/marker/triangle.svg",
@@ -847,10 +1047,10 @@
 				},
 				"view": {
 					"allLayers": true,
-					"id": "zero",
+					"id": "fit",
 					"lat": 0,
 					"lon": 0,
-					"zoom": 1
+					"zoom": 10
 				}
 			},
 			"pluginVersion": "10.3.3",
@@ -913,8 +1113,8 @@
 			},
 			"gridPos": {
 				"h": 13,
-				"w": 9,
-				"x": 12,
+				"w": 7,
+				"x": 16,
 				"y": 32
 			},
 			"id": 18,
@@ -1016,15 +1216,14 @@
 					"displayName": "${__field.labels[\"browser_family\"]}",
 					"fieldMinMax": false,
 					"mappings": [],
-					"noValue": "0",
 					"unitScale": true
 				},
 				"overrides": []
 			},
 			"gridPos": {
 				"h": 13,
-				"w": 9,
-				"x": 3,
+				"w": 11,
+				"x": 1,
 				"y": 45
 			},
 			"id": 4,
@@ -1132,7 +1331,7 @@
 			},
 			"gridPos": {
 				"h": 13,
-				"w": 9,
+				"w": 11,
 				"x": 12,
 				"y": 45
 			},
@@ -1227,14 +1426,14 @@
 			"type": "piechart"
 		}
 	],
-	"refresh": false,
+	"refresh": "",
 	"schemaVersion": 39,
 	"tags": [],
 	"templating": {
 		"list": [
 			{
 				"current": {
-					"selected": true,
+					"selected": false,
 					"text": [
 						"All"
 					],
@@ -1263,7 +1462,7 @@
 			},
 			{
 				"current": {
-					"selected": true,
+					"selected": false,
 					"text": [
 						"All"
 					],
@@ -1292,7 +1491,7 @@
 			},
 			{
 				"current": {
-					"selected": true,
+					"selected": false,
 					"text": [
 						"All"
 					],
@@ -1321,7 +1520,7 @@
 			},
 			{
 				"current": {
-					"selected": true,
+					"selected": false,
 					"text": [
 						"All"
 					],
@@ -1407,7 +1606,7 @@
 		]
 	},
 	"time": {
-		"from": "now-24h",
+		"from": "now-2d",
 		"to": "now"
 	},
 	"timepicker": {
