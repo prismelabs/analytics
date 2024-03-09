@@ -15,9 +15,12 @@
     <img alt="GitHub go.mod Go version" src="https://img.shields.io/github/go-mod/go-version/prismelabs/analytics">
 </p>
 
-# :gem: `prismeanalytics` - An Open Source, privacy-focused and progressive analytics service.
+# :gem: Prisme Analytics
+
+An Open Source, privacy-focused and progressive analytics service.
 
 [Documentation](https://www.prismeanalytics.com/docs)
+|
 [Live demo](https://app.prismeanalytics.com/grafana)
 
 ![grafana dashboard](.github/images/builtin-dashboard.jpg)
