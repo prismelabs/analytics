@@ -102,13 +102,13 @@ func connectSql(logger zerolog.Logger, cfg config.Clickhouse, maxRetry int) *sql
 
 		db, err = sql.Open("clickhouse", connectionString)
 		if err != nil {
-			println(err.Error())
+			logger.Error().Err(err).Send()
 			continue
 		}
 
 		err = db.Ping()
 		if err != nil {
-			println(err.Error())
+			logger.Error().Err(err).Send()
 			continue
 		}
 
