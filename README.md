@@ -25,6 +25,15 @@ An Open Source, privacy-focused and progressive analytics service.
 
 ![grafana dashboard](.github/images/builtin-dashboard.jpg)
 
+## Why ?
+
+Prisme Analytics is the only lightweight and Open Source analytics solution with:
+* Custom dashboards
+* Custom events (soon)
+* Team management
+* Permissions management
+* Extreme ressources efficiency (thanks to [fiber](https://gofiber.io/) and [ClickHouse](https://clickhouse.com))
+
 ## Configuration
 
 You can find configuration documentation on
@@ -32,7 +41,7 @@ You can find configuration documentation on
 
 ## Performance
 
-Prisme Analytics ingestion server is easily capable of ingesting ~8000 req/s on
+Prisme Analytics ingestion server is **easily** capable of ingesting ~8000 req/s on
 AMD Ryzen 7 7840U w/ Radeon 780M Graphics using ~70% of a CPU core and ~200M of RAM.
 
 ```
