@@ -444,7 +444,7 @@
 					},
 					"fieldMinMax": true,
 					"mappings": [],
-					"noValue": "0",
+					"noValue": "No data to display. Adjust filters or visit your website to generate your first page view event.",
 					"thresholds": {
 						"mode": "percentage",
 						"steps": [
@@ -826,7 +826,7 @@
 					"refId": "external"
 				}
 			],
-			"title": "Traffic sources",
+			"title": "Traffic Sources",
 			"type": "piechart"
 		},
 		{
