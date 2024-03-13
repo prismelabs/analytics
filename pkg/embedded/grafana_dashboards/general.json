@@ -549,8 +549,7 @@
 						"mode": "percentage",
 						"steps": [
 							{
-								"color": "super-light-blue",
-								"value": null
+								"color": "super-light-blue"
 							}
 						]
 					},
@@ -846,8 +845,7 @@
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "green",
-								"value": null
+								"color": "green"
 							},
 							{
 								"color": "red",
@@ -954,8 +952,7 @@
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "blue",
-								"value": null
+								"color": "blue"
 							}
 						]
 					},
@@ -1098,8 +1095,7 @@
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "red",
-								"value": null
+								"color": "red"
 							},
 							{
 								"color": "green",
@@ -1433,7 +1429,7 @@
 		"list": [
 			{
 				"current": {
-					"selected": false,
+					"selected": true,
 					"text": [
 						"All"
 					],
@@ -1445,7 +1441,7 @@
 					"type": "grafana-clickhouse-datasource",
 					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
-				"definition": "SELECT DISTINCT(domain) FROM prisme.events_pageviews\nWHERE $__timeFilter(timestamp)",
+				"definition": "SELECT DISTINCT(domain) FROM prisme.events_pageviews",
 				"description": "Website domain",
 				"hide": 0,
 				"includeAll": true,
@@ -1453,7 +1449,7 @@
 				"multi": true,
 				"name": "domains",
 				"options": [],
-				"query": "SELECT DISTINCT(domain) FROM prisme.events_pageviews\nWHERE $__timeFilter(timestamp)",
+				"query": "SELECT DISTINCT(domain) FROM prisme.events_pageviews",
 				"refresh": 2,
 				"regex": "",
 				"skipUrlSync": false,
@@ -1462,7 +1458,7 @@
 			},
 			{
 				"current": {
-					"selected": false,
+					"selected": true,
 					"text": [
 						"All"
 					],
@@ -1491,7 +1487,7 @@
 			},
 			{
 				"current": {
-					"selected": false,
+					"selected": true,
 					"text": [
 						"All"
 					],
@@ -1520,7 +1516,7 @@
 			},
 			{
 				"current": {
-					"selected": false,
+					"selected": true,
 					"text": [
 						"All"
 					],
