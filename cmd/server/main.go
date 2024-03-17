@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	"github.com/prismelabs/analytics/cmd/server/full"
@@ -29,13 +31,24 @@ func main() {
 	case "default":
 		logger.Info().Msg("initilializing default server...")
 		app = full.Initialize(wired.BootstrapLogger(logger))
-		logger.Info().Msg("default server successfully initialized.")
+		app.Logger.Info().Msg("default server successfully initialized.")
 
 	default:
-		logger.Panic().Str("mode", mode).Msg("unknown server mode")
+		app.Logger.Panic().Str("mode", mode).Msg("unknown server mode")
+	}
+
+	// Profiling server.
+	if app.Config.ProfilerHostPort != "" {
+		go func() {
+			app.Logger.Info().Msgf("profiler server listening for incoming request on http://%v", app.Config.ProfilerHostPort)
+			err := http.ListenAndServe(app.Config.ProfilerHostPort, nil)
+			app.Logger.Panic().Err(err).Msg("failed to start profiler server")
+		}()
+	} else {
+		app.Logger.Info().Msgf("profiling server disabled")
 	}
 
 	socket := "0.0.0.0:" + fmt.Sprint(app.Config.Port)
-	logger.Info().Msgf("start listening for incoming requests on http://%v", socket)
-	logger.Panic().Err(app.Fiber.Listen(socket)).Send()
+	app.Logger.Info().Msgf("start listening for incoming requests on http://%v", socket)
+	app.Logger.Panic().Err(app.Fiber.Listen(socket)).Msg("failed to start fiber server")
 }
