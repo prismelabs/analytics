@@ -10,7 +10,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/middlewares"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
-	"github.com/prismelabs/analytics/pkg/services/sourceregistry"
+	"github.com/prismelabs/analytics/pkg/services/originregistry"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/wired"
 )
@@ -30,9 +30,10 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		middlewares.ProvideEventsCors,
 		middlewares.ProvideEventsRateLimiter,
 		middlewares.ProvideLogger,
+		middlewares.ProvideNonRegisteredOriginFilter,
 		middlewares.ProvideRequestId,
 		middlewares.ProvideStatic,
-		sourceregistry.ProvideEnvVarService,
+		originregistry.ProvideEnvVarService,
 		uaparser.ProvideService,
 		wired.ProvideApp,
 		wired.ProvideClickhouseConfig,

@@ -8,7 +8,6 @@ import (
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
-	"github.com/prismelabs/analytics/pkg/services/sourceregistry"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 )
 
@@ -17,7 +16,6 @@ type PostEventsPageview fiber.Handler
 // ProvidePostEventsPageViews is a wire provider for POST /api/v1/events/pageviews events handler.
 func ProvidePostEventsPageViews(
 	eventStore eventstore.Service,
-	sourceRegistry sourceregistry.Service,
 	uaParserService uaparser.Service,
 	ipgeolocatorService ipgeolocator.Service,
 ) PostEventsPageview {
@@ -35,19 +33,6 @@ func ProvidePostEventsPageViews(
 		if err != nil {
 			c.Response().SetStatusCode(fiber.StatusBadRequest)
 			return fmt.Errorf("invalid referrer hostname: %w", err)
-		}
-
-		// Ensure source is registered.
-		isRegistered, err := sourceRegistry.IsSourceRegistered(c.UserContext(), domainName)
-		if err != nil {
-			c.Response().SetStatusCode(fiber.StatusInternalServerError)
-			return fmt.Errorf("failed to store pageview event: %w", err)
-		}
-
-		// Source is not registered.
-		if !isRegistered {
-			c.Response().SetStatusCode(fiber.StatusBadRequest)
-			return fmt.Errorf("source %q not registered", domainName.SourceString())
 		}
 
 		// Website from which viewer comes from.

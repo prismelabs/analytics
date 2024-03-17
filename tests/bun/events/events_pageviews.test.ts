@@ -9,7 +9,14 @@ console.log('faker seed', seed)
 faker.seed(seed)
 
 test('GET request instead of POST request', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL)
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'GET',
+    headers: {
+      'Origin': 'http://mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/foo'
+    }
+  })
   expect(response.status).toBe(405)
 })
 
@@ -17,6 +24,7 @@ test('invalid URL in X-Prisme-Referrer header', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
       'X-Prisme-Referrer': 'not an url'
     }
@@ -28,6 +36,7 @@ test('invalid URL in Referer header', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
       Referer: 'not an url'
     }
@@ -35,10 +44,11 @@ test('invalid URL in Referer header', async () => {
   expect(response.status).toBe(400)
 })
 
-test('non registered domain in X-Prisme-Referrer header is rejected', async () => {
+test('non registered domain in Origin header is rejected', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'https://example.com',
       'X-Forwarded-For': faker.internet.ip(),
       'X-Prisme-Referrer': 'https://example.com/foo?bar=baz#qux'
     }
@@ -46,21 +56,23 @@ test('non registered domain in X-Prisme-Referrer header is rejected', async () =
   expect(response.status).toBe(400)
 })
 
-test('non registered domain in Referer header is rejected', async () => {
+test('registered domain in Origin header and valid referrer is acepted is accepted', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
       Referer: 'https://example.com/foo?bar=baz#qux'
     }
   })
-  expect(response.status).toBe(400)
+  expect(response.status).toBe(200)
 })
 
-test('valid URL with registered domain in X-Prisme-Referrer header is accepted', async () => {
+test('registered domain in Origin header and valid X-Prisme-Referrer is accepted', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/foo?bar=baz#qux',
       'X-Prisme-Document-Referrer': 'https://www.example.com/foo'
@@ -82,10 +94,11 @@ test('valid URL with registered domain in X-Prisme-Referrer header is accepted',
   })
 })
 
-test('valid URL with registered domain in Referer header is accepted', async () => {
+test('valid URL with registered domain in Origin header is accepted', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
       Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux',
       'X-Prisme-Document-Referrer': 'https://www.example.com/foo'
@@ -111,6 +124,7 @@ test('valid pageview with Windows + Chrome user agent', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
       Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux',
       'X-Prisme-Document-Referrer': 'https://www.example.com/foo',
@@ -137,6 +151,7 @@ test('valid pageview without X-Prisme-Document-Referrer', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
       Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux'
     }
@@ -161,6 +176,7 @@ test('valid pageview without trailing slash in referrer', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
       Referer: 'http://foo.mywebsite.localhost' // No / after localhost
     }
@@ -185,6 +201,7 @@ test('valid pageview with US IP address', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': '8.8.8.8', // Google public DNS
       Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux'
     }
@@ -209,6 +226,7 @@ test('valid pageview with dirty path', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      'Origin': 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': '8.8.8.8', // Google public DNS
       Referer: 'http://foo.mywebsite.localhost///another/../another/foo?bar=baz#qux'
     }

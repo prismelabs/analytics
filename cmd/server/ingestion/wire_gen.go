@@ -12,7 +12,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/middlewares"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
-	"github.com/prismelabs/analytics/pkg/services/sourceregistry"
+	"github.com/prismelabs/analytics/pkg/services/originregistry"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/wired"
 )
@@ -32,16 +32,17 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	requestId := middlewares.ProvideRequestId(server)
 	static := middlewares.ProvideStatic(server)
 	minimalFiber := wired.ProvideMinimalFiber(accessLog, errorHandler, config, healhCheck, middlewaresLogger, requestId, static)
+	service := originregistry.ProvideEnvVarService(zerologLogger)
+	nonRegisteredOriginFilter := middlewares.ProvideNonRegisteredOriginFilter(service)
 	configClickhouse := wired.ProvideClickhouseConfig(logger)
 	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
 	ch := clickhouse.ProvideCh(zerologLogger, configClickhouse, driver)
-	service := eventstore.ProvideClickhouseService(ch, zerologLogger)
-	sourceregistryService := sourceregistry.ProvideEnvVarService(zerologLogger)
+	eventstoreService := eventstore.ProvideClickhouseService(ch, zerologLogger)
 	uaparserService := uaparser.ProvideService(zerologLogger)
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger)
-	postEventsPageview := handlers.ProvidePostEventsPageViews(service, sourceregistryService, uaparserService, ipgeolocatorService)
-	postEventsCustom := handlers.ProvidePostEventsCustom(service, sourceregistryService, uaparserService, ipgeolocatorService)
-	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, postEventsPageview, postEventsCustom)
+	postEventsCustom := handlers.ProvidePostEventsCustom(eventstoreService, uaparserService, ipgeolocatorService)
+	postEventsPageview := handlers.ProvidePostEventsPageViews(eventstoreService, uaparserService, ipgeolocatorService)
+	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, nonRegisteredOriginFilter, postEventsCustom, postEventsPageview)
 	setup := wired.ProvideSetup()
 	wiredApp := wired.ProvideApp(server, app, zerologLogger, setup)
 	return wiredApp

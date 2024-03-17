@@ -37,11 +37,6 @@ func (dn DomainName) String() string {
 	return dn.value
 }
 
-// SourceString implements sourceregistry.Source.
-func (dn DomainName) SourceString() string {
-	return dn.value
-}
-
 // UnmarshalJSON implements json.Unmarshaler.
 func (dn *DomainName) UnmarshalJSON(rawJSON []byte) error {
 	var rawDomain string
