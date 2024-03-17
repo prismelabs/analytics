@@ -29,7 +29,6 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		middlewares.ProvideErrorHandler,
 		middlewares.ProvideEventsCors,
 		middlewares.ProvideEventsRateLimiter,
-		middlewares.ProvideLogger,
 		middlewares.ProvideNonRegisteredOriginFilter,
 		middlewares.ProvideRequestId,
 		middlewares.ProvideStatic,

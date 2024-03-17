@@ -16,7 +16,6 @@ func ProvideMinimalFiber(
 	errorHandlerMiddleware middlewares.ErrorHandler,
 	fiberCfg fiber.Config,
 	healthcheckHandler handlers.HealhCheck,
-	loggerMiddleware middlewares.Logger,
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
 ) MinimalFiber {
@@ -24,7 +23,6 @@ func ProvideMinimalFiber(
 
 	app.Use(fiber.Handler(requestIdMiddleware))
 	app.Use(fiber.Handler(accessLogMiddleware))
-	app.Use(fiber.Handler(loggerMiddleware))
 	app.Use(fiber.Handler(errorHandlerMiddleware))
 
 	app.Use("/static", fiber.Handler(staticMiddleware))
