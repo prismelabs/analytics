@@ -43,6 +43,8 @@
                 postBuild = ''
                   mv "$GOPATH/bin/server" "$GOPATH/bin/prisme"
                 '';
+
+                subPackages = "./cmd/server";
               };
 
               docker = pkgs.dockerTools.buildImage {

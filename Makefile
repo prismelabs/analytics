@@ -6,15 +6,18 @@ GENENV_FILES ?= $(wildcard ./config/*)
 GENENV_FILE ?= ./config/genenv.local.sh
 
 .PHONY: start
-start: .env codegen
-	source ./.env && go build ./cmd/server
-	$(DOCKER_COMPOSE) \
-		-f ./docker-compose.$${PRISME_MODE:-default}.yml \
+start: start/server
+
+start/%: .env codegen
+	go build -o prisme ./cmd/$*
+	source ./.env \
+	&& $(DOCKER_COMPOSE) \
+		-f ./docker-compose.$${PRISME_MODE}.yml \
 		up --wait
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
 		down
-	$(DOCKER_COMPOSE) \
+	-$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
 		up --wait --force-recreate
 	$(DOCKER) logs -f $(notdir $(CURDIR))-prisme-1 |& bunyan
@@ -37,9 +40,11 @@ down:
 
 .PHONY: clean
 clean:
+	@touch .env
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
 		-f ./docker-compose.default.yml \
+		-f ./docker-compose.ingestion.yml \
 		 down --volumes --remove-orphans
 	rm -f .env
 

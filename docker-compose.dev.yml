@@ -6,7 +6,7 @@ services:
     environment:
       PRISME_MODE: "${PRISME_MODE:-default}"
     working_dir: "/app"
-    command: "/app/server"
+    command: "/app/prisme ${ARGS:-}"
     volumes:
       - "./:/app:ro"
     ports:

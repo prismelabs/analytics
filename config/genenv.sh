@@ -7,7 +7,7 @@ setenv() {
 }
 
 # Server options.
-# setenv PRISME_MODE
+setenv PRISME_MODE "default"
 setenv PRISME_ACCESS_LOG "/dev/stdout"
 setenv PRISME_DEBUG "true"
 setenv PRISME_PORT "8000"
