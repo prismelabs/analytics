@@ -13,7 +13,7 @@ type EventsRateLimiter fiber.Handler
 // ProvideEventsRateLimiter is a wire provider for events endpoints rate limiter.
 func ProvideEventsRateLimiter(cfg config.Server) EventsRateLimiter {
 	return limiter.New(limiter.Config{
-		Max: 10,
+		Max: 60,
 		KeyGenerator: func(c *fiber.Ctx) string {
 			return c.IP()
 		},

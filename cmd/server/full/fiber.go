@@ -12,7 +12,8 @@ func ProvideFiber(
 	eventsCorsMiddleware middlewares.EventsCors,
 	eventsRateLimiterMiddleware middlewares.EventsRateLimiter,
 	minimalFiber wired.MinimalFiber,
-	postPageViewEventHandler handlers.PostPageViewEvent,
+	postPageViewEventHandler handlers.PostEventsPageview,
+	postCustomEventHandler handlers.PostEventsCustom,
 ) *fiber.App {
 	app := (*fiber.App)(minimalFiber)
 
@@ -22,6 +23,7 @@ func ProvideFiber(
 		fiber.Handler(eventsRateLimiterMiddleware),
 	)
 	app.Post("/api/v1/events/pageviews", fiber.Handler(postPageViewEventHandler))
+	app.Post("/api/v1/events/custom/:name", fiber.Handler(postCustomEventHandler))
 
 	return app
 }

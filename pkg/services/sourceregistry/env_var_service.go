@@ -36,7 +36,7 @@ func ProvideEnvVarService(logger zerolog.Logger) Service {
 // IsSourceRegistered implements Service.
 func (evs EnvVarService) IsSourceRegistered(_ context.Context, src Source) (bool, error) {
 	_, ok := evs.sources[src.SourceString()]
-	evs.Logger.Debug().Bool("source_registered", ok).Send()
+	evs.Logger.Debug().Bool("source_registered", ok).Msg("checked if source is registered")
 
 	return ok, nil
 }

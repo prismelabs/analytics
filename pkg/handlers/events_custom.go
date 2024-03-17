@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
@@ -12,16 +13,20 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 )
 
-type PostEventsPageview fiber.Handler
+type PostEventsCustom fiber.Handler
 
-// ProvidePostEventsPageViews is a wire provider for POST /api/v1/events/pageviews events handler.
-func ProvidePostEventsPageViews(
+// ProvidePostEventsCustom is a wire provider for POST /api/v1/events/custom/<name> events handler.
+func ProvidePostEventsCustom(
 	eventStore eventstore.Service,
 	sourceRegistry sourceregistry.Service,
 	uaParserService uaparser.Service,
 	ipgeolocatorService ipgeolocator.Service,
-) PostEventsPageview {
+) PostEventsCustom {
 	return func(c *fiber.Ctx) error {
+		if utils.UnsafeString(c.Request().Header.ContentType()) != fiber.MIMEApplicationJSON {
+			return fiber.ErrBadRequest
+		}
+
 		// Referrer of the POST request, that is the viewed page.
 		pageReferrer := string(peekReferrerHeader(c))
 		pageUrl, err := url.ParseRequestURI(pageReferrer)
@@ -50,24 +55,13 @@ func ProvidePostEventsPageViews(
 			return fmt.Errorf("source %q not registered", domainName.SourceString())
 		}
 
-		// Website from which viewer comes from.
-		referrer := string(c.Request().Header.Peek("X-Prisme-Document-Referrer"))
-
-		// Parse user agent.
-		cli := uaParserService.ParseUserAgent(string(c.Request().Header.UserAgent()))
-
-		// Find country code for given IP.
-		countryCode := ipgeolocatorService.FindCountryCodeForIP(c.IP())
-
-		// Create pageview.
-		pageview, err := event.NewPageView(pageUrl, domainName, cli, referrer, countryCode)
+		customEvent, err := event.NewCustom(domainName, c.Params("name"), c.Body())
 		if err != nil {
-			c.Response().SetStatusCode(fiber.StatusBadRequest)
-			return fmt.Errorf("invalid pageview event: %w", err)
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 
 		// Store event.
-		err = eventStore.StorePageViewEvent(c.UserContext(), pageview)
+		err = eventStore.StoreCustomEvent(c.UserContext(), customEvent)
 		if err != nil {
 			c.Response().SetStatusCode(fiber.StatusInternalServerError)
 			return fmt.Errorf("failed to store pageview event: %w", err)

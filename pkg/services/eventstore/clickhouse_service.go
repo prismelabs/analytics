@@ -14,7 +14,8 @@ import (
 // ProvideClickhouseService is a wire provider for a clickhouse based event
 // storage service.
 func ProvideClickhouseService(ch clickhouse.Ch, logger zerolog.Logger) Service {
-	appendCh := make(chan event.PageView, 1024)
+	pageviewCh := make(chan event.PageView, 1024)
+	customCh := make(chan event.Custom, 1024)
 
 	batchSize := config.ParseUintEnvOrDefault("PRISME_EVENTSTORE_MAX_BATCH_SIZE", 4096, 64)
 	batchTimeout := config.ParseDurationEnvOrDefault("PRISME_EVENTSTORE_MAX_BATCH_TIMEOUT", 1*time.Minute)
@@ -28,29 +29,33 @@ func ProvideClickhouseService(ch clickhouse.Ch, logger zerolog.Logger) Service {
 
 	logger.Info().Msg("clickhouse based event store configured")
 
-	go batchPageViewLoop(logger, ch.Conn, appendCh, batchSize, batchTimeout)
+	go batchPageViewLoop(logger, ch.Conn, pageviewCh, batchSize, batchTimeout)
+	// go batchCustomEventLoop(logger, ch.Conn, customCh, batchSize, batchTimeout)
 
 	return &ClickhouseService{
 		logger,
-		appendCh,
+		pageviewCh,
+		customCh,
 	}
 }
 
 // ClickhouseService define a clickhouse based event storage service.
 type ClickhouseService struct {
-	logger   zerolog.Logger
-	appendCh chan<- event.PageView
+	logger     zerolog.Logger
+	pageviewCh chan<- event.PageView
+	customCh   chan<- event.Custom
 }
 
 // StorePageViewEvent implements Service.
 func (cs *ClickhouseService) StorePageViewEvent(ctx context.Context, ev event.PageView) error {
-	cs.appendCh <- ev
+	cs.pageviewCh <- ev
 	cs.logger.Debug().Object("pageview_event", ev).Msg("pageview event added to batch")
 
 	return nil
 }
 
-func batchPageViewLoop(logger zerolog.Logger,
+func batchPageViewLoop(
+	logger zerolog.Logger,
 	conn driver.Conn,
 	appendCh <-chan event.PageView,
 	maxBatchSize uint64,
@@ -68,6 +73,7 @@ func batchPageViewLoop(logger zerolog.Logger,
 			)
 			if err != nil {
 				logger.Err(err).Msg("failed to prepare batch")
+				continue
 			}
 
 			batchCreationDate = time.Now()
@@ -106,12 +112,65 @@ func sendBatch(logger zerolog.Logger, batch driver.Batch) {
 		if err != nil {
 			time.Sleep(time.Duration(i) * time.Second)
 		} else {
-			logger.Debug().Msg("pageviews batch successfully sent")
+			logger.Debug().Msg("pageview events batch successfully sent")
 			break
 		}
 	}
 
 	if err != nil {
-		logger.Err(err).Msg("failed to send pageview batch")
+		logger.Err(err).Msg("failed to send pageview events batch")
+	}
+}
+
+// StoreCustomEvent implements Service.
+func (cs *ClickhouseService) StoreCustomEvent(_ context.Context, ev event.Custom) error {
+	cs.customCh <- ev
+	cs.logger.Debug().Object("custom_event", ev).Msg("custom event added to batch")
+
+	return nil
+}
+
+func batchCustomEventLoop(
+	logger zerolog.Logger,
+	conn driver.Conn,
+	appendCh <-chan event.Custom,
+	maxBatchSize uint64,
+	maxBatchLifeTime time.Duration,
+) {
+	var batch driver.Batch
+	var err error
+	batchCreationDate := time.Now()
+
+	for {
+		if batch == nil {
+			batch, err = conn.PrepareBatch(
+				context.Background(),
+				`INSERT INTO events_custom SELECT
+NOW('UTC') AS timestamp,
+'$1' AS domain,
+'$2' AS name,
+arrayMap(x -> x.1, JSONExtractKeysAndValues('$3', 'String')) AS 'keys',
+arrayMap(x -> x.2, JSONExtractKeysAndValues('$3', 'String')) AS 'values'`,
+			)
+			if err != nil {
+				logger.Err(err).Msg("failed to prepare batch")
+				continue
+			}
+
+			batchCreationDate = time.Now()
+		}
+
+		ev := <-appendCh
+
+		// Append to batch.
+		err = batch.Append(ev.DomainName(), ev.Name(), ev.Properties())
+		if err != nil {
+			logger.Err(err).Msg("failed to append to custom events batch")
+		}
+
+		if uint64(batch.Rows()) >= maxBatchSize || time.Since(batchCreationDate) > 3*time.Second {
+			go sendBatch(logger, batch)
+			batch = nil
+		}
 	}
 }

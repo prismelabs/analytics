@@ -26,15 +26,11 @@ type PageView struct {
 // NewPageView creates a new PageView event.
 func NewPageView(
 	pvUrl *url.URL,
+	domainName DomainName,
 	cli uaparser.Client,
 	pageReferrer string,
 	countryCode ipgeolocator.CountryCode,
 ) (PageView, error) {
-	domain, err := ParseDomainName(pvUrl.Hostname())
-	if err != nil {
-		return PageView{}, err
-	}
-
 	referrerDomain, err := ParseReferrerDomain(pageReferrer)
 	if err != nil {
 		return PageView{}, err
@@ -47,7 +43,7 @@ func NewPageView(
 
 	return PageView{
 		Timestamp:      time.Now().UTC(),
-		DomainName:     domain,
+		DomainName:     domainName,
 		PathName:       path.Clean(pageviewPath),
 		Client:         cli,
 		ReferrerDomain: referrerDomain,

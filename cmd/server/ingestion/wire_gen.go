@@ -39,8 +39,9 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	sourceregistryService := sourceregistry.ProvideEnvVarService(zerologLogger)
 	uaparserService := uaparser.ProvideService(zerologLogger)
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger)
-	postPageViewEvent := handlers.ProvidePostEventsPageViews(service, sourceregistryService, uaparserService, ipgeolocatorService)
-	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, postPageViewEvent)
+	postEventsPageview := handlers.ProvidePostEventsPageViews(service, sourceregistryService, uaparserService, ipgeolocatorService)
+	postEventsCustom := handlers.ProvidePostEventsCustom(service, sourceregistryService, uaparserService, ipgeolocatorService)
+	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, postEventsPageview, postEventsCustom)
 	setup := wired.ProvideSetup()
 	wiredApp := wired.ProvideApp(server, app, zerologLogger, setup)
 	return wiredApp
