@@ -52,7 +52,7 @@ func (a App) AddPageviewsEvents() {
 					randomOS(),
 					randomBrowser(),
 					"benchbot",
-					"direct",
+					randomReferrerDomain(),
 					"XX",
 				)
 				if err != nil {
@@ -77,7 +77,7 @@ func (a App) AddCustomEvents() {
 	ctx := context.Background()
 	wg := sync.WaitGroup{}
 
-	timeStep := a.cfg.FromDate.Sub(time.Now()) / time.Duration(a.cfg.BatchCount)
+	timeStep := time.Until(a.cfg.FromDate) / time.Duration(a.cfg.BatchCount)
 	timeCursor := a.cfg.FromDate
 
 	for i := 0; i < a.cfg.BatchCount; i++ {

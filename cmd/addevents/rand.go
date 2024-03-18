@@ -58,10 +58,6 @@ func randomReferrerDomain() string {
 	return randomItem(referrerDomains)
 }
 
-func randomHour() time.Duration {
-	return time.Duration((rand.Int()%24)-12) * time.Hour
-}
-
 func randomMinute() time.Duration {
 	return time.Duration((rand.Int() % 60)) * time.Minute
 }
