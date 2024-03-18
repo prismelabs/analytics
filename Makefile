@@ -9,7 +9,7 @@ GENENV_FILE ?= ./config/genenv.local.sh
 start: start/server
 
 start/%: .env codegen
-	go build -o prisme ./cmd/$*
+	go build -o prisme -race ./cmd/$*
 	source ./.env \
 	&& $(DOCKER_COMPOSE) \
 		-f ./docker-compose.$${PRISME_MODE}.yml \
