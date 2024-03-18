@@ -4,29 +4,57 @@ import { sleep } from 'k6';
 export const options = {
 	discardResponseBodies: true,
 	scenarios: {
-		sharedIterations: {
+		sharedIterationsPageViewEvents: {
 			executor: "shared-iterations",
 			vus: 4096,
-			iterations: 2 ** 17,
+			iterations: 2 ** 19,
+			exec: "pageView",
+		},
+		sharedIterationsCustomEvents: {
+			executor: "shared-iterations",
+			vus: 4096,
+			iterations: 2 ** 19,
+			exec: "customEvent",
 		}
 	}
 }
 
-export default function() {
-	const res = http.post('http://prisme.localhost/api/v1/events/pageviews', null, {
-		headers: {
-			"X-Prisme-Referrer": [
+export function pageView() {
+	const origin = [
 				randomItem(["http", "https"]),
 				"://",
 				randomItem(["mywebsite.localhost", "foo.mywebsite.localhost", "someoneelsewebsite.com"]),
-				randomItem(["/", "/foo", "/bar", "qux"])
+	].join('')
+	const res = http.post('http://prisme.localhost/api/v1/events/pageviews', null, {
+		headers: {
+			"Origin": origin,
+			"X-Prisme-Referrer": [
+				origin,
+				randomItem(["/", "/foo", "/bar", "qux", "/foo/"])
 			].join(''),
 			"X-Prisme-Document-Referrer": randomItem([undefined, "https://google.com", "https://duckduckgo.com", "https://qwant.com", "https://github.com"]),
 			"X-Forwarded-For": randomIP()
 		}
 	})
+}
 
-	sleep(0.5)
+export function customEvent() {
+	const origin = [
+				randomItem(["http", "https"]),
+				"://",
+				randomItem(["mywebsite.localhost", "foo.mywebsite.localhost", "someoneelsewebsite.com"]),
+	].join('')
+	const res = http.post(`http://prisme.localhost/api/v1/events/custom/${"foo"}`, JSON.stringify({x: 1024, y: 4096}), {
+		headers: {
+			"Content-Type": "application/json",
+			"Origin": origin,
+			"X-Prisme-Referrer": [
+				origin,
+				randomItem(["/", "/foo", "/bar", "qux", "/foo/"])
+			].join(''),
+			"X-Forwarded-For": randomIP()
+		}
+	})
 }
 
 function randomItem(items) {
