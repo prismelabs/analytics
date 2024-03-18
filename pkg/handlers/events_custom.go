@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"fmt"
-	"net/url"
+	"encoding/json"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
@@ -20,36 +20,38 @@ func ProvidePostEventsCustom(
 	uaParserService uaparser.Service,
 	ipgeolocatorService ipgeolocator.Service,
 ) PostEventsCustom {
+	emptyObjectBody := []byte("{}")
+
 	return func(c *fiber.Ctx) error {
 		if utils.UnsafeString(c.Request().Header.ContentType()) != fiber.MIMEApplicationJSON {
 			return fiber.NewError(fiber.StatusBadRequest, "content type is not application/json")
 		}
 
+		customEv := event.Custom{}
+		customEv.Timestamp = time.Now().UTC()
+		customEv.Name = utils.CopyString(c.Params("name"))
+
 		// Referrer of the POST request, that is the viewed page.
-		pageReferrer := string(peekReferrerHeader(c))
-		pageUrl, err := url.ParseRequestURI(pageReferrer)
+		requestReferrer := peekReferrerHeader(c)
+		err := customEv.PageUri.Parse(requestReferrer)
 		if err != nil {
-			c.Response().SetStatusCode(fiber.StatusBadRequest)
-			return fmt.Errorf("invalid referrer: %w", err)
+			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 		}
 
-		// Parse domain name.
-		domainName, err := event.ParseDomainName(pageUrl.Hostname())
-		if err != nil {
-			c.Response().SetStatusCode(fiber.StatusBadRequest)
-			return fmt.Errorf("invalid referrer hostname: %w", err)
+		// Validate properties.
+		body := utils.CopyBytes(c.Body())
+		if len(body) == 0 {
+			body = emptyObjectBody
 		}
-
-		customEvent, err := event.NewCustom(domainName, c.Params("name"), c.Body())
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		if !json.Valid(body) {
+			return fiber.NewError(fiber.StatusBadRequest, "invalid json")
 		}
+		customEv.Properties = body
 
 		// Store event.
-		err = eventStore.StoreCustomEvent(c.UserContext(), customEvent)
+		err = eventStore.StoreCustom(c.UserContext(), &customEv)
 		if err != nil {
-			c.Response().SetStatusCode(fiber.StatusInternalServerError)
-			return fmt.Errorf("failed to store pageview event: %w", err)
+			return fiber.NewError(fiber.StatusInternalServerError, "failed to store custom event")
 		}
 
 		return nil

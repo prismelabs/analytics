@@ -7,5 +7,5 @@ CREATE TABLE events_custom (
   properties String,
 )
 ENGINE = MergeTree
-ORDER BY (domain, name);
+ORDER BY (timestamp, domain, path, name);
 

@@ -42,7 +42,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	uaparserService := uaparser.ProvideService(zerologLogger)
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger)
 	postEventsCustom := handlers.ProvidePostEventsCustom(eventstoreService, uaparserService, ipgeolocatorService)
-	postEventsPageview := handlers.ProvidePostEventsPageViews(eventstoreService, uaparserService, ipgeolocatorService)
+	postEventsPageview := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService)
 	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, nonRegisteredOriginFilter, postEventsCustom, postEventsPageview)
 	configGrafana := wired.ProvideGrafanaConfig(logger)
 	client := grafana.ProvideClient(configGrafana)

@@ -8,6 +8,6 @@ import (
 
 // Service define an event storage service.
 type Service interface {
-	StorePageViewEvent(context.Context, event.PageView) error
-	StoreCustomEvent(context.Context, event.Custom) error
+	StorePageView(context.Context, *event.PageView) error
+	StoreCustom(context.Context, *event.Custom) error
 }

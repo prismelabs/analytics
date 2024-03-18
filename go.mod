@@ -1,6 +1,8 @@
 module github.com/prismelabs/analytics
 
-go 1.20
+go 1.21
+
+toolchain go1.21.5
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.17.1
@@ -8,11 +10,11 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/google/uuid v1.5.0
 	github.com/google/wire v0.5.0
+	github.com/negrel/ringo v0.2.0
 	github.com/oschwald/maxminddb-golang v1.12.0
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	github.com/ua-parser/uap-go v0.0.0-20240113215029-33f8e6d47f38
-	golang.org/x/net v0.19.0
 )
 
 require (
@@ -29,7 +31,6 @@ require (
 	github.com/tinylib/msgp v1.1.8 // indirect
 	go.opentelemetry.io/otel v1.19.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
 
