@@ -20,6 +20,11 @@ func ProvideNonRegisteredOriginFilter(originRegistry originregistry.Service) Non
 			origin = strings.TrimPrefix(origin, "http://")
 		}
 
+		portIndex := strings.LastIndexByte(origin, ':')
+		if portIndex != -1 {
+			origin = origin[:portIndex]
+		}
+
 		registered, err := originRegistry.IsOriginRegistered(c.UserContext(), origin)
 		if err != nil {
 			return fiber.ErrInternalServerError
