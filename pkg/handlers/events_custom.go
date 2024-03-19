@@ -12,14 +12,14 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 )
 
-type PostEventsCustom fiber.Handler
+type PostEventsCustoms fiber.Handler
 
-// ProvidePostEventsCustom is a wire provider for POST /api/v1/events/custom/:name events handler.
-func ProvidePostEventsCustom(
+// ProvidePostEventsCustoms is a wire provider for POST /api/v1/events/customs/:name events handler.
+func ProvidePostEventsCustoms(
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipgeolocatorService ipgeolocator.Service,
-) PostEventsCustom {
+) PostEventsCustoms {
 	emptyObjectBody := []byte("{}")
 
 	return func(c *fiber.Ctx) error {

@@ -44,7 +44,7 @@ export function customEvent() {
 				"://",
 				randomItem(["mywebsite.localhost", "foo.mywebsite.localhost", "someoneelsewebsite.com"]),
 	].join('')
-	const res = http.post(`http://prisme.localhost/api/v1/events/custom/${"foo"}`, JSON.stringify({x: 1024, y: 4096}), {
+	const res = http.post(`http://prisme.localhost/api/v1/events/customs/${"foo"}`, JSON.stringify({x: 1024, y: 4096}), {
 		headers: {
 			"Content-Type": "application/json",
 			"Origin": origin,
