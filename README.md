@@ -25,14 +25,29 @@ An Open Source, privacy-focused and progressive analytics service.
 
 ![grafana dashboard](.github/images/builtin-dashboard.jpg)
 
-## Why ?
+## Why Prisme ?
 
-Prisme Analytics is the only lightweight and Open Source analytics solution with:
-* Custom dashboards
-* Custom events (soon)
-* Team management
-* Permissions management
-* Extreme ressources efficiency (thanks to [fiber](https://gofiber.io/) and [ClickHouse](https://clickhouse.com))
+Here's what makes Prisme a great alternative to other analytics:
+* **Tailored analytics**: Prisme Analytics supports **custom dashboards and events**
+so you can collect, visualize analyze metrics that matters to you the way you want.
+* **Ready to use**: Prisme also comes with built-ins metrics and dashboards 
+(see [demo](https://app.prismeanalytics.com/grafana)).
+* **Privacy-focused**: Prisme is **GDPRC, CCPA, PECR compliant by design**, no
+Personally Identifiable Information (PII) is collected. Tracking script doesn't
+use cookies, you can ditch your cookie pop-up.
+* **Lightweight**: Prisme tracking script is less than 1kB (~45x smaller than
+Google Analytics).
+* **Ressources efficient**: Prisme is designed to be fast and ressource efficient,
+checkout our [benchmarks](#performance).
+* **SPA support**: Prisme is built with modern web frameworks in mind and it works
+automatically with any pushState based router on the frontend.
+* **[Grafana](https://github.com/grafana/grafana) based**: Prisme integrates with 
+[Grafana](https://github.com/grafana/grafana) that provides:
+  * User managements
+  * Team managements
+  * Permissions managements
+  * Multi organizations support
+  * Custom dashboards
 
 ## Configuration
 
@@ -41,8 +56,8 @@ You can find configuration documentation on
 
 ## Performance
 
-Prisme Analytics ingestion server is **easily** capable of ingesting ~47,000 req/s on
-my AMD Ryzen 7 7840U w/ Radeon 780M Graphics.
+Prisme Analytics ingestion server is **easily** capable of ingesting more than 
+50,000 req/s on my AMD Ryzen 7 7840U w/ Radeon 780M Graphics.
 
 ```
 $ cat /proc/cpuinfo | head | grep 'model name'
