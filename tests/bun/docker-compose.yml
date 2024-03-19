@@ -4,6 +4,8 @@ services:
     image: "docker.io/clickhouse/clickhouse-server:24.2.1-alpine"
     ulimits:
       nofile: 262144
+    # ports:
+    #   - "8123:8123"
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
     environment:

@@ -6,18 +6,19 @@ const seed = new Date().getTime()
 console.log('faker seed', seed)
 faker.seed(seed)
 
-test('more than 10 requests per minute are rejected', async () => {
+test('more than 60 requests per minute are rejected', async () => {
   const clientIp = faker.internet.ip()
 
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 100; i++) {
     const response = await fetch(PRISME_PAGEVIEWS_URL, {
       method: 'POST',
       headers: {
+        Origin: 'http://mywebsite.localhost',
         'X-Custom-Forwarded-For': clientIp,
         'X-Prisme-Referrer': 'http://mywebsite.localhost'
       }
     })
-    if (i < 10) {
+    if (i < 60) {
       expect(response.status).toBe(200)
     } else {
       expect(response.status).toBe(429)
@@ -30,6 +31,7 @@ test('more than 10 requests per minute are rejected', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',
     headers: {
+      Origin: 'http://mywebsite.localhost',
       'X-Custom-Forwarded-For': clientIp,
       'X-Prisme-Referrer': 'http://mywebsite.localhost'
     }
@@ -38,10 +40,11 @@ test('more than 10 requests per minute are rejected', async () => {
 }, { timeout: 120 * 1000 })
 
 test('requests are rate limited based on X-Custom-Forwarded-For header', async () => {
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 100; i++) {
     const response = await fetch(PRISME_PAGEVIEWS_URL, {
       method: 'POST',
       headers: {
+        Origin: 'http://mywebsite.localhost',
         'X-Custom-Forwarded-For': faker.internet.ip(),
         'X-Prisme-Referrer': 'http://mywebsite.localhost'
       }
