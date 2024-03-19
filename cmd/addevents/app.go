@@ -94,7 +94,7 @@ func (a App) AddCustomEvents() {
 			defer wg.Done()
 
 			for j := 0; j < a.cfg.BatchSize; j++ {
-				date := timeCursor.Add(-randomMinute())
+				date := cursor.Add(-randomMinute())
 				name, props := randomCustomEvent()
 
 				err := batch.Append(
@@ -137,16 +137,17 @@ func randomCustomEvent() (string, string) {
 		return name, fmt.Sprintf(`{"plan":"%v"}`, randomItem([]string{"growth", "premium", "enterprise"}))
 
 	case "lot_of_props":
+		propsCount := 128
 		ev := strings.Builder{}
 		ev.WriteRune('{')
-		for i := 0; i < 16; i++ {
+		for i := 0; i < 128; i++ {
 			ev.WriteString(`"`)
 			ev.WriteString(randomString(alphaLower, 3))
 			ev.WriteString(`"`)
 			ev.WriteString(`:"`)
 			ev.WriteString(randomString(alpha, 9))
 			ev.WriteString(`"`)
-			if i != 128 {
+			if i+1 < propsCount {
 				ev.WriteString(`,`)
 			}
 		}
