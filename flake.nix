@@ -27,6 +27,7 @@
                   bunyan-rs
                   entr
                   bun
+                  minify
                 ];
               };
             };
@@ -34,7 +35,7 @@
               default = pkgs.buildGoModule {
                 pname = "prisme";
                 version = "0.11.0";
-                vendorHash = "sha256-IMNRuHL146sjRx2/Am6LTAxotOAFUvu0auvjRCJ3aFQ=";
+                vendorHash = "sha256-ZztZLzkKDhka9kZRSThccP+hcQH9qD5xY5rIRhm+H3A=";
 
                 src = ./.;
                 # Skip go test.

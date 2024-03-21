@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,6 +9,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
+	"github.com/tidwall/gjson"
 )
 
 type PostEventsCustoms fiber.Handler
@@ -20,8 +20,6 @@ func ProvidePostEventsCustoms(
 	uaParserService uaparser.Service,
 	ipgeolocatorService ipgeolocator.Service,
 ) PostEventsCustoms {
-	emptyObjectBody := []byte("{}")
-
 	return func(c *fiber.Ctx) error {
 		if utils.UnsafeString(c.Request().Header.ContentType()) != fiber.MIMEApplicationJSON {
 			return fiber.NewError(fiber.StatusBadRequest, "content type is not application/json")
@@ -40,13 +38,17 @@ func ProvidePostEventsCustoms(
 
 		// Validate properties.
 		body := utils.CopyBytes(c.Body())
-		if len(body) == 0 {
-			body = emptyObjectBody
+		if len(body) > 0 {
+			result := gjson.GetManyBytes(utils.CopyBytes(c.Body()), "@keys", "@values")
+			result[0].ForEach(func(_, keys gjson.Result) bool {
+				customEv.Keys = append(customEv.Keys, keys.String())
+				return true
+			})
+			result[1].ForEach(func(_, values gjson.Result) bool {
+				customEv.Values = append(customEv.Values, values.String())
+				return true
+			})
 		}
-		if !json.Valid(body) {
-			return fiber.NewError(fiber.StatusBadRequest, "invalid json")
-		}
-		customEv.Properties = body
 
 		// Store event.
 		err = eventStore.StoreCustom(c.UserContext(), &customEv)

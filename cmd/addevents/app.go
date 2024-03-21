@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"strings"
 	"sync"
 	"time"
 
@@ -31,19 +30,24 @@ func (a App) AddPageviewsEvents() {
 	ctx := context.Background()
 	wg := sync.WaitGroup{}
 
+	timeStep := time.Since(a.cfg.FromDate) / time.Duration(a.cfg.BatchCount)
+	timeCursor := a.cfg.FromDate
+
 	for i := 0; i < a.cfg.BatchCount; i++ {
 		batch, err := a.ch.Conn.PrepareBatch(ctx, "INSERT INTO prisme.events_pageviews")
 		if err != nil {
 			panic(err)
 		}
 
+		// Move cursor.
+		timeCursor = timeCursor.Add(timeStep)
+
 		wg.Add(1)
-		go func(i int, batch driver.Batch) {
+		go func(i int, cursor time.Time, batch driver.Batch) {
 			defer wg.Done()
 
 			for j := 0; j < a.cfg.BatchSize; j++ {
-				date := time.Now().Add(-randomMinute())
-				date = date.Round(time.Minute)
+				date := cursor.Add(-randomMinute())
 
 				err := batch.Append(
 					date,
@@ -68,7 +72,7 @@ func (a App) AddPageviewsEvents() {
 				Int("batch_count", a.cfg.BatchCount).
 				Int("current_batch", i).
 				Msg("batch done")
-		}(i, batch)
+		}(i, timeCursor, batch)
 	}
 	wg.Wait()
 }
@@ -77,7 +81,7 @@ func (a App) AddCustomEvents() {
 	ctx := context.Background()
 	wg := sync.WaitGroup{}
 
-	timeStep := time.Until(a.cfg.FromDate) / time.Duration(a.cfg.BatchCount)
+	timeStep := time.Since(a.cfg.FromDate) / time.Duration(a.cfg.BatchCount)
 	timeCursor := a.cfg.FromDate
 
 	for i := 0; i < a.cfg.BatchCount; i++ {
@@ -95,14 +99,15 @@ func (a App) AddCustomEvents() {
 
 			for j := 0; j < a.cfg.BatchSize; j++ {
 				date := cursor.Add(-randomMinute())
-				name, props := randomCustomEvent()
+				name, keys, values := randomCustomEvent()
 
 				err := batch.Append(
 					date,
 					randomItem(a.cfg.Domains),
 					randomPathName(),
 					name,
-					props,
+					keys,
+					values,
 				)
 				if err != nil {
 					panic(err)
@@ -122,38 +127,29 @@ func (a App) AddCustomEvents() {
 	wg.Wait()
 }
 
-func randomCustomEvent() (string, string) {
+func randomCustomEvent() (string, []string, []string) {
 	name := randomItem([]string{"click", "download", "sign_up", "subscription", "lot_of_props"})
 	switch name {
 	case "click":
-		return name, fmt.Sprintf(`{"x":%v,"y":%v}`, rand.Intn(1024), rand.Intn(4096))
+		return name, []string{"x", "y"}, []string{fmt.Sprint(rand.Intn(3000)), fmt.Sprint(rand.Intn(2000))}
 	case "download":
-		return name, fmt.Sprintf(`{"doc":"%v.pdf"}`, randomString(alphaLower, 3))
+		return name, []string{"doc"}, []string{fmt.Sprintf("%v.pdf", randomString(alphaLower, 3))}
 
 	case "sign_up":
-		return name, "{}"
+		return name, []string{}, []string{}
 
 	case "subscription":
-		return name, fmt.Sprintf(`{"plan":"%v"}`, randomItem([]string{"growth", "premium", "enterprise"}))
+		return name, []string{"plan"}, []string{randomItem([]string{"growth", "premium", "enterprise"})}
 
 	case "lot_of_props":
-		propsCount := 128
-		ev := strings.Builder{}
-		ev.WriteRune('{')
-		for i := 0; i < 128; i++ {
-			ev.WriteString(`"`)
-			ev.WriteString(randomString(alphaLower, 3))
-			ev.WriteString(`"`)
-			ev.WriteString(`:"`)
-			ev.WriteString(randomString(alpha, 9))
-			ev.WriteString(`"`)
-			if i+1 < propsCount {
-				ev.WriteString(`,`)
-			}
+		keys := make([]string, 64)
+		values := make([]string, len(keys))
+		for i := 0; i < len(keys); i++ {
+			keys[i] = randomString(alphaLower, 3)
+			values[i] = randomString(alpha, 9)
 		}
-		ev.WriteRune('}')
 
-		return name, ev.String()
+		return name, keys, values
 
 	default:
 		panic("not implemented")
