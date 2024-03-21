@@ -14,6 +14,7 @@ require (
 	github.com/oschwald/maxminddb-golang v1.12.0
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
+	github.com/tidwall/gjson v1.17.1
 	github.com/ua-parser/uap-go v0.0.0-20240113215029-33f8e6d47f38
 )
 
@@ -28,6 +29,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tinylib/msgp v1.1.8 // indirect
 	go.opentelemetry.io/otel v1.19.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect

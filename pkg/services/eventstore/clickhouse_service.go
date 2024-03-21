@@ -130,7 +130,7 @@ func (cs *ClickhouseService) batchCustomEventLoop() {
 		if batch == nil {
 			batch, err = cs.conn.PrepareBatch(
 				context.Background(),
-				"INSERT INTO events_custom VALUES ($1, $2, $3, $4, $5)",
+				"INSERT INTO events_custom VALUES ($1, $2, $3, $4, $5, $6)",
 			)
 			if err != nil {
 				cs.logger.Err(err).Msg("failed to prepare next custom events batch")
@@ -157,7 +157,8 @@ func (cs *ClickhouseService) batchCustomEventLoop() {
 			ev.PageUri.Host(),
 			ev.PageUri.Path(),
 			ev.Name,
-			ev.Properties,
+			ev.Keys,
+			ev.Values,
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append custom event to batch")
