@@ -27,7 +27,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		grafana.ProvideService,
 		grafanaCli.ProvideClient,
 		handlers.ProvideHealthCheck,
-		handlers.ProvidePostEventsCustoms,
+		handlers.ProvidePostEventsCustom,
 		handlers.ProvidePostEventsPageViews,
 		ipgeolocator.ProvideMmdbService,
 		middlewares.ProvideAccessLog,

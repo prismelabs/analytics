@@ -12,14 +12,14 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-type PostEventsCustoms fiber.Handler
+type PostEventsCustom fiber.Handler
 
-// ProvidePostEventsCustoms is a wire provider for POST /api/v1/events/customs/:name events handler.
-func ProvidePostEventsCustoms(
+// ProvidePostEventsCustom is a wire provider for POST /api/v1/events/custom/:name events handler.
+func ProvidePostEventsCustom(
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipgeolocatorService ipgeolocator.Service,
-) PostEventsCustoms {
+) PostEventsCustom {
 	return func(c *fiber.Ctx) error {
 		if utils.UnsafeString(c.Request().Header.ContentType()) != fiber.MIMEApplicationJSON {
 			return fiber.NewError(fiber.StatusBadRequest, "content type is not application/json")
