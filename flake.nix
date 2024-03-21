@@ -35,7 +35,7 @@
               default = pkgs.buildGoModule {
                 pname = "prisme";
                 version = "0.11.0";
-                vendorHash = "sha256-ZztZLzkKDhka9kZRSThccP+hcQH9qD5xY5rIRhm+H3A=";
+                vendorHash = "sha256-G/8OsfDkpGs87J1kLgQZyyul3XGic8CqeaAdPDr+wFw=";
 
                 src = ./.;
                 # Skip go test.
