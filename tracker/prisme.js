@@ -2,14 +2,14 @@
   var currentScript = document.currentScript
   var currentScriptDataset = currentScript.dataset
   var currentScriptUrl = new URL(currentScript.src)
-  var prismeApi = currentScriptDataset.prismeApi || currentScriptUrl.origin.concat("/api/v1")
+  var prismeUrl = currentScriptDataset.prismeUrl || currentScriptUrl.origin
   var scheme = location.protocol;
   var domain = currentScriptDataset.domain || location.host;
   var referrer = document.referrer.replace(location.host, domain);
   var pageUrl = function() { return location.toString().replace(location.host, domain) }
 
   function pageview() {
-    fetch(prismeApi.concat("/events/pageviews"), {
+    fetch(prismeUrl.concat("/api/v1/events/pageviews"), {
       method: "POST",
       headers: {
         "Access-Control-Max-Age": 3600,
@@ -24,7 +24,7 @@
 
   window.prisme = {
     trigger: function(eventName, properties) {
-      fetch(prismeApi.concat("/events/customs/", eventName), {
+      fetch(prismeUrl.concat("/api/v1/events/custom/", eventName), {
         method: "POST",
         headers: {
           "Access-Control-Max-Age": 3600,
