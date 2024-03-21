@@ -66,9 +66,12 @@ lint/fix:
 	$(MAKE) -C ./tests lint/fix
 
 .PHONY: codegen
-codegen:
+codegen: ./pkg/embedded/static/m.js
 	wire ./...
 	go generate -skip="wire" ./...
+
+./pkg/embedded/static/m.js: ./tracker/prisme.js
+	minify --js-version 2019 $^ > $@
 
 $(GENENV_FILE):
 	@echo "$(GENENV_FILE) doesn't exist, generating one..."
