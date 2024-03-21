@@ -15,7 +15,6 @@ import (
 // ProvideClickhouseService is a wire provider for a clickhouse based event
 // storage service.
 func ProvideClickhouseService(ch clickhouse.Ch, logger zerolog.Logger) Service {
-
 	service := &ClickhouseService{
 		logger:          logger,
 		conn:            ch.Conn,
@@ -23,10 +22,20 @@ func ProvideClickhouseService(ch clickhouse.Ch, logger zerolog.Logger) Service {
 		maxBatchTimeout: config.ParseDurationEnvOrDefault("PRISME_EVENTSTORE_MAX_BATCH_TIMEOUT", 1*time.Minute),
 	}
 	service.pageViewRingBuf = ringo.NewWaiter(
-		ringo.NewManyToOne[*event.PageView](int(service.maxBatchSize * 10)),
+		ringo.NewManyToOne(
+			int(service.maxBatchSize*10),
+			ringo.WithManyToOneCollisionHandler[*event.PageView](ringo.CollisionHandlerFunc(func(_ any) {
+				service.logger.Warn().Msg("pageview events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+			})),
+		),
 	)
 	service.customEventRingBuf = ringo.NewWaiter(
-		ringo.NewManyToOne[*event.Custom](int(service.maxBatchSize * 10)),
+		ringo.NewManyToOne(
+			int(service.maxBatchSize*10),
+			ringo.WithManyToOneCollisionHandler[*event.Custom](ringo.CollisionHandlerFunc(func(_ any) {
+				service.logger.Warn().Msg("custom events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+			})),
+		),
 	)
 
 	logger = logger.With().

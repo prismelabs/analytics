@@ -10,7 +10,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/google/uuid v1.5.0
 	github.com/google/wire v0.5.0
-	github.com/negrel/ringo v0.3.0
+	github.com/negrel/ringo v0.5.0
 	github.com/oschwald/maxminddb-golang v1.12.0
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
