@@ -116,4 +116,5 @@ Please give a :star: if this project helped you!
 
 ## :scroll: License
 
-AGPL-3.0 © [Prisme Analytics](https://www.prismeanalytics.com/)
+[Prisme Analytics](https://www.prismeanalytics.com/) is distributed under 
+[AGPL-3.0-only](LICENSE). For MIT exceptions, see [LICENSING.md](LICENSING.md)
