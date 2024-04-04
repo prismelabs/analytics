@@ -5,6 +5,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/prismelabs/analytics/cmd/server/full"
 	"github.com/prismelabs/analytics/cmd/server/ingestion"
@@ -48,7 +50,20 @@ func main() {
 		app.Logger.Info().Msgf("profiling server disabled")
 	}
 
-	socket := "0.0.0.0:" + fmt.Sprint(app.Config.Port)
-	app.Logger.Info().Msgf("start listening for incoming requests on http://%v", socket)
-	app.Logger.Panic().Err(app.Fiber.Listen(socket)).Msg("failed to start fiber server")
+	go func() {
+		socket := "0.0.0.0:" + fmt.Sprint(app.Config.Port)
+		app.Logger.Info().Msgf("start listening for incoming requests on http://%v", socket)
+		err := app.Fiber.Listen(socket)
+		if err != nil {
+			app.Logger.Panic().Err(err).Send()
+		}
+	}()
+
+	ch := make(chan os.Signal, 16)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
+	<-ch
+
+	app.Logger.Info().Msg("starting tearing down procedures...")
+	err := app.TeardownService.Teardown()
+	app.Logger.Err(err).Msg("tearing down procedures done.")
 }

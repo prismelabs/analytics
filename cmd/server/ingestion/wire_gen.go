@@ -13,6 +13,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/originregistry"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/wired"
 )
@@ -30,9 +31,10 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	healhCheck := handlers.ProvideHealthCheck()
 	requestId := middlewares.ProvideRequestId(server)
 	static := middlewares.ProvideStatic(server)
-	minimalFiber := wired.ProvideMinimalFiber(accessLog, errorHandler, config, healhCheck, requestId, static)
-	service := originregistry.ProvideEnvVarService(zerologLogger)
-	nonRegisteredOriginFilter := middlewares.ProvideNonRegisteredOriginFilter(service)
+	service := teardown.ProvideService()
+	minimalFiber := wired.ProvideMinimalFiber(accessLog, errorHandler, config, healhCheck, zerologLogger, requestId, static, service)
+	originregistryService := originregistry.ProvideEnvVarService(zerologLogger)
+	nonRegisteredOriginFilter := middlewares.ProvideNonRegisteredOriginFilter(originregistryService)
 	configClickhouse := wired.ProvideClickhouseConfig(logger)
 	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
 	ch := clickhouse.ProvideCh(zerologLogger, configClickhouse, driver)
@@ -43,6 +45,6 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	postEventsPageview := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService)
 	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, nonRegisteredOriginFilter, postEventsCustom, postEventsPageview)
 	setup := wired.ProvideSetup()
-	wiredApp := wired.ProvideApp(server, app, zerologLogger, setup)
+	wiredApp := wired.ProvideApp(server, app, zerologLogger, service, setup)
 	return wiredApp
 }

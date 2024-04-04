@@ -5,6 +5,8 @@ import (
 	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/prismelabs/analytics/pkg/handlers"
 	"github.com/prismelabs/analytics/pkg/middlewares"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
+	"github.com/rs/zerolog"
 )
 
 type MinimalFiber *fiber.App
@@ -16,10 +18,20 @@ func ProvideMinimalFiber(
 	errorHandlerMiddleware middlewares.ErrorHandler,
 	fiberCfg fiber.Config,
 	healthcheckHandler handlers.HealhCheck,
+	logger zerolog.Logger,
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
+	teardownService teardown.Service,
 ) MinimalFiber {
 	app := fiber.New(fiberCfg)
+
+	teardownService.RegisterProcedure(func() error {
+		logger.Info().Msg("shutting down fiber server...")
+		err := app.Shutdown()
+		logger.Err(err).Msg("fiber server shutdown.")
+
+		return err
+	})
 
 	app.Use(fiber.Handler(requestIdMiddleware))
 	app.Use(fiber.Handler(accessLogMiddleware))
