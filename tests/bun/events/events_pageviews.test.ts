@@ -32,6 +32,19 @@ test('invalid URL in X-Prisme-Referrer header', async () => {
   expect(response.status).toBe(400)
 })
 
+test('invalid URL in X-Prisme-Document-Referrer header', async () => {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      'X-Prisme-Referrer': 'http://mywebsite.localhost',
+      'X-Prisme-Document-Referrer': 'not an url'
+    }
+  })
+  expect(response.status).toBe(400)
+})
+
 test('invalid URL in Referer header', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',

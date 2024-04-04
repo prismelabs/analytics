@@ -52,6 +52,7 @@ export function customEvent() {
 				origin,
 				randomItem(["/", "/foo", "/bar", "qux", "/foo/"])
 			].join(''),
+			"X-Prisme-Document-Referrer": randomItem([undefined, "https://google.com", "https://duckduckgo.com", "https://qwant.com", "https://github.com"]),
 			"X-Forwarded-For": randomIP()
 		}
 	})

@@ -36,6 +36,17 @@ func ProvidePostEventsCustom(
 			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 		}
 
+		err = customEv.ReferrerUri.Parse(c.Request().Header.Peek("X-Prisme-Document-Referrer"))
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, "invalid X-Prisme-Document-Referrer")
+		}
+
+		// Find country code for given IP.
+		customEv.CountryCode = ipgeolocatorService.FindCountryCodeForIP(c.IP())
+
+		// Parse user agent.
+		customEv.Client = uaParserService.ParseUserAgent(string(c.Request().Header.UserAgent()))
+
 		// Validate properties.
 		body := utils.CopyBytes(c.Body())
 		if len(body) > 0 {
