@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { PRISME_CUSTOM_EVENTS_URL, TIMESTAMP_REGEX } from '../const'
+import { COUNTRY_CODE_REGEX, PRISME_CUSTOM_EVENTS_URL, TIMESTAMP_REGEX } from '../const'
 
 const seed = new Date().getTime()
 console.log('faker seed', seed)
@@ -81,6 +81,11 @@ test('valid custom event request without body', async () => {
     timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     domain: 'mywebsite.localhost',
     path: '/index.html',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     name: 'foo',
     properties: {}
   })
@@ -105,6 +110,11 @@ test('valid custom event with no properties', async () => {
     timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     domain: 'mywebsite.localhost',
     path: '/index.html',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     name: 'foo',
     properties: {}
   })
@@ -129,6 +139,11 @@ test('valid custom event with JSON bool as body', async () => {
     timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     domain: 'mywebsite.localhost',
     path: '/index.html',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     name: 'foo',
     properties: {}
   })
@@ -154,6 +169,11 @@ test('valid custom event with JSON number as body', async () => {
     domain: 'mywebsite.localhost',
     path: '/index.html',
     name: 'foo',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     properties: {}
   })
 })
@@ -177,6 +197,11 @@ test('valid custom event with JSON string as body', async () => {
     timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     domain: 'mywebsite.localhost',
     path: '/index.html',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     name: 'foo',
     properties: {}
   })
@@ -205,6 +230,11 @@ test('valid custom event with few properties', async () => {
     timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     domain: 'mywebsite.localhost',
     path: '/index.html',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     name: 'foo',
     properties: props
   })
@@ -234,6 +264,7 @@ test('valid custom event with lot of properties', async () => {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
+      'X-Prisme-Document-Referrer': 'https://example.com/foo',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(props)
@@ -246,6 +277,11 @@ test('valid custom event with lot of properties', async () => {
     timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     domain: 'mywebsite.localhost',
     path: '/index.html',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'example.com',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     name: 'foo',
     properties: props
   })
@@ -270,8 +306,73 @@ test('valid custom event without X-Prisme-Referrer', async () => {
     timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     domain: 'mywebsite.localhost',
     path: '/index.html',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     name: 'foo',
     properties: {}
+  })
+})
+
+test('valid custom event without trailing slash in referrer', async () => {
+  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
+    method: 'POST',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      Referer: 'http://mywebsite.localhost',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestCustomEvent()
+
+  expect(data).toMatchObject({
+    timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+    domain: 'mywebsite.localhost',
+    path: '/',
+    operating_system: 'Other',
+    browser_family: 'Other',
+    device: 'Other',
+    referrer_domain: 'direct',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+    name: 'foo',
+    properties: {}
+  })
+})
+
+test('valid custom event with Windows + Chrome user agent', async () => {
+  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
+    method: 'POST',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      Referer: 'http://mywebsite.localhost',
+      'X-Prisme-Document-Referrer': 'https://www.example.com/foo',
+      'Content-Type': 'application/json',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3'
+    },
+    body: JSON.stringify({ foo: 'bar' })
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestCustomEvent()
+
+  expect(data).toMatchObject({
+    timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+    domain: 'mywebsite.localhost',
+    path: '/',
+    operating_system: 'Windows',
+    browser_family: 'Chrome',
+    device: 'Other',
+    referrer_domain: 'www.example.com',
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+    name: 'foo',
+    properties: { foo: 'bar' }
   })
 })
 

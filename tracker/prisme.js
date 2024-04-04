@@ -29,6 +29,7 @@
         headers: {
           "Access-Control-Max-Age": 3600,
           "X-Prisme-Referrer": pageUrl(),
+          "X-Prisme-Document-Referrer": referrer,
           "Content-Type": "application/json",
         },
         referrerPolicy: "no-referrer-when-downgrade",
