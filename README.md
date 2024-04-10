@@ -37,7 +37,7 @@ Personally Identifiable Information (PII) is collected. Tracking script doesn't
 use cookies, you can ditch your cookie pop-up.
 * **Lightweight**: Prisme tracking script is less than 1kB (~45x smaller than
 Google Analytics).
-* **Ressources efficient**: Prisme is designed to be fast and ressource efficient,
+* **Resource efficient**: Prisme is designed to be fast and resource efficient,
 checkout our [benchmarks](#performance).
 * **SPA support**: Prisme is built with modern web frameworks in mind and it works
 automatically with any pushState based router on the frontend.
