@@ -16,7 +16,8 @@
         "X-Prisme-Referrer": pageUrl(),
         "X-Prisme-Document-Referrer": referrer,
       },
-      referrerPolicy: "no-referrer-when-downgrade"
+      keepalive: true,
+      referrerPolicy: "no-referrer-when-downgrade",
     });
 
     referrer = pageUrl()
@@ -32,6 +33,7 @@
           "X-Prisme-Document-Referrer": referrer,
           "Content-Type": "application/json",
         },
+        keepalive: true,
         referrerPolicy: "no-referrer-when-downgrade",
         body: JSON.stringify(properties)
       });
