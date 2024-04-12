@@ -44,7 +44,7 @@
 							}
 						]
 					},
-					"unit": "none",
+					"unit": "short",
 					"unitScale": false
 				},
 				"overrides": [
@@ -189,6 +189,7 @@
 				"y": 0
 			},
 			"id": 10,
+			"maxDataPoints": 32,
 			"options": {
 				"colorMode": "background",
 				"graphMode": "area",
@@ -454,7 +455,7 @@
 							}
 						]
 					},
-					"unit": "none",
+					"unit": "short",
 					"unitScale": false
 				},
 				"overrides": [
@@ -505,7 +506,7 @@
 				"y": 7
 			},
 			"id": 6,
-			"maxDataPoints": 64,
+			"maxDataPoints": 32,
 			"options": {
 				"legend": {
 					"calcs": [],
@@ -555,6 +556,7 @@
 							}
 						]
 					},
+					"unit": "short",
 					"unitScale": true
 				},
 				"overrides": []
@@ -649,6 +651,7 @@
 						}
 					},
 					"mappings": [],
+					"unit": "short",
 					"unitScale": true
 				},
 				"overrides": [
@@ -856,6 +859,7 @@
 							}
 						]
 					},
+					"unit": "short",
 					"unitScale": true
 				},
 				"overrides": []
@@ -960,6 +964,7 @@
 							}
 						]
 					},
+					"unit": "short",
 					"unitScale": true
 				},
 				"overrides": []
@@ -1108,6 +1113,7 @@
 							}
 						]
 					},
+					"unit": "short",
 					"unitScale": true
 				},
 				"overrides": []
@@ -1217,6 +1223,7 @@
 					"displayName": "${__field.labels[\"browser_family\"]}",
 					"fieldMinMax": false,
 					"mappings": [],
+					"unit": "short",
 					"unitScale": true
 				},
 				"overrides": []
@@ -1326,6 +1333,7 @@
 						}
 					},
 					"mappings": [],
+					"unit": "short",
 					"unitScale": true
 				},
 				"overrides": []
@@ -1436,10 +1444,12 @@
 				"current": {
 					"selected": true,
 					"text": [
-						"All"
+						"localhost",
+						"mywebsite.localhost"
 					],
 					"value": [
-						"$__all"
+						"localhost",
+						"mywebsite.localhost"
 					]
 				},
 				"datasource": {
