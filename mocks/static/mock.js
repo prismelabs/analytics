@@ -22,13 +22,13 @@ const server = Bun.serve({
 function indexHtml (verificationId) {
   return `
 <!doctype html>
-<html lang="en" class="min-h-screen">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="${PRISME_URL}/static/m.js" data-prisme-verification-id="${verificationId}" async></script>
+  <script src="${PRISME_URL}/static/m.js" data-prisme-verification-id="${verificationId}" defer></script>
   <title>Static site</title>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
