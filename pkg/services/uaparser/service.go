@@ -1,6 +1,8 @@
 package uaparser
 
 import (
+	"strings"
+
 	"github.com/rs/zerolog"
 	"github.com/ua-parser/uap-go/uaparser"
 )
@@ -17,6 +19,7 @@ func ProvideService(logger zerolog.Logger) Service {
 		Logger()
 
 	parser := uaparser.NewFromSaved()
+
 	return service{logger, parser}
 }
 
@@ -32,6 +35,7 @@ func (s service) ParseUserAgent(userAgent string) Client {
 		BrowserFamily:   client.UserAgent.Family,
 		OperatingSystem: client.Os.Family,
 		Device:          client.Device.Family,
+		IsBot:           strings.Contains(client.UserAgent.Family, "Bot") || strings.Contains(client.UserAgent.Family, "bot") || strings.Contains(client.Device.Family, "Spider"),
 	}
 
 	s.Logger.Debug().

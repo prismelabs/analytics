@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
@@ -18,13 +19,22 @@ func ProvidePostEventsPageViews(
 	logger zerolog.Logger,
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
-	ipgeolocatorService ipgeolocator.Service,
+	ipGeolocatorService ipgeolocator.Service,
 ) PostEventsPageview {
 	return func(c *fiber.Ctx) error {
 		// Referrer of the POST request, that is the viewed page.
 		requestReferrer := peekReferrerHeader(c)
 
 		pageView := event.PageView{}
+
+		// Parse user agent.
+		userAgent := utils.CopyBytes(c.Request().Header.UserAgent())
+		pageView.Client = uaParserService.ParseUserAgent(utils.UnsafeString(userAgent))
+		if pageView.Client.IsBot {
+			return nil
+		}
+
+		// Event date.
 		pageView.Timestamp = time.Now().UTC()
 
 		err := pageView.PageUri.Parse(requestReferrer)
@@ -38,10 +48,7 @@ func ProvidePostEventsPageViews(
 		}
 
 		// Find country code for given IP.
-		pageView.CountryCode = ipgeolocatorService.FindCountryCodeForIP(c.IP())
-
-		// Parse user agent.
-		pageView.Client = uaParserService.ParseUserAgent(string(c.Request().Header.UserAgent()))
+		pageView.CountryCode = ipGeolocatorService.FindCountryCodeForIP(c.IP())
 
 		err = eventStore.StorePageView(c.UserContext(), &pageView)
 		if err != nil {

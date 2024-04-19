@@ -18,7 +18,7 @@ type PostEventsCustom fiber.Handler
 func ProvidePostEventsCustom(
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
-	ipgeolocatorService ipgeolocator.Service,
+	ipGeolocatorService ipgeolocator.Service,
 ) PostEventsCustom {
 	return func(c *fiber.Ctx) error {
 		if utils.UnsafeString(c.Request().Header.ContentType()) != fiber.MIMEApplicationJSON {
@@ -26,6 +26,15 @@ func ProvidePostEventsCustom(
 		}
 
 		customEv := event.Custom{}
+
+		// Parse user agent.
+		userAgent := utils.CopyBytes(c.Request().Header.UserAgent())
+		customEv.Client = uaParserService.ParseUserAgent(utils.UnsafeString(userAgent))
+		if customEv.Client.IsBot {
+			return nil
+		}
+
+		// Event date and name.
 		customEv.Timestamp = time.Now().UTC()
 		customEv.Name = utils.CopyString(c.Params("name"))
 
@@ -42,10 +51,7 @@ func ProvidePostEventsCustom(
 		}
 
 		// Find country code for given IP.
-		customEv.CountryCode = ipgeolocatorService.FindCountryCodeForIP(c.IP())
-
-		// Parse user agent.
-		customEv.Client = uaParserService.ParseUserAgent(string(c.Request().Header.UserAgent()))
+		customEv.CountryCode = ipGeolocatorService.FindCountryCodeForIP(c.IP())
 
 		// Validate properties.
 		body := utils.CopyBytes(c.Body())

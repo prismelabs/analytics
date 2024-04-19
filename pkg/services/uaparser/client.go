@@ -7,6 +7,7 @@ type Client struct {
 	BrowserFamily   string
 	OperatingSystem string
 	Device          string
+	IsBot           bool
 }
 
 // MarshalZerologObject implements zerolog.LogObjectMarshaler.

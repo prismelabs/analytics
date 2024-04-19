@@ -73,6 +73,24 @@ func TestService(t *testing.T) {
 			},
 			userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.",
 		},
+		{
+			expectedClient: Client{
+				BrowserFamily:   "Applebot",
+				OperatingSystem: "Other",
+				Device:          "Spider",
+				IsBot:           true,
+			},
+			userAgent: "Applebot",
+		},
+		{
+			expectedClient: Client{
+				BrowserFamily:   "AdsBot-Google",
+				OperatingSystem: "Other",
+				Device:          "Spider",
+				IsBot:           true,
+			},
+			userAgent: "AdsBot-Google",
+		},
 	}
 
 	logger := log.NewLogger("test_logger_1", io.Discard, false)

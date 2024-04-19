@@ -6,6 +6,7 @@ toolchain go1.21.5
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.17.1
+	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/gofiber/fiber/v2 v2.52.0
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/google/uuid v1.5.0
