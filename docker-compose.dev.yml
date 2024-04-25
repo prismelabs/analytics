@@ -1,4 +1,3 @@
-version: '3'
 services:
   prisme:
     image: "prismelabs/analytics:dev"

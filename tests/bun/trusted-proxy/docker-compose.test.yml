@@ -1,4 +1,3 @@
-version: '3'
 services:
   bun:
     image: docker.io/oven/bun

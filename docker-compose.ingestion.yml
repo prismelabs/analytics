@@ -1,4 +1,3 @@
-version: '3'
 services:
   clickhouse:
     image: "docker.io/clickhouse/clickhouse-server:23.9.1-alpine"
