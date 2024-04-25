@@ -3,16 +3,22 @@
 </h1>
 
 <p align="center">
-    <a href="https://goreportcard.com/report/github.com/prismelabs/analytics">
-        <img src="https://goreportcard.com/badge/github.com/prismelabs/analytics">
-    </a>
     <a href="https://github.com/prismelabs/analytics/raw/master/LICENSE">
         <img src="https://img.shields.io/github/license/prismelabs/analytics">
+    </a>
+    <a href="https://github.com/prismelabs/analytics/blob/master/CONTRIBUTING.md">
+        <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen" alt="PRs welcome!" />
     </a>
     <a href="https://hub.docker.com/r/prismelabs/analytics">
         <img alt="Docker Image Size (tag)" src="https://img.shields.io/docker/image-size/prismelabs/analytics/latest">
     </a>
-    <img alt="GitHub go.mod Go version" src="https://img.shields.io/github/go-mod/go-version/prismelabs/analytics">
+    <a href="https://goreportcard.com/report/github.com/prismelabs/analytics">
+        <img src="https://goreportcard.com/badge/github.com/prismelabs/analytics">
+    </a>
+    <img alt="Go version" src="https://img.shields.io/github/go-mod/go-version/prismelabs/analytics">
+    <a href="https://x.com/prismeanalytics">
+        <img src="https://img.shields.io/twitter/follow/prismeanalytics?label=Follow" alt="Prisme Analytics Twitter" />
+    </a>
 </p>
 
 # :gem: Prisme Analytics
