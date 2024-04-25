@@ -8,6 +8,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
+	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/tidwall/gjson"
 )
@@ -19,6 +20,7 @@ func ProvidePostEventsCustom(
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
+	saltManagerService saltmanager.Service,
 ) PostEventsCustom {
 	return func(c *fiber.Ctx) error {
 		if utils.UnsafeString(c.Request().Header.ContentType()) != fiber.MIMEApplicationJSON {
@@ -66,6 +68,12 @@ func ProvidePostEventsCustom(
 				return true
 			})
 		}
+
+		// Compute visitor id.
+		customEv.VisitorId = computeVisitorId(
+			userAgent, saltManagerService.DailySalt().Bytes(), []byte(c.IP()),
+			customEv.PageUri.Host(),
+		)
 
 		// Store event.
 		err = eventStore.StoreCustom(c.UserContext(), &customEv)

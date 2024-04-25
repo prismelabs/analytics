@@ -110,7 +110,7 @@ func (cs *ClickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 		if batch == nil {
 			batch, err = cs.conn.PrepareBatch(
 				context.Background(),
-				"INSERT INTO events_pageviews VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+				"INSERT INTO events_pageviews VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
 			)
 			if err != nil {
 				cs.logger.Err(err).Msg("failed to prepare next pageviews batch")
@@ -145,6 +145,7 @@ func (cs *ClickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 			ev.Client.Device,
 			ev.ReferrerUri.HostOrDirect(),
 			ev.CountryCode,
+			ev.VisitorId,
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append pageview to batch")
@@ -204,6 +205,7 @@ func (cs *ClickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 			ev.Client.Device,
 			ev.ReferrerUri.HostOrDirect(),
 			ev.CountryCode,
+			ev.VisitorId,
 			ev.Name,
 			ev.Keys,
 			ev.Values,

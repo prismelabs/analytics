@@ -8,6 +8,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
+	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/rs/zerolog"
 )
@@ -20,6 +21,7 @@ func ProvidePostEventsPageViews(
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
+	saltManagerService saltmanager.Service,
 ) PostEventsPageview {
 	return func(c *fiber.Ctx) error {
 		// Referrer of the POST request, that is the viewed page.
@@ -49,6 +51,12 @@ func ProvidePostEventsPageViews(
 
 		// Find country code for given IP.
 		pageView.CountryCode = ipGeolocatorService.FindCountryCodeForIP(c.IP())
+
+		// Compute visitor id.
+		pageView.VisitorId = computeVisitorId(
+			userAgent, saltManagerService.DailySalt().Bytes(), []byte(c.IP()),
+			pageView.PageUri.Host(),
+		)
 
 		err = eventStore.StorePageView(c.UserContext(), &pageView)
 		if err != nil {

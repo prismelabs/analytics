@@ -17,6 +17,7 @@ type Custom struct {
 	ReferrerUri ReferrerUri
 	Client      uaparser.Client
 	CountryCode ipgeolocator.CountryCode
+	VisitorId   string
 	Name        string
 	Keys        []string
 	Values      []string
@@ -30,6 +31,7 @@ func (c *Custom) MarshalZerologObject(e *zerolog.Event) {
 		Stringer("referrer_uri", &c.ReferrerUri).
 		Object("client", c.Client).
 		Stringer("country_code", c.CountryCode).
+		Str("visitor_id", c.VisitorId).
 		Str("name", c.Name).
 		Strs("keys", c.Keys).
 		Strs("values", c.Values)

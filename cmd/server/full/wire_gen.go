@@ -15,6 +15,7 @@ import (
 	grafana2 "github.com/prismelabs/analytics/pkg/services/grafana"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/originregistry"
+	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/wired"
@@ -32,24 +33,25 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	config := wired.ProvideMinimalFiberConfig(server)
 	healhCheck := handlers.ProvideHealthCheck()
 	requestId := middlewares.ProvideRequestId(server)
-	service := originregistry.ProvideEnvVarService(zerologLogger)
-	nonRegisteredOriginFilter := middlewares.ProvideNonRegisteredOriginFilter(service)
 	static := middlewares.ProvideStatic(server)
-	teardownService := teardown.ProvideService()
-	minimalFiber := wired.ProvideMinimalFiber(accessLog, errorHandler, config, healhCheck, zerologLogger, requestId, nonRegisteredOriginFilter, static, teardownService)
+	service := teardown.ProvideService()
+	minimalFiber := wired.ProvideMinimalFiber(accessLog, errorHandler, config, healhCheck, zerologLogger, requestId, static, service)
+	originregistryService := originregistry.ProvideEnvVarService(zerologLogger)
+	nonRegisteredOriginFilter := middlewares.ProvideNonRegisteredOriginFilter(originregistryService)
 	configClickhouse := wired.ProvideClickhouseConfig(logger)
 	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
 	ch := clickhouse.ProvideCh(zerologLogger, configClickhouse, driver)
-	eventstoreService := eventstore.ProvideClickhouseService(ch, zerologLogger, teardownService)
+	eventstoreService := eventstore.ProvideClickhouseService(ch, zerologLogger, service)
 	uaparserService := uaparser.ProvideService(zerologLogger)
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger)
-	postEventsCustom := handlers.ProvidePostEventsCustom(eventstoreService, uaparserService, ipgeolocatorService)
-	postEventsPageview := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService)
+	saltmanagerService := saltmanager.ProvideService(zerologLogger)
+	postEventsCustom := handlers.ProvidePostEventsCustom(eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService)
+	postEventsPageview := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService)
 	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, nonRegisteredOriginFilter, postEventsCustom, postEventsPageview)
 	configGrafana := wired.ProvideGrafanaConfig(logger)
 	client := grafana.ProvideClient(configGrafana)
 	grafanaService := grafana2.ProvideService(client, configClickhouse)
 	setup := ProvideSetup(zerologLogger, client, grafanaService)
-	wiredApp := wired.ProvideApp(server, app, zerologLogger, teardownService, setup)
+	wiredApp := wired.ProvideApp(server, app, zerologLogger, service, setup)
 	return wiredApp
 }

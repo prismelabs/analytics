@@ -20,7 +20,6 @@ func ProvideMinimalFiber(
 	healthcheckHandler handlers.HealhCheck,
 	logger zerolog.Logger,
 	requestIdMiddleware middlewares.RequestId,
-	nonRegistreredOriginFilterMiddleware middlewares.NonRegisteredOriginFilter,
 	staticMiddleware middlewares.Static,
 	teardownService teardown.Service,
 ) MinimalFiber {
@@ -38,8 +37,7 @@ func ProvideMinimalFiber(
 	app.Use(fiber.Handler(accessLogMiddleware))
 	app.Use(fiber.Handler(errorHandlerMiddleware))
 
-	app.Use("/static", fiber.Handler(nonRegistreredOriginFilterMiddleware),
-		fiber.Handler(staticMiddleware))
+	app.Use("/static", fiber.Handler(staticMiddleware))
 
 	app.Use("/api/v1/healthcheck", fiber.Handler(healthcheckHandler))
 

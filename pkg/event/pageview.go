@@ -17,6 +17,7 @@ type PageView struct {
 	ReferrerUri ReferrerUri
 	Client      uaparser.Client
 	CountryCode ipgeolocator.CountryCode
+	VisitorId   string
 }
 
 // MarshalZerologObject implements zerolog.LogObjectMarshaler.
@@ -26,5 +27,6 @@ func (pv *PageView) MarshalZerologObject(e *zerolog.Event) {
 		Stringer("page_uri", &pv.PageUri).
 		Stringer("referrer_uri", &pv.ReferrerUri).
 		Object("client", pv.Client).
-		Stringer("country_code", pv.CountryCode)
+		Stringer("country_code", pv.CountryCode).
+		Str("visitor_id", pv.VisitorId)
 }

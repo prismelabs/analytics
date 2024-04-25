@@ -31,7 +31,7 @@
                 ];
               };
             };
-            packages = rec {
+            packages = {
               default = pkgs.buildGoModule {
                 pname = "prisme";
                 version = "0.14.0";
