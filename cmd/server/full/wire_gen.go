@@ -44,7 +44,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
 	ch := clickhouse.ProvideCh(zerologLogger, configClickhouse, driver)
 	eventstoreService := eventstore.ProvideClickhouseService(ch, zerologLogger, service)
-	uaparserService := uaparser.ProvideService(zerologLogger)
+	uaparserService := uaparser.ProvideService(zerologLogger, registry)
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger, registry)
 	saltmanagerService := saltmanager.ProvideService(zerologLogger)
 	postEventsCustom := handlers.ProvidePostEventsCustom(eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService)

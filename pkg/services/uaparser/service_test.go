@@ -3,9 +3,12 @@ package uaparser
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"testing"
 
 	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/testutils"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -94,7 +97,7 @@ func TestService(t *testing.T) {
 	}
 
 	logger := log.NewLogger("test_logger_1", io.Discard, false)
-	service := ProvideService(logger)
+	service := ProvideService(logger, prometheus.NewRegistry())
 	for _, tcase := range testCases {
 		testName := fmt.Sprintf("%v/%v/%v", tcase.expectedClient.BrowserFamily, tcase.expectedClient.OperatingSystem, tcase.expectedClient.Device)
 
@@ -103,4 +106,23 @@ func TestService(t *testing.T) {
 			require.Equal(t, tcase.expectedClient, cli)
 		})
 	}
+}
+
+func TestIntegServiceMetrics(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
+	logger := log.NewLogger("test_logger_1", io.Discard, false)
+	promRegistry := prometheus.NewRegistry()
+	service := ProvideService(logger, promRegistry)
+
+	client := service.ParseUserAgent("AdsBot-Google")
+
+	require.Equal(t, float64(1), testutils.CounterValue(t, promRegistry, "uaparser_parse_total", prometheus.Labels{
+		"browser_family":   client.BrowserFamily,
+		"operating_system": client.OperatingSystem,
+		"device":           client.Device,
+		"is_bot":           strconv.FormatBool(client.IsBot),
+	}))
 }
