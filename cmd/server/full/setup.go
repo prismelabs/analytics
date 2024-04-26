@@ -11,7 +11,11 @@ import (
 )
 
 // ProvideSetup is a wire provider that performs setup of full server.
-func ProvideSetup(logger zerolog.Logger, cli grafanaCli.Client, grafanaService grafana.Service) wired.Setup {
+func ProvideSetup(
+	logger zerolog.Logger,
+	cli grafanaCli.Client,
+	grafanaService grafana.Service,
+) wired.Setup {
 	grafanaCli.WaitHealthy(logger, cli, 5)
 	logger.Info().Msg("setting up grafana datasource and dashboards...")
 	{

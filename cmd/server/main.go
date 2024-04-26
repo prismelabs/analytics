@@ -7,12 +7,14 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/prismelabs/analytics/cmd/server/full"
 	"github.com/prismelabs/analytics/cmd/server/ingestion"
 	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/wired"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -39,16 +41,22 @@ func main() {
 		app.Logger.Panic().Str("mode", mode).Msg("unknown server mode")
 	}
 
-	// Profiling server.
-	if app.Config.ProfilerHostPort != "" {
-		go func() {
-			app.Logger.Info().Msgf("profiler server listening for incoming request on http://%v", app.Config.ProfilerHostPort)
-			err := http.ListenAndServe(app.Config.ProfilerHostPort, nil)
-			app.Logger.Panic().Err(err).Msg("failed to start profiler server")
-		}()
-	} else {
-		app.Logger.Info().Msgf("profiling server disabled")
-	}
+	// Admin and profiling server.
+	go func() {
+		http.Handle("/metrics", promhttp.HandlerFor(app.PromRegistry, promhttp.HandlerOpts{
+			ErrorLog:            &app.Logger,
+			ErrorHandling:       promhttp.HTTPErrorOnError,
+			Registry:            app.PromRegistry,
+			DisableCompression:  false,
+			MaxRequestsInFlight: 0,
+			Timeout:             3 * time.Second,
+			EnableOpenMetrics:   false,
+			ProcessStartTime:    time.Now(),
+		}))
+		app.Logger.Info().Msgf("admin server listening for incoming request on http://%v", app.Config.AdminHostPort)
+		err := http.ListenAndServe(app.Config.AdminHostPort, nil)
+		app.Logger.Panic().Err(err).Msg("failed to start admin server")
+	}()
 
 	go func() {
 		socket := "0.0.0.0:" + fmt.Sprint(app.Config.Port)

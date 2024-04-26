@@ -31,6 +31,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		middlewares.ProvideErrorHandler,
 		middlewares.ProvideEventsCors,
 		middlewares.ProvideEventsRateLimiter,
+		middlewares.ProvideMetrics,
 		middlewares.ProvideNonRegisteredOriginFilter,
 		middlewares.ProvideRequestId,
 		middlewares.ProvideStatic,
@@ -43,6 +44,8 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		wired.ProvideLogger,
 		wired.ProvideMinimalFiber,
 		wired.ProvideMinimalFiberConfig,
+		wired.ProvidePromHttpLogger,
+		wired.ProvidePrometheusRegistry,
 		wired.ProvideServerConfig,
 		wired.ProvideSetup,
 	)

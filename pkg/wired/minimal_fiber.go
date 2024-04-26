@@ -21,6 +21,7 @@ func ProvideMinimalFiber(
 	logger zerolog.Logger,
 	requestIdMiddleware middlewares.RequestId,
 	staticMiddleware middlewares.Static,
+	metricsMiddleware middlewares.Metrics,
 	teardownService teardown.Service,
 ) MinimalFiber {
 	app := fiber.New(fiberCfg)
@@ -33,6 +34,7 @@ func ProvideMinimalFiber(
 		return err
 	})
 
+	app.Use(fiber.Handler(metricsMiddleware))
 	app.Use(fiber.Handler(requestIdMiddleware))
 	app.Use(fiber.Handler(accessLogMiddleware))
 	app.Use(fiber.Handler(errorHandlerMiddleware))

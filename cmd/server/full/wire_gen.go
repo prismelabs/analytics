@@ -24,8 +24,8 @@ import (
 // Injectors from wire.go:
 
 func Initialize(logger wired.BootstrapLogger) wired.App {
-	server := wired.ProvideServerConfig(logger)
 	eventsCors := middlewares.ProvideEventsCors()
+	server := wired.ProvideServerConfig(logger)
 	eventsRateLimiter := middlewares.ProvideEventsRateLimiter(server)
 	zerologLogger := wired.ProvideLogger(server)
 	accessLog := middlewares.ProvideAccessLog(server, zerologLogger)
@@ -34,8 +34,10 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	healhCheck := handlers.ProvideHealthCheck()
 	requestId := middlewares.ProvideRequestId(server)
 	static := middlewares.ProvideStatic(server)
+	registry := wired.ProvidePrometheusRegistry()
+	metrics := middlewares.ProvideMetrics(registry)
 	service := teardown.ProvideService()
-	minimalFiber := wired.ProvideMinimalFiber(accessLog, errorHandler, config, healhCheck, zerologLogger, requestId, static, service)
+	minimalFiber := wired.ProvideMinimalFiber(accessLog, errorHandler, config, healhCheck, zerologLogger, requestId, static, metrics, service)
 	originregistryService := originregistry.ProvideEnvVarService(zerologLogger)
 	nonRegisteredOriginFilter := middlewares.ProvideNonRegisteredOriginFilter(originregistryService)
 	configClickhouse := wired.ProvideClickhouseConfig(logger)
@@ -43,15 +45,16 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	ch := clickhouse.ProvideCh(zerologLogger, configClickhouse, driver)
 	eventstoreService := eventstore.ProvideClickhouseService(ch, zerologLogger, service)
 	uaparserService := uaparser.ProvideService(zerologLogger)
-	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger)
+	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger, registry)
 	saltmanagerService := saltmanager.ProvideService(zerologLogger)
 	postEventsCustom := handlers.ProvidePostEventsCustom(eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService)
 	postEventsPageview := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService)
 	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, nonRegisteredOriginFilter, postEventsCustom, postEventsPageview)
+	promhttpLogger := wired.ProvidePromHttpLogger(server, zerologLogger)
 	configGrafana := wired.ProvideGrafanaConfig(logger)
 	client := grafana.ProvideClient(configGrafana)
 	grafanaService := grafana2.ProvideService(client, configClickhouse)
 	setup := ProvideSetup(zerologLogger, client, grafanaService)
-	wiredApp := wired.ProvideApp(server, app, zerologLogger, service, setup)
+	wiredApp := wired.ProvideApp(app, server, zerologLogger, promhttpLogger, registry, setup, service)
 	return wiredApp
 }

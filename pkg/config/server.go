@@ -12,18 +12,18 @@ type Server struct {
 	TrustProxy bool
 	// X-Forwarded-For proxy header.
 	ProxyHeader string
-	// host:port address used by profiler http server.
-	ProfilerHostPort string
+	// host:port address of admin http server.
+	AdminHostPort string
 }
 
 // ServerFromEnv loads server related options from environment variables.
 func ServerFromEnv() Server {
 	return Server{
-		AccessLog:        GetEnvOrDefault("PRISME_ACCESS_LOG", "/dev/stdout"),
-		Debug:            GetEnvOrDefault("PRISME_DEBUG", "false") != "false",
-		Port:             uint16(ParseUintEnvOrDefault("PRISME_PORT", 80, 16)),
-		TrustProxy:       GetEnvOrDefault("PRISME_TRUST_PROXY", "false") != "false",
-		ProxyHeader:      GetEnvOrDefault("PRISME_PROXY_HEADER", "X-Forwarded-For"),
-		ProfilerHostPort: GetEnvOrDefault("PRISME_PROFILER_HOSTPORT", ""),
+		AccessLog:     GetEnvOrDefault("PRISME_ACCESS_LOG", "/dev/stdout"),
+		Debug:         GetEnvOrDefault("PRISME_DEBUG", "false") != "false",
+		Port:          uint16(ParseUintEnvOrDefault("PRISME_PORT", 80, 16)),
+		TrustProxy:    GetEnvOrDefault("PRISME_TRUST_PROXY", "false") != "false",
+		ProxyHeader:   GetEnvOrDefault("PRISME_PROXY_HEADER", "X-Forwarded-For"),
+		AdminHostPort: GetEnvOrDefault("PRISME_ADMIN_HOSTPORT", "0.0.0.0:9090"),
 	}
 }

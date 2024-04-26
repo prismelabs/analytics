@@ -10,7 +10,7 @@ services:
       - "./:/app:ro"
     ports:
       - "8000:8000"
-      - "6060:6060"
+      - "9090:9090"
     networks:
       default:
         aliases:
