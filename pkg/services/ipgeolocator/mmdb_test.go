@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/testutils"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -63,7 +65,7 @@ func TestMmdbService(t *testing.T) {
 
 			for _, tcase := range testCases {
 				t.Run(tcase.ip+"/"+tcase.countryCode, func(t *testing.T) {
-					service := ProvideMmdbService(logger)
+					service := ProvideMmdbService(logger, prometheus.NewRegistry())
 
 					countryCode := service.FindCountryCodeForIP(tcase.ip)
 					require.Equal(t, tcase.countryCode, countryCode.String())
@@ -86,7 +88,7 @@ func TestMmdbService(t *testing.T) {
 
 			for _, tcase := range testCases {
 				t.Run(tcase.ip, func(t *testing.T) {
-					service := ProvideMmdbService(logger)
+					service := ProvideMmdbService(logger, prometheus.NewRegistry())
 
 					countryCode := service.FindCountryCodeForIP(tcase.ip)
 					require.Equal(t, CountryCode{"XX"}, countryCode)
@@ -94,4 +96,21 @@ func TestMmdbService(t *testing.T) {
 			}
 		})
 	})
+}
+
+func TestIntegMmdbServiceMetrics(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
+	logger := log.NewLogger("ipgeolocator_mmdb_service", io.Discard, false)
+	promRegistry := prometheus.NewRegistry()
+	service := ProvideMmdbService(logger, promRegistry)
+
+	countryCode := service.FindCountryCodeForIP("127.0.0.1")
+
+	require.Equal(t, float64(1), testutils.CounterValue(t, promRegistry, "ipgeolocator_search_total", prometheus.Labels{
+		"country_code": countryCode.String(),
+		"ip_version":   "4",
+	}))
 }

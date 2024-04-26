@@ -7,11 +7,15 @@ import (
 
 	"github.com/oschwald/maxminddb-golang"
 	"github.com/prismelabs/analytics/pkg/embedded"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
 
 // ProvideMmdbService is a wire provider for mmdb based ip geolocator service.
-func ProvideMmdbService(logger zerolog.Logger) Service {
+func ProvideMmdbService(
+	logger zerolog.Logger,
+	promRegistry *prometheus.Registry,
+) Service {
 	logger = logger.With().
 		Str("service", "ipgeolocator").
 		Str("service_impl", "mmdb").
@@ -23,12 +27,20 @@ func ProvideMmdbService(logger zerolog.Logger) Service {
 		logger.Panic().Err(err).Msg("failed to load maxming GeoLite2 country database")
 	}
 
-	return mmdbService{logger, reader}
+	counter := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "ipgeolocator_search_total",
+		Help: "Number of IP geolocation",
+	}, []string{"country_code", "ip_version"})
+
+	promRegistry.MustRegister(counter)
+
+	return mmdbService{logger, reader, counter}
 }
 
 type mmdbService struct {
-	logger zerolog.Logger
-	reader *maxminddb.Reader
+	logger  zerolog.Logger
+	reader  *maxminddb.Reader
+	counter *prometheus.CounterVec
 }
 
 // FindCountryCodeForIP implements Service.
@@ -45,6 +57,8 @@ func (ms mmdbService) FindCountryCodeForIP(xForwardedFor string) CountryCode {
 	)
 
 	record := mmdbRecord{mmdbRecordCountry{"XX"}}
+
+	ipVersion := "6"
 
 	// Split has X-Forwarded-For may contains multiple IPs address.
 	ips := strings.Split(xForwardedFor, ",")
@@ -67,9 +81,20 @@ func (ms mmdbService) FindCountryCodeForIP(xForwardedFor string) CountryCode {
 			record.Country.ISOCode = "XX"
 		}
 
+		// IPv4 address
+		if ipAddr.To4() != nil {
+			ipVersion = "4"
+		}
+
 		result.value = record.Country.ISOCode
 		break
 	}
+
+	// Increment metric.
+	ms.counter.With(prometheus.Labels{
+		"country_code": result.value,
+		"ip_version":   ipVersion,
+	}).Inc()
 
 	ms.logger.Debug().
 		Str("ip_address", xForwardedFor).
