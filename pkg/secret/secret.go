@@ -1,6 +1,7 @@
 package secret
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 )
@@ -35,4 +36,9 @@ func (s *Secret[T]) Scan(src any) error {
 		return nil
 	}
 	return fmt.Errorf("cannot scan %T into Secret[%T]", src, *new(T))
+}
+
+// MarshalJSON implements json.Marshaler.
+func (s Secret[T]) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.String())
 }
