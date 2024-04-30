@@ -7,28 +7,27 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/negrel/ringo"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
-	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
 
-// ProvideClickhouseService is a wire provider for a clickhouse based event
+// ProvideService is a wire provider for a clickhouse based event
 // storage service.
-func ProvideClickhouseService(
+func ProvideService(
+	cfg Config,
 	ch clickhouse.Ch,
 	logger zerolog.Logger,
+	promRegistry *prometheus.Registry,
 	teardownService teardown.Service,
 ) Service {
-	maxBatchSize := config.ParseUintEnvOrDefault("PRISME_EVENTSTORE_MAX_BATCH_SIZE", 4096, 64)
-	maxBatchTimeout := config.ParseDurationEnvOrDefault("PRISME_EVENTSTORE_MAX_BATCH_TIMEOUT", 1*time.Minute)
 	batchDone := make(chan struct{})
-
 	logger = logger.With().
 		Str("service", "eventstore").
 		Str("service_impl", "clickhouse").
-		Uint64("max_batch_size", maxBatchSize).
-		Stringer("max_batch_timeout", maxBatchTimeout).
+		Uint64("max_batch_size", cfg.MaxBatchSize).
+		Stringer("max_batch_timeout", cfg.MaxBatchTimeout).
 		Logger()
 
 	// Create context for batch loops.
@@ -45,30 +44,31 @@ func ProvideClickhouseService(
 		return nil
 	})
 
-	service := &ClickhouseService{
+	service := &clickhouseService{
 		logger:          logger,
 		conn:            ch.Conn,
-		maxBatchSize:    maxBatchSize,
-		maxBatchTimeout: maxBatchTimeout,
+		maxBatchSize:    cfg.MaxBatchSize,
+		maxBatchTimeout: cfg.MaxBatchTimeout,
+		pageViewRingBuf: ringo.NewWaiter(
+			ringo.NewManyToOne(
+				int(cfg.MaxBatchSize*10),
+				ringo.WithManyToOneCollisionHandler[*event.PageView](ringo.CollisionHandlerFunc(func(_ any) {
+					logger.Warn().Msg("pageview events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+				})),
+			),
+			ringo.WithWaiterContext[*event.PageView](ctx),
+		),
+		customEventRingBuf: ringo.NewWaiter(
+			ringo.NewManyToOne(
+				int(cfg.MaxBatchSize*10),
+				ringo.WithManyToOneCollisionHandler[*event.Custom](ringo.CollisionHandlerFunc(func(_ any) {
+					logger.Warn().Msg("custom events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+				})),
+			),
+			ringo.WithWaiterContext[*event.Custom](ctx),
+		),
+		metrics: newMetrics(promRegistry),
 	}
-	service.pageViewRingBuf = ringo.NewWaiter(
-		ringo.NewManyToOne(
-			int(service.maxBatchSize*10),
-			ringo.WithManyToOneCollisionHandler[*event.PageView](ringo.CollisionHandlerFunc(func(_ any) {
-				service.logger.Warn().Msg("pageview events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_MAX_BATCH_SIZE")
-			})),
-		),
-		ringo.WithWaiterContext[*event.PageView](ctx),
-	)
-	service.customEventRingBuf = ringo.NewWaiter(
-		ringo.NewManyToOne(
-			int(service.maxBatchSize*10),
-			ringo.WithManyToOneCollisionHandler[*event.Custom](ringo.CollisionHandlerFunc(func(_ any) {
-				service.logger.Warn().Msg("custom events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_MAX_BATCH_SIZE")
-			})),
-		),
-		ringo.WithWaiterContext[*event.Custom](ctx),
-	)
 
 	go service.batchPageViewLoop(batchDone)
 	go service.batchCustomEventLoop(batchDone)
@@ -78,33 +78,36 @@ func ProvideClickhouseService(
 	return service
 }
 
-type ClickhouseService struct {
+type clickhouseService struct {
 	logger             zerolog.Logger
 	conn               driver.Conn
 	maxBatchSize       uint64
 	maxBatchTimeout    time.Duration
 	pageViewRingBuf    ringo.Waiter[*event.PageView]
 	customEventRingBuf ringo.Waiter[*event.Custom]
+	metrics            metrics
 }
 
 // StorePageView implements Service.
-func (cs *ClickhouseService) StorePageView(_ context.Context, ev *event.PageView) error {
+func (cs *clickhouseService) StorePageView(_ context.Context, ev *event.PageView) error {
 	cs.pageViewRingBuf.Push(ev)
 	return nil
 }
 
 // StoreCustom implements Service.
-func (cs *ClickhouseService) StoreCustom(_ context.Context, ev *event.Custom) error {
+func (cs *clickhouseService) StoreCustom(_ context.Context, ev *event.Custom) error {
 	cs.customEventRingBuf.Push(ev)
 	return nil
 }
 
-func (cs *ClickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
+func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 	var batch driver.Batch
 	var err error
 	batchCreationDate := time.Now()
 
-	_ = batchCreationDate
+	promLabels := prometheus.Labels{
+		"type": "pageview",
+	}
 
 	for {
 		if batch == nil {
@@ -125,7 +128,7 @@ func (cs *ClickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 		// Ring buffer context was cancelled.
 		if done {
 			cs.logger.Info().Msg("page view ring buffer done, sending last batch...")
-			cs.sendBatch(batch)
+			cs.sendBatch(batch, promLabels)
 			cs.logger.Info().Msg("last batch of page view events sent.")
 			batchDone <- struct{}{}
 			return
@@ -152,18 +155,20 @@ func (cs *ClickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 		}
 
 		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {
-			go cs.sendBatch(batch)
+			go cs.sendBatch(batch, promLabels)
 			batch = nil
 		}
 	}
 }
 
-func (cs *ClickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
+func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 	var batch driver.Batch
 	var err error
 	batchCreationDate := time.Now()
 
-	_ = batchCreationDate
+	promLabels := prometheus.Labels{
+		"type": "custom",
+	}
 
 	for {
 		if batch == nil {
@@ -184,7 +189,7 @@ func (cs *ClickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 		// Ring buffer context was cancelled.
 		if done {
 			cs.logger.Info().Msg("custom ring buffer done, sending last batch...")
-			cs.sendBatch(batch)
+			cs.sendBatch(batch, promLabels)
 			cs.logger.Info().Msg("last batch of custom events sent.")
 			batchDone <- struct{}{}
 			return
@@ -215,27 +220,34 @@ func (cs *ClickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 		}
 
 		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {
-			go cs.sendBatch(batch)
+			go cs.sendBatch(batch, promLabels)
 			batch = nil
 		}
 	}
 }
 
-func (cs *ClickhouseService) sendBatch(batch driver.Batch) {
+func (cs *clickhouseService) sendBatch(batch driver.Batch, labels prometheus.Labels) {
 	// Retry if an error occurred. This can happen on clickhouse cloud if instance
 	// goes to idle state.
 	var err error
 	for i := 0; i < 5; i++ {
+		start := time.Now()
+
 		err = batch.Send()
 		if err != nil {
 			time.Sleep(time.Duration(i) * time.Second)
+			cs.metrics.batchRetry.With(labels).Inc()
 		} else {
+			cs.metrics.sendBatchDuration.With(labels).Observe(time.Since(start).Seconds())
+			cs.metrics.batchSize.With(labels).Observe(float64(batch.Rows()))
+			cs.metrics.eventsCounter.With(labels).Add(float64(batch.Rows()))
 			cs.logger.Debug().Msg("events batch successfully sent")
 			break
 		}
 	}
 
 	if err != nil {
+		cs.metrics.batchDropped.With(labels).Inc()
 		cs.logger.Err(err).Msg("failed to send events batch")
 	}
 }

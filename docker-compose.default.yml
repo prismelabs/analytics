@@ -3,6 +3,7 @@ services:
     image: "docker.io/clickhouse/clickhouse-server:24.2.1-alpine"
     ports:
       - 8123:8123 # HTTP interface
+      - 9000:9000 # Native interface
     ulimits:
       nofile: 262144
     healthcheck:
