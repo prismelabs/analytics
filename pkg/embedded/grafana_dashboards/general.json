@@ -531,7 +531,7 @@
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "blue",
+								"color": "purple",
 								"value": null
 							}
 						]
@@ -549,6 +549,13 @@
 							{
 								"id": "unit",
 								"value": "percent"
+							},
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "blue",
+									"mode": "fixed"
+								}
 							}
 						]
 					}
@@ -556,7 +563,7 @@
 			},
 			"gridPos": {
 				"h": 2,
-				"w": 11,
+				"w": 22,
 				"x": 1,
 				"y": 5
 			},
