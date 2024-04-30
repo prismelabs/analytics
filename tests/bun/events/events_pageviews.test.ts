@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { COUNTRY_CODE_REGEX, PRISME_PAGEVIEWS_URL, TIMESTAMP_REGEX } from '../const'
+import { COUNTRY_CODE_REGEX, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX } from '../const'
 
 const seed = new Date().getTime()
 console.log('faker seed', seed)
@@ -103,7 +103,8 @@ test('registered domain in Origin header and valid X-Prisme-Referrer is accepted
     browser_family: 'Other',
     device: 'Other',
     referrer_domain: 'www.example.com',
-    country_code: expect.stringMatching(COUNTRY_CODE_REGEX)
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+    visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX)
   })
 })
 
@@ -129,7 +130,8 @@ test('valid URL with registered domain in Origin header is accepted', async () =
     browser_family: 'Other',
     device: 'Other',
     referrer_domain: 'www.example.com',
-    country_code: expect.stringMatching(COUNTRY_CODE_REGEX)
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+    visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX)
   })
 })
 
@@ -156,7 +158,8 @@ test('valid pageview with Windows + Chrome user agent', async () => {
     browser_family: 'Chrome',
     device: 'Other',
     referrer_domain: 'www.example.com',
-    country_code: expect.stringMatching(COUNTRY_CODE_REGEX)
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+    visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX)
   })
 })
 
@@ -181,7 +184,8 @@ test('valid pageview without X-Prisme-Document-Referrer', async () => {
     browser_family: 'Other',
     device: 'Other',
     referrer_domain: 'direct',
-    country_code: expect.stringMatching(COUNTRY_CODE_REGEX)
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+    visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX)
   })
 })
 
@@ -206,7 +210,8 @@ test('valid pageview without trailing slash in referrer', async () => {
     browser_family: 'Other',
     device: 'Other',
     referrer_domain: 'direct',
-    country_code: expect.stringMatching(COUNTRY_CODE_REGEX)
+    country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+    visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX)
   })
 })
 
@@ -231,7 +236,8 @@ test('valid pageview with US IP address', async () => {
     browser_family: 'Other',
     device: 'Other',
     referrer_domain: 'direct',
-    country_code: 'US'
+    country_code: 'US',
+    visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX)
   })
 })
 
@@ -256,7 +262,8 @@ test('valid pageview with dirty path', async () => {
     browser_family: 'Other',
     device: 'Other',
     referrer_domain: 'direct',
-    country_code: 'US'
+    country_code: 'US',
+    visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX)
   })
 })
 
