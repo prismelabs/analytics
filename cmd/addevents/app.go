@@ -56,7 +56,7 @@ func (a App) AddPageviewsEvents() {
 					randomOS(),
 					randomBrowser(),
 					"benchbot",
-					randomReferrerDomain(),
+					randomReferrerDomain(a.cfg.Domains),
 					randomCountryCode(),
 					fmt.Sprintf("prisme_%X", rand.Uint64()%uint64(a.cfg.BatchSize*a.cfg.BatchCount/3)),
 				)
@@ -109,7 +109,7 @@ func (a App) AddCustomEvents() {
 					randomOS(),
 					randomBrowser(),
 					"benchbot",
-					randomReferrerDomain(),
+					randomReferrerDomain(a.cfg.Domains),
 					randomCountryCode(),
 					fmt.Sprintf("prisme_%X", rand.Uint64()%uint64(a.cfg.BatchSize*a.cfg.BatchCount/3)),
 					name,

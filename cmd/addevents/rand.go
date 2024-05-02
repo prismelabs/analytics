@@ -54,7 +54,11 @@ var referrerDomains = []string{
 	"direct",
 }
 
-func randomReferrerDomain() string {
+func randomReferrerDomain(extraDomains []string) string {
+	if rand.Int()%2 == 0 {
+		return randomItem(extraDomains)
+	}
+
 	return randomItem(referrerDomains)
 }
 
