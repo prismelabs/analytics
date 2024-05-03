@@ -17,7 +17,8 @@ start/%: .env codegen
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
 		down
-	-$(DOCKER_COMPOSE) \
+	-source ./.env \
+	&& $(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
 		up --wait --force-recreate
 	$(DOCKER) logs -f $(notdir $(CURDIR))-prisme-1 |& bunyan
