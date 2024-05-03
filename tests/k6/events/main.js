@@ -19,12 +19,27 @@ export const options = {
 	}
 }
 
+const origins = [
+	"mywebsite.localhost",
+	"foo.mywebsite.localhost",
+	"someoneelsewebsite.com"
+]
+
 export function pageView() {
 	const origin = [
 				randomItem(["http", "https"]),
 				"://",
-				randomItem(["mywebsite.localhost", "foo.mywebsite.localhost", "someoneelsewebsite.com"]),
+				randomItem(origins),
 	].join('')
+	const docReferrer = randomItem([
+		undefined,
+		"https://google.com",
+		"https://duckduckgo.com",
+		"https://qwant.com",
+		"https://github.com",
+		origin,
+	])
+
 	const res = http.post('http://prisme.localhost/api/v1/events/pageviews', null, {
 		headers: {
 			"Origin": origin,
@@ -32,8 +47,8 @@ export function pageView() {
 				origin,
 				randomItem(["/", "/foo", "/bar", "qux", "/foo/"])
 			].join(''),
-			"X-Prisme-Document-Referrer": randomItem([undefined, "https://google.com", "https://duckduckgo.com", "https://qwant.com", "https://github.com"]),
-			"X-Forwarded-For": randomIP()
+			"X-Forwarded-For": randomIP(),
+			"X-Prisme-Document-Referrer": docReferrer
 		}
 	})
 }
@@ -42,8 +57,17 @@ export function customEvent() {
 	const origin = [
 				randomItem(["http", "https"]),
 				"://",
-				randomItem(["mywebsite.localhost", "foo.mywebsite.localhost", "someoneelsewebsite.com"]),
+				randomItem(origins),
 	].join('')
+	const docReferrer = randomItem([
+		undefined,
+		"https://google.com",
+		"https://duckduckgo.com",
+		"https://qwant.com",
+		"https://github.com",
+		...origins,
+	])
+
 	const res = http.post(`http://prisme.localhost/api/v1/events/custom/${"foo"}`, JSON.stringify({x: 1024, y: 4096}), {
 		headers: {
 			"Content-Type": "application/json",
@@ -52,8 +76,8 @@ export function customEvent() {
 				origin,
 				randomItem(["/", "/foo", "/bar", "qux", "/foo/"])
 			].join(''),
-			"X-Prisme-Document-Referrer": randomItem([undefined, "https://google.com", "https://duckduckgo.com", "https://qwant.com", "https://github.com"]),
-			"X-Forwarded-For": randomIP()
+			"X-Forwarded-For": randomIP(),
+			"X-Prisme-Document-Referrer": docReferrer
 		}
 	})
 }
@@ -64,10 +88,11 @@ function randomItem(items) {
 }
 
 function randomIP() {
-	const addr = []
-	for (let i = 0; i < 4; i++) {
-		addr.push(Math.floor(Math.random() * 255))
-	}
+	const addr = [10, 10]
+	// for (let i = 0; i < 2; i++) {
+	addr.push(Math.floor(Math.random() * 16))
+	addr.push(Math.floor(Math.random() * 255))
+	// }
 
 	return addr.map((b) => b.toString()).join('.')
 }
