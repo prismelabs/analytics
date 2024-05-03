@@ -142,7 +142,7 @@ async function getLatestEntryPage (): Promise<any> {
   const rows = await client.query({
     query: 'SELECT * FROM prisme.entry_pages ORDER BY timestamp DESC LIMIT 1;'
   })
-  return await rows.json().then((r: any) => r.data[0])
+  return rows.json().then((r: any) => r.data[0])
 }
 
 async function getLatestExitPage (): Promise<any> {
@@ -159,5 +159,5 @@ async function getLatestExitPage (): Promise<any> {
   const rows = await client.query({
     query: 'SELECT * FROM prisme.exit_pages_no_bounce FINAL ORDER BY timestamp DESC LIMIT 1;'
   })
-  return await rows.json().then((r: any) => r.data[0])
+  return rows.json().then((r: any) => r.data[0])
 }

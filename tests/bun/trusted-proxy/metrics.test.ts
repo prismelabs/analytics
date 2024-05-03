@@ -47,7 +47,7 @@ async function fetchMetrics (): Promise<string> {
   const resp = await fetch(PRISME_METRICS_URL)
   expect(resp.ok).toBeTrue()
 
-  return await resp.text()
+  return resp.text()
 }
 
 async function parseMetrics (prometheusMetrics: string): Promise<Metrics> {
