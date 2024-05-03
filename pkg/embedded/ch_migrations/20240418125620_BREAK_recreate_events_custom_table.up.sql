@@ -31,7 +31,7 @@ SAMPLE BY xxh3(visitor_id)
 PARTITION BY toYYYYMM(timestamp);
 
 -- Move rows to new table.
-INSERT INTO events_custom 
+INSERT INTO events_custom
 	SELECT timestamp, domain, path, operating_system, browser_family, device,
 		referrer_domain, country_code, visitor_id, name, keys, values
 	FROM events_custom_old;
