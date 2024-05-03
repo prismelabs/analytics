@@ -266,26 +266,18 @@
 					"hide": true,
 					"meta": {
 						"builderOptions": {
-							"aggregates": [],
 							"columns": [],
 							"database": "",
-							"filters": [
-								{
-									"key": "timestamp",
-									"operator": "WITH IN DASHBOARD TIME RANGE",
-									"type": "datetime"
-								}
-							],
-							"limit": 100,
-							"mode": "trend",
+							"limit": 1000,
+							"mode": "list",
 							"queryType": "table",
-							"table": "events_pageviews"
+							"table": ""
 						}
 					},
 					"pluginVersion": "4.0.6",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(*) * ${sample}\nFROM \"prisme\".\"events_pageviews\"\nSAMPLE 1/${sample}\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\n",
-					"refId": "Total page views previous period"
+					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) * ${sample}\nFROM \"prisme\".\"events_pageviews\"\nSAMPLE 1/${sample}\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})",
+					"refId": "Total visitors previous period"
 				},
 				{
 					"datasource": {
@@ -299,7 +291,7 @@
 						"builderOptions": {
 							"columns": [],
 							"database": "",
-							"limit": 100,
+							"limit": 1000,
 							"mode": "list",
 							"queryType": "table",
 							"table": ""
@@ -307,8 +299,8 @@
 					},
 					"pluginVersion": "4.0.6",
 					"queryType": "table",
-					"rawSql": "SELECT $__timeInterval(timestamp) as time, COUNT(*) * ${sample}\nFROM \"prisme\".\"events_pageviews\"\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY time\nORDER BY time",
-					"refId": "Page views over time"
+					"rawSql": "SELECT $__timeInterval(timestamp) as time, COUNT(DISTINCT(visitor_id)) * ${sample}\nFROM \"prisme\".\"events_pageviews\"\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\nGROUP BY time\nORDER BY time",
+					"refId": "Visitors over time"
 				},
 				{
 					"datasource": {
@@ -316,10 +308,10 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "Page views over time",
+					"expression": "Visits over time",
 					"hide": true,
 					"reducer": "sum",
-					"refId": "Total page views",
+					"refId": "Total visitors",
 					"settings": {
 						"mode": "dropNN"
 					},
@@ -331,9 +323,9 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "100 * (${Total page views} / ${Total page views previous period}) - 100",
+					"expression": "(${Total visitors} / ${Total visitors previous period} - 1) * 100",
 					"hide": false,
-					"refId": "Page views change",
+					"refId": "Visitors change",
 					"type": "math"
 				},
 				{
@@ -407,6 +399,86 @@
 				},
 				{
 					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"editorType": "sql",
+					"format": 1,
+					"hide": true,
+					"meta": {
+						"builderOptions": {
+							"aggregates": [],
+							"columns": [],
+							"database": "",
+							"filters": [
+								{
+									"key": "timestamp",
+									"operator": "WITH IN DASHBOARD TIME RANGE",
+									"type": "datetime"
+								}
+							],
+							"limit": 100,
+							"mode": "trend",
+							"queryType": "table",
+							"table": "events_pageviews"
+						}
+					},
+					"pluginVersion": "4.0.6",
+					"queryType": "table",
+					"rawSql": "SELECT COUNT(*) * ${sample}\nFROM \"prisme\".\"events_pageviews\"\nSAMPLE 1/${sample}\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\n",
+					"refId": "Total page views previous period"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"editorType": "sql",
+					"format": 1,
+					"hide": false,
+					"meta": {
+						"builderOptions": {
+							"columns": [],
+							"database": "",
+							"limit": 100,
+							"mode": "list",
+							"queryType": "table",
+							"table": ""
+						}
+					},
+					"pluginVersion": "4.0.6",
+					"queryType": "table",
+					"rawSql": "SELECT $__timeInterval(timestamp) as time, COUNT(*) * ${sample}\nFROM \"prisme\".\"events_pageviews\"\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY time\nORDER BY time",
+					"refId": "Page views over time"
+				},
+				{
+					"datasource": {
+						"name": "Expression",
+						"type": "__expr__",
+						"uid": "__expr__"
+					},
+					"expression": "Page views over time",
+					"hide": true,
+					"reducer": "sum",
+					"refId": "Total page views",
+					"settings": {
+						"mode": "dropNN"
+					},
+					"type": "reduce"
+				},
+				{
+					"datasource": {
+						"name": "Expression",
+						"type": "__expr__",
+						"uid": "__expr__"
+					},
+					"expression": "100 * (${Total page views} / ${Total page views previous period}) - 100",
+					"hide": false,
+					"refId": "Page views change",
+					"type": "math"
+				},
+				{
+					"datasource": {
 						"name": "Expression",
 						"type": "__expr__",
 						"uid": "__expr__"
@@ -437,78 +509,6 @@
 					"hide": false,
 					"refId": "Views per visit change",
 					"type": "math"
-				},
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"hide": true,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 1000,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.6",
-					"queryType": "table",
-					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) * ${sample}\nFROM \"prisme\".\"events_pageviews\"\nSAMPLE 1/${sample}\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})",
-					"refId": "Total visitors previous period"
-				},
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"hide": false,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 1000,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.6",
-					"queryType": "table",
-					"rawSql": "SELECT $__timeInterval(timestamp) as time, COUNT(DISTINCT(visitor_id)) * ${sample}\nFROM \"prisme\".\"events_pageviews\"\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\nGROUP BY time\nORDER BY time",
-					"refId": "Visitors over time"
-				},
-				{
-					"datasource": {
-						"name": "Expression",
-						"type": "__expr__",
-						"uid": "__expr__"
-					},
-					"expression": "Visits over time",
-					"hide": true,
-					"reducer": "sum",
-					"refId": "Total visitors",
-					"settings": {
-						"mode": "dropNN"
-					},
-					"type": "reduce"
-				},
-				{
-					"datasource": {
-						"name": "Expression",
-						"type": "__expr__",
-						"uid": "__expr__"
-					},
-					"expression": "(${Total visitors} / ${Total visitors previous period} - 1) * 100",
-					"hide": false,
-					"refId": "Visitors change",
-					"type": "math"
 				}
 			],
 			"title": "Summary",
@@ -531,7 +531,7 @@
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "purple",
+								"color": "blue",
 								"value": null
 							}
 						]
@@ -553,9 +553,21 @@
 							{
 								"id": "color",
 								"value": {
-									"fixedColor": "blue",
+									"fixedColor": "purple",
 									"mode": "fixed"
 								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Visit duration"
+						},
+						"properties": [
+							{
+								"id": "unit",
+								"value": "s"
 							}
 						]
 					}
@@ -593,6 +605,29 @@
 					},
 					"editorType": "sql",
 					"format": 1,
+					"hide": false,
+					"meta": {
+						"builderOptions": {
+							"columns": [],
+							"database": "",
+							"limit": 1000,
+							"mode": "list",
+							"queryType": "table",
+							"table": ""
+						}
+					},
+					"pluginVersion": "4.0.6",
+					"queryType": "table",
+					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) * ${sample} AS \"Live visitors\"\nFROM prisme.events_pageviews\nSAMPLE 1/${sample}\nWHERE timestamp > subtractMinutes(now(), 15)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})",
+					"refId": "Live visitor"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"editorType": "sql",
+					"format": 1,
 					"hide": true,
 					"meta": {
 						"builderOptions": {
@@ -606,7 +641,7 @@
 					},
 					"pluginVersion": "4.0.6",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(*) * ${sample}\nFROM prisme.events_pageviews\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\nAND visitor_id IN (\n  SELECT visitor_id\n  FROM prisme.events_pageviews\n  WHERE $__timeFilter(timestamp)\n  AND domain IN (${domains:sqlstring})\n  AND path IN (${pathnames:sqlstring})\n  AND operating_system IN (${operating_systems:sqlstring})\n  AND browser_family IN (${browsers:sqlstring})\n  AND referrer_domain IN (${referrals:sqlstring})\n  AND referrer_domain != domain\n  AND country_code IN (${locations:sqlstring})\n  GROUP BY visitor_id\n  HAVING count(*) = 1\n)",
+					"rawSql": "WITH visitor_visits AS (\n  SELECT visitor_id, COUNT(*) AS \"visits\"\n  FROM prisme.events_pageviews\n  WHERE $__timeFilter(timestamp)\n  AND domain IN (${domains:sqlstring})\n  AND path IN (${pathnames:sqlstring})\n  AND operating_system IN (${operating_systems:sqlstring})\n  AND browser_family IN (${browsers:sqlstring})\n  AND referrer_domain IN (${referrals:sqlstring})\n  AND country_code IN (${locations:sqlstring})\n  GROUP BY visitor_id\n)\nSELECT COUNT(*) FROM visitor_visits WHERE visits = 1",
 					"refId": "Total number of visitors viewing a single page"
 				},
 				{
@@ -663,8 +698,8 @@
 					},
 					"pluginVersion": "4.0.6",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(*) * ${sample} AS \"Custom events\"\nFROM prisme.events_custom\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})",
-					"refId": "Custom events"
+					"rawSql": "SELECT avg(timestamp - entry_timestamp) AS \"Visit duration\" FROM prisme.exit_pages_no_bounce;",
+					"refId": "Visit duration"
 				}
 			],
 			"transparent": true,
@@ -1219,8 +1254,7 @@
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "blue",
-								"value": null
+								"color": "blue"
 							}
 						]
 					},
@@ -1364,8 +1398,7 @@
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "red",
-								"value": null
+								"color": "red"
 							}
 						]
 					},
@@ -1695,8 +1728,7 @@
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "green",
-								"value": null
+								"color": "green"
 							},
 							{
 								"color": "red",
@@ -1946,7 +1978,7 @@
 			},
 			{
 				"current": {
-					"selected": true,
+					"selected": false,
 					"text": "1",
 					"value": "1"
 				},
