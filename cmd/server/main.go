@@ -26,20 +26,20 @@ func main() {
 
 	// Initialize server depending on mode.
 	mode := config.GetEnvOrDefault("PRISME_MODE", "default")
+	logger.Info().Str("mode", mode).Msg("initilializing server...")
+
 	switch mode {
 	case "ingestion":
-		logger.Info().Msg("initilializing ingestion server...")
 		app = ingestion.Initialize(wired.BootstrapLogger(logger))
-		logger.Info().Msg("ingestion server successfully initialized.")
 
 	case "default":
-		logger.Info().Msg("initilializing default server...")
 		app = full.Initialize(wired.BootstrapLogger(logger))
-		app.Logger.Info().Msg("default server successfully initialized.")
 
 	default:
 		app.Logger.Panic().Str("mode", mode).Msg("unknown server mode")
 	}
+
+	app.Logger.Info().Msg("default server successfully initialized.")
 
 	// Admin and profiling server.
 	go func() {
