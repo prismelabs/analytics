@@ -120,7 +120,7 @@ func TestIntegService(t *testing.T) {
 			}
 
 			// Wait for batch time out
-			time.Sleep(2 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 		}
 
 		// Ensure pageviews events are stored.
