@@ -517,196 +517,6 @@
 		},
 		{
 			"datasource": {
-				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUid }}"
-			},
-			"description": "",
-			"fieldConfig": {
-				"defaults": {
-					"color": {
-						"mode": "thresholds"
-					},
-					"mappings": [],
-					"thresholds": {
-						"mode": "absolute",
-						"steps": [
-							{
-								"color": "blue",
-								"value": null
-							}
-						]
-					},
-					"unit": "short",
-					"unitScale": true
-				},
-				"overrides": [
-					{
-						"matcher": {
-							"id": "byName",
-							"options": "Bounce rate"
-						},
-						"properties": [
-							{
-								"id": "unit",
-								"value": "percent"
-							},
-							{
-								"id": "color",
-								"value": {
-									"fixedColor": "purple",
-									"mode": "fixed"
-								}
-							}
-						]
-					},
-					{
-						"matcher": {
-							"id": "byName",
-							"options": "Visit duration"
-						},
-						"properties": [
-							{
-								"id": "unit",
-								"value": "s"
-							}
-						]
-					}
-				]
-			},
-			"gridPos": {
-				"h": 2,
-				"w": 22,
-				"x": 1,
-				"y": 5
-			},
-			"id": 20,
-			"options": {
-				"colorMode": "background",
-				"graphMode": "area",
-				"justifyMode": "center",
-				"orientation": "auto",
-				"reduceOptions": {
-					"calcs": [
-						"sum"
-					],
-					"fields": "",
-					"values": false
-				},
-				"showPercentChange": false,
-				"textMode": "value_and_name",
-				"wideLayout": true
-			},
-			"pluginVersion": "10.3.3",
-			"targets": [
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"hide": false,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 1000,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.6",
-					"queryType": "table",
-					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) * ${sample} AS \"Live visitors\"\nFROM prisme.events_pageviews\nSAMPLE 1/${sample}\nWHERE timestamp > subtractMinutes(now(), 15)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})",
-					"refId": "Live visitor"
-				},
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"hide": true,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 1000,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.6",
-					"queryType": "table",
-					"rawSql": "WITH visitor_visits AS (\n  SELECT visitor_id, COUNT(*) AS \"visits\"\n  FROM prisme.events_pageviews\n  WHERE $__timeFilter(timestamp)\n  AND domain IN (${domains:sqlstring})\n  AND path IN (${pathnames:sqlstring})\n  AND operating_system IN (${operating_systems:sqlstring})\n  AND browser_family IN (${browsers:sqlstring})\n  AND referrer_domain IN (${referrals:sqlstring})\n  AND country_code IN (${locations:sqlstring})\n  GROUP BY visitor_id\n)\nSELECT COUNT(*) FROM visitor_visits WHERE visits = 1",
-					"refId": "Total number of visitors viewing a single page"
-				},
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"hide": true,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 1000,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.6",
-					"queryType": "table",
-					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) * ${sample}\nFROM prisme.events_pageviews\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})",
-					"refId": "Total number of visitors"
-				},
-				{
-					"datasource": {
-						"name": "Expression",
-						"type": "__expr__",
-						"uid": "__expr__"
-					},
-					"expression": "${Total number of visitors viewing a single page} / ${Total number of visitors} * 100",
-					"hide": false,
-					"refId": "Bounce rate",
-					"type": "math"
-				},
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"hide": false,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 1000,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.6",
-					"queryType": "table",
-					"rawSql": "SELECT avg(timestamp - entry_timestamp) AS \"Visit duration\" FROM prisme.exit_pages_no_bounce;",
-					"refId": "Visit duration"
-				}
-			],
-			"transparent": true,
-			"type": "stat"
-		},
-		{
-			"datasource": {
 				"type": "datasource",
 				"uid": "-- Dashboard --"
 			},
@@ -825,7 +635,7 @@
 				"h": 12,
 				"w": 22,
 				"x": 1,
-				"y": 7
+				"y": 5
 			},
 			"id": 6,
 			"maxDataPoints": 32,
@@ -860,20 +670,19 @@
 				"type": "grafana-clickhouse-datasource",
 				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
-			"description": "Top 10 of traffic sources.",
+			"description": "Number of visitors in the last 15 minutes.",
 			"fieldConfig": {
 				"defaults": {
 					"color": {
-						"mode": "continuous-BlPu"
+						"fixedColor": "blue",
+						"mode": "fixed"
 					},
-					"displayName": "${__field.labels[\"referrer_domain\"]}",
-					"fieldMinMax": false,
 					"mappings": [],
 					"thresholds": {
-						"mode": "percentage",
+						"mode": "absolute",
 						"steps": [
 							{
-								"color": "super-light-blue",
+								"color": "green",
 								"value": null
 							}
 						]
@@ -884,30 +693,27 @@
 				"overrides": []
 			},
 			"gridPos": {
-				"h": 13,
-				"w": 8,
+				"h": 2,
+				"w": 7,
 				"x": 1,
-				"y": 19
+				"y": 17
 			},
-			"id": 13,
+			"id": 22,
 			"options": {
-				"displayMode": "lcd",
-				"maxVizHeight": 41,
-				"minVizHeight": 25,
-				"minVizWidth": 8,
-				"namePlacement": "auto",
-				"orientation": "horizontal",
+				"colorMode": "background",
+				"graphMode": "area",
+				"justifyMode": "center",
+				"orientation": "auto",
 				"reduceOptions": {
 					"calcs": [
-						"lastNotNull"
+						"sum"
 					],
 					"fields": "",
-					"limit": 10,
-					"values": true
+					"values": false
 				},
-				"showUnfilled": true,
-				"sizing": "manual",
-				"valueMode": "text"
+				"showPercentChange": false,
+				"textMode": "value_and_name",
+				"wideLayout": true
 			},
 			"pluginVersion": "10.3.3",
 			"targets": [
@@ -922,224 +728,33 @@
 						"builderOptions": {
 							"columns": [],
 							"database": "",
-							"limit": 100,
+							"limit": 1000,
 							"mode": "list",
 							"queryType": "table",
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.3",
+					"pluginVersion": "4.0.6",
 					"queryType": "table",
-					"rawSql": "SELECT referrer_domain, COUNT(*) as count\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY referrer_domain\nORDER BY count DESC",
+					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) * ${sample} AS \"Live visitors\"\nFROM prisme.events_pageviews\nSAMPLE 1/${sample}\nWHERE timestamp > subtractMinutes(now(), 15)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})",
 					"refId": "A"
 				}
 			],
-			"title": "Top Sources",
-			"transformations": [
-				{
-					"id": "rowsToFields",
-					"options": {
-						"mappings": [
-							{
-								"fieldName": "referrer_domain",
-								"handlerKey": "field.name"
-							},
-							{
-								"fieldName": "count",
-								"handlerKey": "field.value"
-							}
-						]
-					}
-				}
-			],
-			"type": "bargauge"
+			"transparent": true,
+			"type": "stat"
 		},
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
 				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
+			"description": "Percentage of visits that access only a single page.",
 			"fieldConfig": {
 				"defaults": {
 					"color": {
 						"fixedColor": "purple",
-						"mode": "shades"
+						"mode": "fixed"
 					},
-					"custom": {
-						"hideFrom": {
-							"legend": false,
-							"tooltip": false,
-							"viz": false
-						}
-					},
-					"mappings": [],
-					"unit": "short",
-					"unitScale": true
-				},
-				"overrides": [
-					{
-						"matcher": {
-							"id": "byName",
-							"options": "internal Internal"
-						},
-						"properties": [
-							{
-								"id": "color",
-								"value": {
-									"fixedColor": "semi-dark-blue",
-									"mode": "fixed"
-								}
-							}
-						]
-					},
-					{
-						"matcher": {
-							"id": "byName",
-							"options": "direct Direct"
-						},
-						"properties": [
-							{
-								"id": "color",
-								"value": {
-									"fixedColor": "#7253cf",
-									"mode": "fixed"
-								}
-							}
-						]
-					},
-					{
-						"matcher": {
-							"id": "byName",
-							"options": "External"
-						},
-						"properties": [
-							{
-								"id": "color",
-								"value": {
-									"fixedColor": "semi-dark-purple",
-									"mode": "fixed"
-								}
-							}
-						]
-					}
-				]
-			},
-			"gridPos": {
-				"h": 13,
-				"w": 7,
-				"x": 9,
-				"y": 19
-			},
-			"id": 19,
-			"options": {
-				"displayLabels": [
-					"percent",
-					"name"
-				],
-				"legend": {
-					"displayMode": "list",
-					"placement": "bottom",
-					"showLegend": true,
-					"values": []
-				},
-				"pieType": "pie",
-				"reduceOptions": {
-					"calcs": [
-						"lastNotNull"
-					],
-					"fields": "",
-					"values": true
-				},
-				"tooltip": {
-					"mode": "single",
-					"sort": "none"
-				}
-			},
-			"targets": [
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 1000,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.3",
-					"queryType": "table",
-					"rawSql": "SELECT COUNT() AS Internal\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain = domain\nAND country_code IN (${locations:sqlstring})",
-					"refId": "internal"
-				},
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"hide": false,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 1000,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.3",
-					"queryType": "table",
-					"rawSql": "SELECT COUNT(*) AS Direct\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain = 'direct'\nAND country_code IN (${locations:sqlstring})",
-					"refId": "direct"
-				},
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"hide": false,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 1000,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.3",
-					"queryType": "table",
-					"rawSql": "SELECT COUNT(*) AS External\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != 'direct' AND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})",
-					"refId": "external"
-				}
-			],
-			"title": "Traffic Sources",
-			"type": "piechart"
-		},
-		{
-			"datasource": {
-				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUid }}"
-			},
-			"description": "Top 10 of most visited pages.",
-			"fieldConfig": {
-				"defaults": {
-					"color": {
-						"mode": "continuous-BlPu"
-					},
-					"displayName": "${__field.labels[\"path\"]}",
 					"mappings": [],
 					"thresholds": {
 						"mode": "absolute",
@@ -1154,485 +769,23 @@
 							}
 						]
 					},
-					"unit": "short",
+					"unit": "percent",
 					"unitScale": true
 				},
 				"overrides": []
 			},
 			"gridPos": {
-				"h": 13,
-				"w": 7,
-				"x": 16,
-				"y": 19
+				"h": 2,
+				"w": 8,
+				"x": 8,
+				"y": 17
 			},
-			"id": 14,
+			"id": 23,
 			"options": {
-				"displayMode": "lcd",
-				"maxVizHeight": 41,
-				"minVizHeight": 25,
-				"minVizWidth": 8,
-				"namePlacement": "auto",
-				"orientation": "horizontal",
-				"reduceOptions": {
-					"calcs": [
-						"lastNotNull"
-					],
-					"fields": "",
-					"limit": 10,
-					"values": true
-				},
-				"showUnfilled": true,
-				"sizing": "manual",
-				"valueMode": "color"
-			},
-			"pluginVersion": "10.3.3",
-			"targets": [
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 100,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.3",
-					"queryType": "table",
-					"rawSql": "SELECT path, COUNT(*) as pageviews\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY path\nORDER BY pageviews DESC",
-					"refId": "A"
-				}
-			],
-			"title": "Top Pages",
-			"transformations": [
-				{
-					"id": "rowsToFields",
-					"options": {
-						"mappings": [
-							{
-								"fieldName": "path",
-								"handlerKey": "field.name"
-							},
-							{
-								"fieldName": "pageviews",
-								"handlerKey": "field.value"
-							}
-						]
-					}
-				}
-			],
-			"type": "bargauge"
-		},
-		{
-			"datasource": {
-				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUid }}"
-			},
-			"description": "",
-			"fieldConfig": {
-				"defaults": {
-					"color": {
-						"mode": "palette-classic"
-					},
-					"custom": {
-						"hideFrom": {
-							"legend": false,
-							"tooltip": false,
-							"viz": false
-						}
-					},
-					"mappings": [],
-					"min": 0,
-					"thresholds": {
-						"mode": "absolute",
-						"steps": [
-							{
-								"color": "blue"
-							}
-						]
-					},
-					"unit": "short",
-					"unitScale": true
-				},
-				"overrides": []
-			},
-			"gridPos": {
-				"h": 13,
-				"w": 15,
-				"x": 1,
-				"y": 32
-			},
-			"id": 15,
-			"options": {
-				"basemap": {
-					"config": {},
-					"name": "Layer 0",
-					"type": "default"
-				},
-				"controls": {
-					"mouseWheelZoom": false,
-					"showAttribution": true,
-					"showDebug": false,
-					"showMeasure": false,
-					"showScale": false,
-					"showZoom": true
-				},
-				"layers": [
-					{
-						"config": {
-							"showLegend": false,
-							"style": {
-								"color": {
-									"fixed": "light-blue"
-								},
-								"opacity": 0.5,
-								"rotation": {
-									"fixed": 0,
-									"max": 360,
-									"min": -360,
-									"mode": "mod"
-								},
-								"size": {
-									"field": "pageview",
-									"fixed": 5,
-									"max": 15,
-									"min": 3
-								},
-								"symbol": {
-									"fixed": "img/icons/marker/triangle.svg",
-									"mode": "fixed"
-								},
-								"symbolAlign": {
-									"horizontal": "center",
-									"vertical": "center"
-								},
-								"text": {
-									"field": "pageview",
-									"fixed": "",
-									"mode": "fixed"
-								},
-								"textConfig": {
-									"fontSize": 10,
-									"offsetX": 0,
-									"offsetY": 0,
-									"textAlign": "center",
-									"textBaseline": "middle"
-								}
-							}
-						},
-						"filterData": {
-							"id": "byRefId",
-							"options": "A"
-						},
-						"location": {
-							"gazetteer": "public/gazetteer/countries.json",
-							"lookup": "country_code",
-							"mode": "lookup"
-						},
-						"name": "Layer 1",
-						"opacity": 1,
-						"tooltip": true,
-						"type": "markers"
-					}
-				],
-				"tooltip": {
-					"mode": "details"
-				},
-				"view": {
-					"allLayers": true,
-					"id": "fit",
-					"lat": 0,
-					"lon": 0,
-					"zoom": 10
-				}
-			},
-			"pluginVersion": "10.3.3",
-			"targets": [
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 100,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.3",
-					"queryType": "table",
-					"rawSql": "SELECT country_code, COUNT(*) as pageview\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY country_code\nORDER BY country_code",
-					"refId": "A"
-				}
-			],
-			"transparent": true,
-			"type": "geomap"
-		},
-		{
-			"datasource": {
-				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUid }}"
-			},
-			"description": "Top 10 of visitors' locations.",
-			"fieldConfig": {
-				"defaults": {
-					"color": {
-						"mode": "continuous-BlPu"
-					},
-					"displayName": "${__field.labels[\"country_code\"]}",
-					"mappings": [],
-					"thresholds": {
-						"mode": "absolute",
-						"steps": [
-							{
-								"color": "red"
-							}
-						]
-					},
-					"unit": "short",
-					"unitScale": true
-				},
-				"overrides": []
-			},
-			"gridPos": {
-				"h": 13,
-				"w": 7,
-				"x": 16,
-				"y": 32
-			},
-			"id": 18,
-			"options": {
-				"displayMode": "lcd",
-				"maxVizHeight": 41,
-				"minVizHeight": 16,
-				"minVizWidth": 8,
-				"namePlacement": "auto",
-				"orientation": "horizontal",
-				"reduceOptions": {
-					"calcs": [
-						"lastNotNull"
-					],
-					"fields": "",
-					"limit": 10,
-					"values": true
-				},
-				"showUnfilled": true,
-				"sizing": "manual",
-				"valueMode": "color"
-			},
-			"pluginVersion": "10.3.3",
-			"targets": [
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"hide": false,
-					"meta": {
-						"builderOptions": {
-							"columns": [],
-							"database": "",
-							"limit": 100,
-							"mode": "list",
-							"queryType": "table",
-							"table": ""
-						}
-					},
-					"pluginVersion": "4.0.6",
-					"queryType": "table",
-					"rawSql": "SELECT DISTINCT(name) AS country, COUNT(*) as pageview\nFROM prisme.events_pageviews\nJOIN prisme.countries ON prisme.events_pageviews.country_code = prisme.countries.code\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY country\nORDER BY pageview DESC",
-					"refId": "A"
-				}
-			],
-			"title": "Top Locations",
-			"transformations": [
-				{
-					"id": "rowsToFields",
-					"options": {
-						"mappings": [
-							{
-								"fieldName": "country_code",
-								"handlerKey": "field.name"
-							},
-							{
-								"fieldName": "pageview",
-								"handlerKey": "field.value"
-							}
-						]
-					}
-				}
-			],
-			"type": "bargauge"
-		},
-		{
-			"datasource": {
-				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUid }}"
-			},
-			"fieldConfig": {
-				"defaults": {
-					"color": {
-						"fixedColor": "blue",
-						"mode": "shades"
-					},
-					"custom": {
-						"hideFrom": {
-							"legend": false,
-							"tooltip": false,
-							"viz": false
-						}
-					},
-					"displayName": "${__field.labels[\"browser_family\"]}",
-					"fieldMinMax": false,
-					"mappings": [],
-					"unit": "short",
-					"unitScale": true
-				},
-				"overrides": []
-			},
-			"gridPos": {
-				"h": 13,
-				"w": 11,
-				"x": 1,
-				"y": 45
-			},
-			"id": 4,
-			"options": {
-				"displayLabels": [
-					"percent",
-					"name"
-				],
-				"legend": {
-					"displayMode": "list",
-					"placement": "bottom",
-					"showLegend": true,
-					"values": []
-				},
-				"pieType": "pie",
-				"reduceOptions": {
-					"calcs": [
-						"lastNotNull"
-					],
-					"fields": "/^count$/",
-					"values": true
-				},
-				"tooltip": {
-					"mode": "single",
-					"sort": "none"
-				}
-			},
-			"pluginVersion": "10.2.2",
-			"targets": [
-				{
-					"datasource": {
-						"type": "grafana-clickhouse-datasource",
-						"uid": "{{ .DatasourceClickhouseUid }}"
-					},
-					"editorType": "sql",
-					"format": 1,
-					"meta": {
-						"builderOptions": {
-							"aggregates": [],
-							"columns": [
-								{
-									"hint": "time",
-									"name": "timestamp",
-									"type": "DateTime('UTC')"
-								}
-							],
-							"database": "prisme",
-							"filters": [
-								{
-									"condition": "AND",
-									"filterType": "custom",
-									"hint": "time",
-									"key": "timestamp",
-									"operator": "WITH IN DASHBOARD TIME RANGE",
-									"restrictToFields": [
-										{
-											"label": "timestamp",
-											"name": "timestamp",
-											"picklistValues": [],
-											"type": "DateTime('UTC')"
-										}
-									],
-									"type": "datetime"
-								}
-							],
-							"limit": 100,
-							"mode": "trend",
-							"orderBy": [],
-							"queryType": "timeseries",
-							"table": "events_pageviews"
-						}
-					},
-					"pluginVersion": "4.0.3",
-					"queryType": "table",
-					"rawSql": "SELECT replaceRegexpAll(browser_family, '(.*) (Mobile|iOS)|Mobile (.*)', '\\\\1\\\\2') AS browser_family, COUNT(browser_family) as count\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY browser_family",
-					"refId": "A"
-				}
-			],
-			"title": "Browsers",
-			"transformations": [],
-			"type": "piechart"
-		},
-		{
-			"datasource": {
-				"type": "grafana-clickhouse-datasource",
-				"uid": "{{ .DatasourceClickhouseUid }}"
-			},
-			"fieldConfig": {
-				"defaults": {
-					"color": {
-						"fixedColor": "purple",
-						"mode": "shades"
-					},
-					"custom": {
-						"hideFrom": {
-							"legend": false,
-							"tooltip": false,
-							"viz": false
-						}
-					},
-					"mappings": [],
-					"unit": "short",
-					"unitScale": true
-				},
-				"overrides": []
-			},
-			"gridPos": {
-				"h": 13,
-				"w": 11,
-				"x": 12,
-				"y": 45
-			},
-			"id": 5,
-			"options": {
-				"displayLabels": [
-					"percent",
-					"name"
-				],
-				"legend": {
-					"displayMode": "list",
-					"placement": "bottom",
-					"showLegend": true
-				},
-				"pieType": "pie",
+				"colorMode": "background",
+				"graphMode": "area",
+				"justifyMode": "center",
+				"orientation": "auto",
 				"reduceOptions": {
 					"calcs": [
 						"lastNotNull"
@@ -1640,12 +793,11 @@
 					"fields": "",
 					"values": false
 				},
-				"tooltip": {
-					"mode": "single",
-					"sort": "none"
-				}
+				"showPercentChange": false,
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "10.2.2",
+			"pluginVersion": "10.3.3",
 			"targets": [
 				{
 					"datasource": {
@@ -1654,118 +806,109 @@
 					},
 					"editorType": "sql",
 					"format": 1,
+					"hide": true,
 					"meta": {
 						"builderOptions": {
 							"columns": [],
-							"database": "prisme",
-							"filters": [
-								{
-									"condition": "AND",
-									"filterType": "custom",
-									"key": "timestamp",
-									"operator": "WITH IN DASHBOARD TIME RANGE",
-									"restrictToFields": [
-										{
-											"label": "timestamp",
-											"name": "timestamp",
-											"picklistValues": [],
-											"type": "DateTime('UTC')"
-										}
-									],
-									"type": "datetime"
-								}
-							],
-							"limit": 100,
+							"database": "",
+							"limit": 1000,
 							"mode": "list",
-							"orderBy": [],
 							"queryType": "table",
-							"table": "events_pageviews"
+							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.3",
+					"pluginVersion": "4.0.6",
 					"queryType": "table",
-					"rawSql": "SELECT operating_system, COUNT(operating_system) as count\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY operating_system",
-					"refId": "A"
-				}
-			],
-			"title": "Operating Systems (OS)",
-			"transformations": [
-				{
-					"id": "partitionByValues",
-					"options": {
-						"fields": [
-							"operating_system"
-						],
-						"naming": {
-							"asLabels": true
-						}
-					}
+					"rawSql": "WITH visitor_visits AS (\n  SELECT visitor_id, COUNT(*) AS \"visits\"\n  FROM prisme.events_pageviews\n  WHERE $__timeFilter(timestamp)\n  AND domain IN (${domains:sqlstring})\n  AND path IN (${pathnames:sqlstring})\n  AND operating_system IN (${operating_systems:sqlstring})\n  AND browser_family IN (${browsers:sqlstring})\n  AND referrer_domain IN (${referrals:sqlstring})\n  AND country_code IN (${locations:sqlstring})\n  GROUP BY visitor_id\n)\nSELECT COUNT(*) FROM visitor_visits WHERE visits = 1",
+					"refId": "Total number of visitors viewing a single page"
 				},
 				{
-					"id": "renameByRegex",
-					"options": {
-						"regex": "count (.*)",
-						"renamePattern": "$1"
-					}
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"editorType": "sql",
+					"format": 1,
+					"hide": true,
+					"meta": {
+						"builderOptions": {
+							"columns": [],
+							"database": "",
+							"limit": 1000,
+							"mode": "list",
+							"queryType": "table",
+							"table": ""
+						}
+					},
+					"pluginVersion": "4.0.6",
+					"queryType": "table",
+					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) * ${sample}\nFROM prisme.events_pageviews\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND addMinutes(timestamp, 15) < now()\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})",
+					"refId": "Total number of visitors"
+				},
+				{
+					"datasource": {
+						"name": "Expression",
+						"type": "__expr__",
+						"uid": "__expr__"
+					},
+					"expression": "${Total number of visitors viewing a single page} / ${Total number of visitors} * 100",
+					"hide": false,
+					"refId": "Bounce rate",
+					"type": "math"
 				}
 			],
-			"type": "piechart"
+			"transparent": true,
+			"type": "stat"
 		},
 		{
 			"datasource": {
 				"type": "grafana-clickhouse-datasource",
 				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
-			"description": "Top 10 of most visited pages.",
+			"description": "Average visit duration (bounces and live visitor excluded).",
 			"fieldConfig": {
 				"defaults": {
 					"color": {
-						"mode": "continuous-BlPu"
+						"fixedColor": "blue",
+						"mode": "fixed"
 					},
-					"displayName": "${__field.labels[\"name\"]}",
 					"mappings": [],
 					"thresholds": {
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "green"
-							},
-							{
-								"color": "red",
-								"value": 80
+								"color": "green",
+								"value": null
 							}
 						]
 					},
-					"unit": "short",
+					"unit": "s",
 					"unitScale": true
 				},
 				"overrides": []
 			},
 			"gridPos": {
-				"h": 13,
-				"w": 11,
-				"x": 1,
-				"y": 58
+				"h": 2,
+				"w": 7,
+				"x": 16,
+				"y": 17
 			},
-			"id": 21,
+			"id": 24,
 			"options": {
-				"displayMode": "lcd",
-				"maxVizHeight": 41,
-				"minVizHeight": 25,
-				"minVizWidth": 8,
-				"namePlacement": "auto",
-				"orientation": "horizontal",
+				"colorMode": "background",
+				"graphMode": "area",
+				"justifyMode": "center",
+				"orientation": "auto",
 				"reduceOptions": {
 					"calcs": [
-						"lastNotNull"
+						"sum"
 					],
 					"fields": "",
-					"limit": 10,
-					"values": true
+					"values": false
 				},
-				"showUnfilled": true,
-				"sizing": "manual",
-				"valueMode": "color"
+				"showPercentChange": false,
+				"textMode": "value_and_name",
+				"wideLayout": true
 			},
 			"pluginVersion": "10.3.3",
 			"targets": [
@@ -1788,15 +931,1187 @@
 					},
 					"pluginVersion": "4.0.6",
 					"queryType": "table",
-					"rawSql": "SELECT name, COUNT(*) as count\nFROM \"prisme\".\"events_custom\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY name\nORDER BY count DESC\n",
+					"rawSql": "SELECT avg(timestamp - entry_timestamp) AS \"Visit duration\"\nFROM prisme.exit_pages_no_bounce\nWHERE $__timeFilter(timestamp)\nAND addMinutes(timestamp, 15) < now();",
 					"refId": "A"
 				}
 			],
-			"title": "Custom events",
-			"type": "bargauge"
+			"type": "stat"
+		},
+		{
+			"collapsed": true,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 19
+			},
+			"id": 30,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"description": "Top 10 of traffic sources.",
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "continuous-BlPu"
+							},
+							"displayName": "${__field.labels[\"referrer_domain\"]}",
+							"fieldMinMax": false,
+							"mappings": [],
+							"thresholds": {
+								"mode": "percentage",
+								"steps": [
+									{
+										"color": "super-light-blue",
+										"value": null
+									}
+								]
+							},
+							"unit": "short",
+							"unitScale": true
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 12,
+						"w": 11,
+						"x": 1,
+						"y": 9
+					},
+					"id": 13,
+					"options": {
+						"displayMode": "lcd",
+						"maxVizHeight": 41,
+						"minVizHeight": 25,
+						"minVizWidth": 8,
+						"namePlacement": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": [
+								"lastNotNull"
+							],
+							"fields": "",
+							"limit": 10,
+							"values": true
+						},
+						"showUnfilled": true,
+						"sizing": "manual",
+						"valueMode": "text"
+					},
+					"pluginVersion": "10.3.3",
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 100,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.0.6",
+							"queryType": "table",
+							"rawSql": "SELECT referrer_domain, COUNT(*) as count\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY referrer_domain\nORDER BY count DESC",
+							"refId": "A"
+						}
+					],
+					"title": "Top Sources",
+					"transformations": [
+						{
+							"id": "rowsToFields",
+							"options": {
+								"mappings": [
+									{
+										"fieldName": "referrer_domain",
+										"handlerKey": "field.name"
+									},
+									{
+										"fieldName": "count",
+										"handlerKey": "field.value"
+									}
+								]
+							}
+						}
+					],
+					"type": "bargauge"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"fixedColor": "purple",
+								"mode": "shades"
+							},
+							"custom": {
+								"hideFrom": {
+									"legend": false,
+									"tooltip": false,
+									"viz": false
+								}
+							},
+							"mappings": [],
+							"unit": "short",
+							"unitScale": true
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "internal Internal"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "semi-dark-blue",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "direct Direct"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "#7253cf",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "External"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "semi-dark-purple",
+											"mode": "fixed"
+										}
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 12,
+						"w": 11,
+						"x": 12,
+						"y": 9
+					},
+					"id": 19,
+					"options": {
+						"displayLabels": [
+							"percent",
+							"name"
+						],
+						"legend": {
+							"displayMode": "list",
+							"placement": "bottom",
+							"showLegend": true,
+							"values": []
+						},
+						"pieType": "pie",
+						"reduceOptions": {
+							"calcs": [
+								"lastNotNull"
+							],
+							"fields": "",
+							"values": true
+						},
+						"tooltip": {
+							"mode": "single",
+							"sort": "none"
+						}
+					},
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 1000,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.0.3",
+							"queryType": "table",
+							"rawSql": "SELECT COUNT() AS Internal\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain = domain\nAND country_code IN (${locations:sqlstring})",
+							"refId": "internal"
+						},
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"hide": false,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 1000,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.0.3",
+							"queryType": "table",
+							"rawSql": "SELECT COUNT(*) AS Direct\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain = 'direct'\nAND country_code IN (${locations:sqlstring})",
+							"refId": "direct"
+						},
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"hide": false,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 1000,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.0.3",
+							"queryType": "table",
+							"rawSql": "SELECT COUNT(*) AS External\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != 'direct' AND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})",
+							"refId": "external"
+						}
+					],
+					"title": "Traffic Sources",
+					"type": "piechart"
+				}
+			],
+			"title": "Sources",
+			"type": "row"
+		},
+		{
+			"collapsed": true,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 20
+			},
+			"id": 28,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"description": "Top 10 of most visited entry pages.",
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "continuous-BlPu"
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									}
+								]
+							},
+							"unit": "short",
+							"unitScale": true
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 13,
+						"w": 7,
+						"x": 1,
+						"y": 9
+					},
+					"id": 25,
+					"options": {
+						"displayMode": "lcd",
+						"maxVizHeight": 41,
+						"minVizHeight": 25,
+						"minVizWidth": 8,
+						"namePlacement": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": [
+								"lastNotNull"
+							],
+							"fields": "",
+							"limit": 10,
+							"values": true
+						},
+						"showUnfilled": true,
+						"sizing": "manual",
+						"valueMode": "color"
+					},
+					"pluginVersion": "10.3.3",
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 1000,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.0.6",
+							"queryType": "table",
+							"rawSql": "SELECT path, COUNT(*) as pageviews\nFROM \"prisme\".\"entry_pages\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY path\nORDER BY pageviews DESC",
+							"refId": "A"
+						}
+					],
+					"title": "Top Entry Pages",
+					"type": "bargauge"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"description": "Top 10 of most visited pages.",
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "continuous-BlPu"
+							},
+							"displayName": "${__field.labels[\"path\"]}",
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							},
+							"unit": "short",
+							"unitScale": true
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 13,
+						"w": 8,
+						"x": 8,
+						"y": 9
+					},
+					"id": 14,
+					"options": {
+						"displayMode": "lcd",
+						"maxVizHeight": 41,
+						"minVizHeight": 25,
+						"minVizWidth": 8,
+						"namePlacement": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": [
+								"lastNotNull"
+							],
+							"fields": "",
+							"limit": 10,
+							"values": true
+						},
+						"showUnfilled": true,
+						"sizing": "manual",
+						"valueMode": "color"
+					},
+					"pluginVersion": "10.3.3",
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 100,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.0.3",
+							"queryType": "table",
+							"rawSql": "SELECT path, COUNT(*) as pageviews\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY path\nORDER BY pageviews DESC",
+							"refId": "A"
+						}
+					],
+					"title": "Top Pages",
+					"transformations": [
+						{
+							"id": "rowsToFields",
+							"options": {
+								"mappings": [
+									{
+										"fieldName": "path",
+										"handlerKey": "field.name"
+									},
+									{
+										"fieldName": "pageviews",
+										"handlerKey": "field.value"
+									}
+								]
+							}
+						}
+					],
+					"type": "bargauge"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"description": "Top 10 of most visited exit pages (bounces excluded)",
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "continuous-BlPu"
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									}
+								]
+							},
+							"unit": "short",
+							"unitScale": true
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 13,
+						"w": 7,
+						"x": 16,
+						"y": 9
+					},
+					"id": 26,
+					"options": {
+						"displayMode": "lcd",
+						"maxVizHeight": 41,
+						"minVizHeight": 25,
+						"minVizWidth": 8,
+						"namePlacement": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": [
+								"lastNotNull"
+							],
+							"fields": "",
+							"limit": 10,
+							"values": true
+						},
+						"showUnfilled": true,
+						"sizing": "manual",
+						"valueMode": "color"
+					},
+					"pluginVersion": "10.3.3",
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 1000,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.0.6",
+							"queryType": "table",
+							"rawSql": "SELECT path, COUNT(*) as pageviews\nFROM \"prisme\".\"exit_pages_no_bounce\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY path\nORDER BY pageviews DESC",
+							"refId": "A"
+						}
+					],
+					"title": "Top Exit Pages",
+					"type": "bargauge"
+				}
+			],
+			"title": "Top Pages",
+			"type": "row"
+		},
+		{
+			"collapsed": true,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 21
+			},
+			"id": 31,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"description": "",
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "palette-classic"
+							},
+							"custom": {
+								"hideFrom": {
+									"legend": false,
+									"tooltip": false,
+									"viz": false
+								}
+							},
+							"mappings": [],
+							"min": 0,
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "blue",
+										"value": null
+									}
+								]
+							},
+							"unit": "short",
+							"unitScale": true
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 13,
+						"w": 15,
+						"x": 1,
+						"y": 23
+					},
+					"id": 15,
+					"options": {
+						"basemap": {
+							"config": {},
+							"name": "Layer 0",
+							"type": "default"
+						},
+						"controls": {
+							"mouseWheelZoom": false,
+							"showAttribution": true,
+							"showDebug": false,
+							"showMeasure": false,
+							"showScale": false,
+							"showZoom": true
+						},
+						"layers": [
+							{
+								"config": {
+									"showLegend": false,
+									"style": {
+										"color": {
+											"fixed": "light-blue"
+										},
+										"opacity": 0.5,
+										"rotation": {
+											"fixed": 0,
+											"max": 360,
+											"min": -360,
+											"mode": "mod"
+										},
+										"size": {
+											"field": "pageview",
+											"fixed": 5,
+											"max": 15,
+											"min": 3
+										},
+										"symbol": {
+											"fixed": "img/icons/marker/triangle.svg",
+											"mode": "fixed"
+										},
+										"symbolAlign": {
+											"horizontal": "center",
+											"vertical": "center"
+										},
+										"text": {
+											"field": "pageview",
+											"fixed": "",
+											"mode": "fixed"
+										},
+										"textConfig": {
+											"fontSize": 10,
+											"offsetX": 0,
+											"offsetY": 0,
+											"textAlign": "center",
+											"textBaseline": "middle"
+										}
+									}
+								},
+								"filterData": {
+									"id": "byRefId",
+									"options": "A"
+								},
+								"location": {
+									"gazetteer": "public/gazetteer/countries.json",
+									"lookup": "country_code",
+									"mode": "lookup"
+								},
+								"name": "Layer 1",
+								"opacity": 1,
+								"tooltip": true,
+								"type": "markers"
+							}
+						],
+						"tooltip": {
+							"mode": "details"
+						},
+						"view": {
+							"allLayers": true,
+							"id": "fit",
+							"lat": 0,
+							"lon": 0,
+							"zoom": 10
+						}
+					},
+					"pluginVersion": "10.3.3",
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 100,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.0.3",
+							"queryType": "table",
+							"rawSql": "SELECT country_code, COUNT(*) as pageview\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY country_code\nORDER BY country_code",
+							"refId": "A"
+						}
+					],
+					"transparent": true,
+					"type": "geomap"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"description": "Top 10 of visitors' locations.",
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "continuous-BlPu"
+							},
+							"displayName": "${__field.labels[\"country_code\"]}",
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "red",
+										"value": null
+									}
+								]
+							},
+							"unit": "short",
+							"unitScale": true
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 13,
+						"w": 7,
+						"x": 16,
+						"y": 23
+					},
+					"id": 18,
+					"options": {
+						"displayMode": "lcd",
+						"maxVizHeight": 41,
+						"minVizHeight": 16,
+						"minVizWidth": 8,
+						"namePlacement": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": [
+								"lastNotNull"
+							],
+							"fields": "",
+							"limit": 10,
+							"values": true
+						},
+						"showUnfilled": true,
+						"sizing": "manual",
+						"valueMode": "color"
+					},
+					"pluginVersion": "10.3.3",
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"hide": false,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 100,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.0.6",
+							"queryType": "table",
+							"rawSql": "SELECT DISTINCT(name) AS country, COUNT(*) as pageview\nFROM prisme.events_pageviews\nJOIN prisme.countries ON prisme.events_pageviews.country_code = prisme.countries.code\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY country\nORDER BY pageview DESC",
+							"refId": "A"
+						}
+					],
+					"title": "Top Locations",
+					"transformations": [
+						{
+							"id": "rowsToFields",
+							"options": {
+								"mappings": [
+									{
+										"fieldName": "country_code",
+										"handlerKey": "field.name"
+									},
+									{
+										"fieldName": "pageview",
+										"handlerKey": "field.value"
+									}
+								]
+							}
+						}
+					],
+					"type": "bargauge"
+				}
+			],
+			"title": "Locations",
+			"type": "row"
+		},
+		{
+			"collapsed": true,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 22
+			},
+			"id": 32,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"fixedColor": "blue",
+								"mode": "shades"
+							},
+							"custom": {
+								"hideFrom": {
+									"legend": false,
+									"tooltip": false,
+									"viz": false
+								}
+							},
+							"displayName": "${__field.labels[\"browser_family\"]}",
+							"fieldMinMax": false,
+							"mappings": [],
+							"unit": "short",
+							"unitScale": true
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 13,
+						"w": 11,
+						"x": 1,
+						"y": 24
+					},
+					"id": 4,
+					"options": {
+						"displayLabels": [
+							"percent",
+							"name"
+						],
+						"legend": {
+							"displayMode": "list",
+							"placement": "bottom",
+							"showLegend": true,
+							"values": []
+						},
+						"pieType": "pie",
+						"reduceOptions": {
+							"calcs": [
+								"lastNotNull"
+							],
+							"fields": "/^count$/",
+							"values": true
+						},
+						"tooltip": {
+							"mode": "single",
+							"sort": "none"
+						}
+					},
+					"pluginVersion": "10.2.2",
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"meta": {
+								"builderOptions": {
+									"aggregates": [],
+									"columns": [
+										{
+											"hint": "time",
+											"name": "timestamp",
+											"type": "DateTime('UTC')"
+										}
+									],
+									"database": "prisme",
+									"filters": [
+										{
+											"condition": "AND",
+											"filterType": "custom",
+											"hint": "time",
+											"key": "timestamp",
+											"operator": "WITH IN DASHBOARD TIME RANGE",
+											"restrictToFields": [
+												{
+													"label": "timestamp",
+													"name": "timestamp",
+													"picklistValues": [],
+													"type": "DateTime('UTC')"
+												}
+											],
+											"type": "datetime"
+										}
+									],
+									"limit": 100,
+									"mode": "trend",
+									"orderBy": [],
+									"queryType": "timeseries",
+									"table": "events_pageviews"
+								}
+							},
+							"pluginVersion": "4.0.3",
+							"queryType": "table",
+							"rawSql": "SELECT replaceRegexpAll(browser_family, '(.*) (Mobile|iOS)|Mobile (.*)', '\\\\1\\\\2') AS browser_family, COUNT(browser_family) as count\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY browser_family",
+							"refId": "A"
+						}
+					],
+					"title": "Browsers",
+					"transformations": [],
+					"type": "piechart"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"fixedColor": "purple",
+								"mode": "shades"
+							},
+							"custom": {
+								"hideFrom": {
+									"legend": false,
+									"tooltip": false,
+									"viz": false
+								}
+							},
+							"mappings": [],
+							"unit": "short",
+							"unitScale": true
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 13,
+						"w": 11,
+						"x": 12,
+						"y": 24
+					},
+					"id": 5,
+					"options": {
+						"displayLabels": [
+							"percent",
+							"name"
+						],
+						"legend": {
+							"displayMode": "list",
+							"placement": "bottom",
+							"showLegend": true
+						},
+						"pieType": "pie",
+						"reduceOptions": {
+							"calcs": [
+								"lastNotNull"
+							],
+							"fields": "",
+							"values": false
+						},
+						"tooltip": {
+							"mode": "single",
+							"sort": "none"
+						}
+					},
+					"pluginVersion": "10.2.2",
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "prisme",
+									"filters": [
+										{
+											"condition": "AND",
+											"filterType": "custom",
+											"key": "timestamp",
+											"operator": "WITH IN DASHBOARD TIME RANGE",
+											"restrictToFields": [
+												{
+													"label": "timestamp",
+													"name": "timestamp",
+													"picklistValues": [],
+													"type": "DateTime('UTC')"
+												}
+											],
+											"type": "datetime"
+										}
+									],
+									"limit": 100,
+									"mode": "list",
+									"orderBy": [],
+									"queryType": "table",
+									"table": "events_pageviews"
+								}
+							},
+							"pluginVersion": "4.0.3",
+							"queryType": "table",
+							"rawSql": "SELECT operating_system, COUNT(operating_system) as count\nFROM \"prisme\".\"events_pageviews\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY operating_system",
+							"refId": "A"
+						}
+					],
+					"title": "Operating Systems (OS)",
+					"transformations": [
+						{
+							"id": "partitionByValues",
+							"options": {
+								"fields": [
+									"operating_system"
+								],
+								"naming": {
+									"asLabels": true
+								}
+							}
+						},
+						{
+							"id": "renameByRegex",
+							"options": {
+								"regex": "count (.*)",
+								"renamePattern": "$1"
+							}
+						}
+					],
+					"type": "piechart"
+				}
+			],
+			"title": "Devices",
+			"type": "row"
+		},
+		{
+			"collapsed": true,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 23
+			},
+			"id": 34,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"description": "Top 10 of most sent custom events.",
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "continuous-BlPu"
+							},
+							"displayName": "${__field.labels[\"name\"]}",
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							},
+							"unit": "short",
+							"unitScale": true
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 13,
+						"w": 11,
+						"x": 1,
+						"y": 38
+					},
+					"id": 21,
+					"options": {
+						"displayMode": "lcd",
+						"maxVizHeight": 41,
+						"minVizHeight": 25,
+						"minVizWidth": 8,
+						"namePlacement": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": [
+								"lastNotNull"
+							],
+							"fields": "",
+							"limit": 10,
+							"values": true
+						},
+						"showUnfilled": true,
+						"sizing": "manual",
+						"valueMode": "color"
+					},
+					"pluginVersion": "10.3.3",
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 1000,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.0.6",
+							"queryType": "table",
+							"rawSql": "SELECT name, COUNT(*) as count\nFROM \"prisme\".\"events_custom\"\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY name\nORDER BY count DESC\n",
+							"refId": "A"
+						}
+					],
+					"title": "Top Custom Events",
+					"type": "bargauge"
+				}
+			],
+			"title": "Custom Events",
+			"type": "row"
 		}
 	],
-	"refresh": "",
+	"refresh": false,
 	"schemaVersion": 39,
 	"tags": [],
 	"templating": {
