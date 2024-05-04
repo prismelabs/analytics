@@ -8,12 +8,15 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/gofiber/fiber/v2 v2.52.4
+	github.com/gofiber/storage v1.3.3
+	github.com/gofiber/storage/memory v1.3.4
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
 	github.com/negrel/ringo v0.5.0
 	github.com/oschwald/maxminddb-golang v1.12.0
 	github.com/prometheus/client_golang v1.19.0
+	github.com/prometheus/client_model v0.5.0
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/gjson v1.17.1
@@ -31,7 +34,6 @@ require (
 	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect

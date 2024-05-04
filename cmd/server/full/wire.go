@@ -47,6 +47,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		uaparser.ProvideService,
 		wired.ProvideApp,
 		wired.ProvideClickhouseConfig,
+		wired.ProvideFiberStorage,
 		wired.ProvideGrafanaConfig,
 		wired.ProvideLogger,
 		wired.ProvideMinimalFiber,

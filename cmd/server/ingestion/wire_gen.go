@@ -24,7 +24,8 @@ import (
 func Initialize(logger wired.BootstrapLogger) wired.App {
 	eventsCors := middlewares.ProvideEventsCors()
 	server := wired.ProvideServerConfig(logger)
-	eventsRateLimiter := middlewares.ProvideEventsRateLimiter(server)
+	storage := wired.ProvideFiberStorage()
+	eventsRateLimiter := middlewares.ProvideEventsRateLimiter(server, storage)
 	zerologLogger := wired.ProvideLogger(server)
 	accessLog := middlewares.ProvideAccessLog(server, zerologLogger)
 	errorHandler := middlewares.ProvideErrorHandler()
