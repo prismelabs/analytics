@@ -24,6 +24,6 @@ func ServerFromEnv() Server {
 		Port:          uint16(ParseUintEnvOrDefault("PRISME_PORT", 80, 16)),
 		TrustProxy:    GetEnvOrDefault("PRISME_TRUST_PROXY", "false") != "false",
 		ProxyHeader:   GetEnvOrDefault("PRISME_PROXY_HEADER", "X-Forwarded-For"),
-		AdminHostPort: GetEnvOrDefault("PRISME_ADMIN_HOSTPORT", "0.0.0.0:9090"),
+		AdminHostPort: GetEnvOrDefault("PRISME_ADMIN_HOSTPORT", "127.0.0.1:9090"),
 	}
 }
