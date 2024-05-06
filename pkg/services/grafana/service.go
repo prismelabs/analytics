@@ -89,7 +89,7 @@ func (s service) SetupDatasourceAndDashboards(ctx context.Context, orgId grafana
 		}
 
 		buf := bytes.Buffer{}
-		err := s.tmpl.ExecuteTemplate(&buf, "general.json", GeneralTemplateData{
+		err := s.tmpl.ExecuteTemplate(&buf, "web_analytics.json", GeneralTemplateData{
 			DatasourceClickhouseUid: dsId,
 		})
 		if err != nil {
