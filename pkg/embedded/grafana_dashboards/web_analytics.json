@@ -1244,6 +1244,7 @@
 							"color": {
 								"mode": "continuous-BlPu"
 							},
+							"displayName": "${__field.labels[\"path\"]}",
 							"mappings": [],
 							"thresholds": {
 								"mode": "absolute",
@@ -1424,6 +1425,7 @@
 							"color": {
 								"mode": "continuous-BlPu"
 							},
+							"displayName": "${__field.labels[\"path\"]}",
 							"mappings": [],
 							"thresholds": {
 								"mode": "absolute",
