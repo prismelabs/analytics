@@ -279,7 +279,7 @@ async function getLatestPageview (): Promise<any> {
   })
 
   const rows = await client.query({
-    query: 'SELECT * FROM prisme.events_pageviews ORDER BY timestamp DESC LIMIT 1;'
+    query: 'SELECT * FROM prisme.pageviews ORDER BY timestamp DESC LIMIT 1;'
   })
   return rows.json().then((r: any) => r.data[0])
 }

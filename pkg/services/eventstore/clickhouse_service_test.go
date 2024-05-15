@@ -52,7 +52,7 @@ func TestIntegService(t *testing.T) {
 		// Ensure event is stored.
 		row := ch.QueryRow(
 			context.Background(),
-			"SELECT timestamp FROM prisme.events_pageviews WHERE timestamp = $1 AND visitor_id = 'singlePageViewTestCase'",
+			"SELECT timestamp FROM prisme.pageviews WHERE timestamp = $1 AND visitor_id = 'singlePageViewTestCase'",
 			eventTime,
 		)
 		var storedEventTime time.Time
@@ -127,7 +127,7 @@ func TestIntegService(t *testing.T) {
 		{
 			row := ch.QueryRow(
 				context.Background(),
-				"SELECT COUNT(*) FROM prisme.events_pageviews WHERE timestamp >= $1 AND visitor_id = 'multipleEventsTestCase'",
+				"SELECT COUNT(*) FROM prisme.pageviews WHERE timestamp >= $1 AND visitor_id = 'multipleEventsTestCase'",
 				testStartTime,
 			)
 			var pageviewsCount uint64

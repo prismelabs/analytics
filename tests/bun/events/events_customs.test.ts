@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { COUNTRY_CODE_REGEX, PRISME_CUSTOM_EVENTS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX } from '../const'
+import { COUNTRY_CODE_REGEX, PRISME_CUSTOM_EVENTS_URL, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, SESSION_ID_REGEX, TIMESTAMP_REGEX } from '../const'
 
 const seed = new Date().getTime()
 console.log('faker seed', seed)
@@ -13,7 +13,7 @@ test('GET request instead of POST request', async () => {
     method: 'GET',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/foo',
       'Content-Type': 'application/json'
     }
@@ -27,7 +27,7 @@ test('invalid URL in X-Prisme-Referrer header', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'not an url',
       'Content-Type': 'application/json'
     },
@@ -41,7 +41,7 @@ test('non registered domain in Origin header is rejected', async () => {
     method: 'POST',
     headers: {
       Origin: 'https://example.com',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'https://example.com/foo?bar=baz#qux',
       'Content-Type': 'application/json',
       body: JSON.stringify({})
@@ -55,7 +55,7 @@ test('content type different than application/json is rejected', async () => {
     method: 'POST',
     headers: {
       Origin: 'https://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'https://mywebsite.localhost/foo?bar=baz#qux',
       'Content-Type': 'text/plain'
     }
@@ -68,7 +68,7 @@ test('valid custom event request without body', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
       'Content-Type': 'application/json'
     }
@@ -87,9 +87,25 @@ test('valid custom event request without body', async () => {
     referrer_domain: 'direct',
     country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_id: expect.stringMatching(SESSION_ID_REGEX),
     name: 'foo',
     properties: {}
   })
+})
+
+test('invalid sessionless custom event', async () => {
+  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
+    method: 'POST',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      // No session associated with this ip.
+      'X-Forwarded-For': faker.internet.ip(),
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  })
+  expect(response.status).toBe(400)
 })
 
 test('valid custom event with no properties', async () => {
@@ -97,7 +113,7 @@ test('valid custom event with no properties', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
       'Content-Type': 'application/json'
     },
@@ -117,6 +133,7 @@ test('valid custom event with no properties', async () => {
     referrer_domain: 'direct',
     country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_id: expect.stringMatching(SESSION_ID_REGEX),
     name: 'foo',
     properties: {}
   })
@@ -127,7 +144,7 @@ test('valid custom event with JSON bool as body', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
       'Content-Type': 'application/json'
     },
@@ -147,6 +164,7 @@ test('valid custom event with JSON bool as body', async () => {
     referrer_domain: 'direct',
     country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_id: expect.stringMatching(SESSION_ID_REGEX),
     name: 'foo',
     properties: {}
   })
@@ -157,7 +175,7 @@ test('valid custom event with JSON number as body', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
       'Content-Type': 'application/json'
     },
@@ -177,6 +195,7 @@ test('valid custom event with JSON number as body', async () => {
     device: 'Other',
     referrer_domain: 'direct',
     visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_id: expect.stringMatching(SESSION_ID_REGEX),
     country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     properties: {}
   })
@@ -187,7 +206,7 @@ test('valid custom event with JSON string as body', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
       'Content-Type': 'application/json'
     },
@@ -206,6 +225,7 @@ test('valid custom event with JSON string as body', async () => {
     device: 'Other',
     referrer_domain: 'direct',
     visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_id: expect.stringMatching(SESSION_ID_REGEX),
     country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     name: 'foo',
     properties: {}
@@ -221,7 +241,7 @@ test('valid custom event with few properties', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
       'Content-Type': 'application/json'
     },
@@ -240,6 +260,7 @@ test('valid custom event with few properties', async () => {
     device: 'Other',
     referrer_domain: 'direct',
     visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_id: expect.stringMatching(SESSION_ID_REGEX),
     country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     name: 'foo',
     properties: props
@@ -268,7 +289,7 @@ test('valid custom event with lot of properties', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
       'X-Prisme-Document-Referrer': 'https://example.com/foo',
       'Content-Type': 'application/json'
@@ -289,6 +310,7 @@ test('valid custom event with lot of properties', async () => {
     referrer_domain: 'example.com',
     country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_id: expect.stringMatching(SESSION_ID_REGEX),
     name: 'foo',
     properties: props
   })
@@ -299,7 +321,7 @@ test('valid custom event without X-Prisme-Referrer', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       Referer: 'http://mywebsite.localhost/index.html',
       'Content-Type': 'application/json'
     },
@@ -319,6 +341,7 @@ test('valid custom event without X-Prisme-Referrer', async () => {
     referrer_domain: 'direct',
     country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_id: expect.stringMatching(SESSION_ID_REGEX),
     name: 'foo',
     properties: {}
   })
@@ -329,7 +352,7 @@ test('valid custom event without trailing slash in referrer', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       Referer: 'http://mywebsite.localhost',
       'Content-Type': 'application/json'
     },
@@ -349,21 +372,24 @@ test('valid custom event without trailing slash in referrer', async () => {
     referrer_domain: 'direct',
     country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_id: expect.stringMatching(SESSION_ID_REGEX),
     name: 'foo',
     properties: {}
   })
 })
 
 test('valid custom event with Windows + Chrome user agent', async () => {
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3'
+
   const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', userAgent),
       Referer: 'http://mywebsite.localhost',
       'X-Prisme-Document-Referrer': 'https://www.example.com/foo',
       'Content-Type': 'application/json',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3'
+      'User-Agent': userAgent
     },
     body: JSON.stringify({ foo: 'bar' })
   })
@@ -381,6 +407,7 @@ test('valid custom event with Windows + Chrome user agent', async () => {
     referrer_domain: 'www.example.com',
     country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
     visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_id: expect.stringMatching(SESSION_ID_REGEX),
     name: 'foo',
     properties: { foo: 'bar' }
   })
@@ -401,8 +428,30 @@ async function getLatestCustomEvent (): Promise<any> {
     query: 'SELECT * FROM prisme.events_custom ORDER BY timestamp DESC LIMIT 1;'
   })
   const row = await rows.json().then((r: any) => r.data[0])
+  if (row === null || row === undefined) return null
   row.properties = Object.fromEntries(row.keys.map((key: string, index: number) => [key, JSON.parse(row.values[index])]))
   delete row.keys
   delete row.values
   return row
+}
+
+async function randomIpWithSession (domain: string, userAgent?: string): Promise<string> {
+  const ip = faker.internet.ip()
+  const headers: HeadersInit = {
+    Origin: 'http://foo.mywebsite.localhost',
+    'X-Forwarded-For': ip,
+    'X-Prisme-Referrer': `http://${domain}/path`
+  }
+  if (userAgent !== undefined) {
+    headers['User-Agent'] = userAgent
+  }
+
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers
+  })
+
+  expect(response.status).toBe(200)
+
+  return ip
 }
