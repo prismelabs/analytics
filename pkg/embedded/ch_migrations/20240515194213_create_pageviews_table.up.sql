@@ -1,15 +1,17 @@
 RENAME TABLE events_pageviews TO pageviews;
 
 CREATE TABLE events_pageviews (
-	timestamp DateTime('UTC'),
-	domain String,
-	path String,
-	operating_system LowCardinality(String),
-	browser_family LowCardinality(String),
-	device LowCardinality(String),
-	referrer_domain String,
-	country_code LowCardinality(String),
-	visitor_id String
+  timestamp DateTime('UTC'),
+  domain String,
+  path String,
+  operating_system LowCardinality(String),
+  browser_family LowCardinality(String),
+  device LowCardinality(String),
+  referrer_domain String,
+  country_code LowCardinality(String),
+  visitor_id String,
+  session_id UInt64,
+  entry_timestamp DateTime('UTC')
 )
 ENGINE = Null;
 
@@ -24,5 +26,6 @@ CREATE MATERIALIZED VIEW pageviews_mv TO pageviews AS
     referrer_domain,
     country_code,
     visitor_id,
+    session_id
   FROM events_pageviews
 
