@@ -5,6 +5,8 @@ include $(repository_root)/variables.mk
 GENENV_FILES ?= $(wildcard ./config/*)
 GENENV_FILE ?= ./config/genenv.local.sh
 
+COMPOSE_PROJECT_NAME ?= $(notdir $(CURDIR))
+
 .PHONY: start
 start: start/server
 
@@ -21,7 +23,7 @@ start/%: .env codegen
 	&& $(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
 		up --wait --force-recreate
-	$(DOCKER) logs -f $(notdir $(CURDIR))-prisme-1 |& bunyan
+	$(DOCKER) logs -f $(COMPOSE_PROJECT_NAME)-prisme-1 |& bunyan
 
 .PHONY: stop
 stop:
