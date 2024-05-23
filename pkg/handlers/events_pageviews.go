@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/gofiber/storage"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
@@ -22,6 +23,7 @@ func ProvidePostEventsPageViews(
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
+	storage storage.Storage,
 ) PostEventsPageview {
 	return func(c *fiber.Ctx) error {
 		// Referrer of the POST request, that is the viewed page.
@@ -58,8 +60,43 @@ func ProvidePostEventsPageViews(
 			pageView.PageUri.Host(),
 		)
 
+		newSession := !equalBytes(pageView.ReferrerUri.Host(), pageView.PageUri.Host())
+		var session session
+		if newSession {
+			// Compute session ID.
+			session.id = computeSessionId(&pageView)
+			session.entryTime = pageView.Timestamp
+
+			// Store it.
+			err := storage.Set(
+				sessionKey(pageView.VisitorId),
+				unsafeSessionToBytesCast(&session),
+				24*time.Hour,
+			)
+			if err != nil {
+				return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			}
+		} else {
+			// Retrieve session.
+			sessionBytes, err := storage.Get(sessionKey(pageView.VisitorId))
+			if err != nil {
+				logger.Err(err).Msg("failed to retrieve session id")
+				return fiber.NewError(fiber.StatusInternalServerError, "failed to retrieve session id")
+			}
+			if sessionBytes == nil {
+				return fiber.NewError(fiber.StatusBadRequest, "entry page missing")
+			}
+
+			session = *unsafeBytesToSessionCast(sessionBytes)
+		}
+
+		// Add session related fields.
+		pageView.SessionId = session.id
+		pageView.EntryTimestamp = session.entryTime
+
 		err = eventStore.StorePageView(c.UserContext(), &pageView)
 		if err != nil {
+			logger.Err(err).Msg("failed to store page view event")
 			return fiber.NewError(fiber.StatusInternalServerError, "failed to store page view event")
 		}
 
