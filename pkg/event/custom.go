@@ -18,6 +18,7 @@ type Custom struct {
 	Client      uaparser.Client
 	CountryCode ipgeolocator.CountryCode
 	VisitorId   string
+	SessionId   uint64
 	Name        string
 	Keys        []string
 	Values      []string
@@ -32,6 +33,7 @@ func (c *Custom) MarshalZerologObject(e *zerolog.Event) {
 		Object("client", c.Client).
 		Stringer("country_code", c.CountryCode).
 		Str("visitor_id", c.VisitorId).
+		Uint64("session_id", c.SessionId).
 		Str("name", c.Name).
 		Strs("keys", c.Keys).
 		Strs("values", c.Values)

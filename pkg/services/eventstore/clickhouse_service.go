@@ -149,6 +149,8 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 			ev.ReferrerUri.HostOrDirect(),
 			ev.CountryCode,
 			ev.VisitorId,
+			ev.SessionId,
+			ev.EntryTimestamp,
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append pageview to batch")
@@ -214,6 +216,7 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 			ev.Name,
 			ev.Keys,
 			ev.Values,
+			ev.SessionId,
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append custom event to batch")

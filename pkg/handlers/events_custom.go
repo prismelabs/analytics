@@ -5,11 +5,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/gofiber/storage"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
+	"github.com/rs/zerolog"
 	"github.com/tidwall/gjson"
 )
 
@@ -17,10 +19,12 @@ type PostEventsCustom fiber.Handler
 
 // ProvidePostEventsCustom is a wire provider for POST /api/v1/events/custom/:name events handler.
 func ProvidePostEventsCustom(
+	logger zerolog.Logger,
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
+	storage storage.Storage,
 ) PostEventsCustom {
 	return func(c *fiber.Ctx) error {
 		if utils.UnsafeString(c.Request().Header.ContentType()) != fiber.MIMEApplicationJSON {
@@ -69,11 +73,23 @@ func ProvidePostEventsCustom(
 			})
 		}
 
-		// Compute visitor id.
+		// Compute visitor ID.
 		customEv.VisitorId = computeVisitorId(
 			userAgent, saltManagerService.DailySalt().Bytes(), []byte(c.IP()),
 			customEv.PageUri.Host(),
 		)
+
+		// Retrieve session ID.
+		sessionBytes, err := storage.Get(sessionKey(customEv.VisitorId))
+		if err != nil {
+			logger.Err(err).Msg("failed to retrieve session id")
+			return fiber.NewError(fiber.StatusInternalServerError, "failed to retrieve session id")
+		}
+		if sessionBytes == nil {
+			return fiber.NewError(fiber.StatusBadRequest, "entry page missing")
+		}
+		session := unsafeBytesToSessionCast(sessionBytes)
+		customEv.SessionId = session.id
 
 		// Store event.
 		err = eventStore.StoreCustom(c.UserContext(), &customEv)

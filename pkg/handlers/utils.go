@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
+	"github.com/prismelabs/analytics/pkg/event"
 )
 
 func peekReferrerHeader(c *fiber.Ctx) []byte {
@@ -19,7 +22,15 @@ func peekReferrerHeader(c *fiber.Ctx) []byte {
 	return referrer
 }
 
+func equalBytes(a, b []byte) bool {
+	return utils.UnsafeString(a) == utils.UnsafeString(b)
+}
+
 func computeVisitorId(bytesSlice ...[]byte) string {
+	return fmt.Sprintf("prisme_%X", xxh3(bytesSlice...))
+}
+
+func xxh3(bytesSlice ...[]byte) uint64 {
 	hash := xxhash.New()
 
 	for _, slice := range bytesSlice {
@@ -30,5 +41,17 @@ func computeVisitorId(bytesSlice ...[]byte) string {
 		}
 	}
 
-	return fmt.Sprintf("prisme_%X", hash.Sum64())
+	return hash.Sum64()
+}
+
+func sessionKey(visitorId string) string {
+	return fmt.Sprintf("session_id[%q]", visitorId)
+}
+
+func computeSessionId(pageView *event.PageView) uint64 {
+	return xxh3(
+		binary.LittleEndian.AppendUint64(nil, uint64(pageView.Timestamp.UnixNano())),
+		utils.UnsafeBytes(pageView.VisitorId),
+		pageView.PageUri.Host(),
+	)
 }
