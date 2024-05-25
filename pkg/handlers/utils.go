@@ -26,10 +26,6 @@ func equalBytes(a, b []byte) bool {
 	return utils.UnsafeString(a) == utils.UnsafeString(b)
 }
 
-func computeVisitorId(bytesSlice ...[]byte) string {
-	return fmt.Sprintf("prisme_%X", xxh3(bytesSlice...))
-}
-
 func xxh3(bytesSlice ...[]byte) uint64 {
 	hash := xxhash.New()
 
@@ -42,6 +38,10 @@ func xxh3(bytesSlice ...[]byte) uint64 {
 	}
 
 	return hash.Sum64()
+}
+
+func computeVisitorId(userAgent, salt, ipAddr, pageHost []byte) string {
+	return fmt.Sprintf("prisme_%X", xxh3(userAgent, salt, ipAddr, pageHost))
 }
 
 func sessionKey(visitorId string) string {

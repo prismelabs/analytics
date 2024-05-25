@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"math/big"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/gofiber/storage"
+	"github.com/google/uuid"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
@@ -26,78 +28,82 @@ func ProvidePostEventsPageViews(
 	storage storage.Storage,
 ) PostEventsPageview {
 	return func(c *fiber.Ctx) error {
+		session := event.Session{}
+
 		// Referrer of the POST request, that is the viewed page.
-		requestReferrer := peekReferrerHeader(c)
-
-		pageView := event.PageView{}
-
-		// Parse user agent.
-		userAgent := utils.CopyBytes(c.Request().Header.UserAgent())
-		pageView.Client = uaParserService.ParseUserAgent(utils.UnsafeString(userAgent))
-		if pageView.Client.IsBot {
-			return nil
-		}
-
-		// Event date.
-		pageView.Timestamp = time.Now().UTC()
-
-		err := pageView.PageUri.Parse(requestReferrer)
+		err := session.PageUri.Parse(peekReferrerHeader(c))
 		if err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 		}
-
-		err = pageView.ReferrerUri.Parse(c.Request().Header.Peek("X-Prisme-Document-Referrer"))
+		// Referrer of the viewed page / document.
+		err = session.ReferrerUri.Parse(c.Request().Header.Peek("X-Prisme-Document-Referrer"))
 		if err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, "invalid X-Prisme-Document-Referrer")
 		}
 
-		// Find country code for given IP.
-		pageView.CountryCode = ipGeolocatorService.FindCountryCodeForIP(c.IP())
+		userAgent := utils.CopyBytes(c.Request().Header.UserAgent())
 
-		// Compute visitor id.
-		pageView.VisitorId = computeVisitorId(
-			userAgent, saltManagerService.DailySalt().Bytes(), []byte(c.IP()),
-			pageView.PageUri.Host(),
+		// Compute visitor ID.
+		session.VisitorId = computeVisitorId(
+			userAgent, saltManagerService.DailySalt().Bytes(),
+			utils.UnsafeBytes(c.IP()), session.PageUri.Host(),
 		)
 
-		newSession := !equalBytes(pageView.ReferrerUri.Host(), pageView.PageUri.Host())
-		var session session
+		newSession := !equalBytes(session.ReferrerUri.Host(), session.PageUri.Host())
 		if newSession {
-			// Compute session ID.
-			session.id = computeSessionId(&pageView)
-			session.entryTime = pageView.Timestamp
+			// Parse user agent.
+			session.Client = uaParserService.ParseUserAgent(utils.UnsafeString(userAgent))
+			if session.Client.IsBot {
+				return fiber.NewError(fiber.StatusBadRequest, "bot detected")
+			}
 
-			// Store it.
+			// Find country code for given IP.
+			session.CountryCode = ipGeolocatorService.FindCountryCodeForIP(c.IP())
+
+			// Generate session ID.
+			session.SessionUuid, err = uuid.NewV7()
+			if err != nil {
+				return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			}
+			session.Timestamp = time.Unix(session.SessionUuid.Time().UnixTime()).UTC()
+
+			// Store session id in KV store.
 			err := storage.Set(
-				sessionKey(pageView.VisitorId),
-				unsafeSessionToBytesCast(&session),
+				sessionKey(session.VisitorId),
+				session.SessionUuid[:],
 				24*time.Hour,
 			)
 			if err != nil {
 				return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 			}
-		} else {
+
+			// Store session event.
+			err = eventStore.StoreSession(c.UserContext(), &session)
+			if err != nil {
+				logger.Err(err).Msg("failed to store session event")
+				return fiber.NewError(fiber.StatusInternalServerError, "failed to store session event")
+			}
+
+		} else { // Page view event.
+
 			// Retrieve session.
-			sessionBytes, err := storage.Get(sessionKey(pageView.VisitorId))
+			sessionIdBytes, err := storage.Get(sessionKey(session.VisitorId))
 			if err != nil {
 				logger.Err(err).Msg("failed to retrieve session id")
 				return fiber.NewError(fiber.StatusInternalServerError, "failed to retrieve session id")
 			}
-			if sessionBytes == nil {
-				return fiber.NewError(fiber.StatusBadRequest, "entry page missing")
+			if sessionIdBytes == nil {
+				return fiber.NewError(fiber.StatusBadRequest, "session missing")
 			}
 
-			session = *unsafeBytesToSessionCast(sessionBytes)
-		}
+			session.PageView.SessionId = big.NewInt(0).SetBytes(sessionIdBytes)
+			session.Timestamp = time.Now().UTC()
 
-		// Add session related fields.
-		pageView.SessionId = session.id
-		pageView.EntryTimestamp = session.entryTime
-
-		err = eventStore.StorePageView(c.UserContext(), &pageView)
-		if err != nil {
-			logger.Err(err).Msg("failed to store page view event")
-			return fiber.NewError(fiber.StatusInternalServerError, "failed to store page view event")
+			err = eventStore.StorePageView(c.UserContext(), &session.PageView)
+			if err != nil {
+				logger.Err(err).Msg("failed to store page view event")
+				return fiber.NewError(fiber.StatusInternalServerError, "failed to store page view event")
+			}
 		}
 
 		return nil

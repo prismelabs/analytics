@@ -40,6 +40,7 @@ func ProvideService(
 		// Wait for last batch to be sent.
 		<-batchDone
 		<-batchDone
+		<-batchDone
 		logger.Info().Msg("event batch loops cancelled.")
 		return nil
 	})
@@ -58,6 +59,15 @@ func ProvideService(
 			),
 			ringo.WithWaiterContext[*event.PageView](ctx),
 		),
+		sessionRingBuf: ringo.NewWaiter(
+			ringo.NewManyToOne(
+				int(cfg.MaxBatchSize*10),
+				ringo.WithManyToOneCollisionHandler[*event.Session](ringo.CollisionHandlerFunc(func(_ any) {
+					logger.Warn().Msg("session ring buffer collision detected, consider increasing PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+				})),
+			),
+			ringo.WithWaiterContext[*event.Session](ctx),
+		),
 		customEventRingBuf: ringo.NewWaiter(
 			ringo.NewManyToOne(
 				int(cfg.MaxBatchSize*10),
@@ -71,6 +81,7 @@ func ProvideService(
 	}
 
 	go service.batchPageViewLoop(batchDone)
+	go service.batchSessionLoop(batchDone)
 	go service.batchCustomEventLoop(batchDone)
 
 	logger.Info().Msg("clickhouse based event store configured")
@@ -84,6 +95,7 @@ type clickhouseService struct {
 	maxBatchSize       uint64
 	maxBatchTimeout    time.Duration
 	pageViewRingBuf    ringo.Waiter[*event.PageView]
+	sessionRingBuf     ringo.Waiter[*event.Session]
 	customEventRingBuf ringo.Waiter[*event.Custom]
 	metrics            metrics
 }
@@ -91,6 +103,12 @@ type clickhouseService struct {
 // StorePageView implements Service.
 func (cs *clickhouseService) StorePageView(_ context.Context, ev *event.PageView) error {
 	cs.pageViewRingBuf.Push(ev)
+	return nil
+}
+
+// StoreSession implements Service.
+func (cs *clickhouseService) StoreSession(_ context.Context, ev *event.Session) error {
+	cs.sessionRingBuf.Push(ev)
 	return nil
 }
 
@@ -113,7 +131,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 		if batch == nil {
 			batch, err = cs.conn.PrepareBatch(
 				context.Background(),
-				"INSERT INTO events_pageviews VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+				"INSERT INTO events_pageviews VALUES ($1, $2, $3, $4, $5)",
 			)
 			if err != nil {
 				cs.logger.Err(err).Msg("failed to prepare next pageviews batch")
@@ -127,9 +145,9 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 		ev, done, dropped := cs.pageViewRingBuf.Next()
 		// Ring buffer context was cancelled.
 		if done {
-			cs.logger.Info().Msg("page view ring buffer done, sending last batch...")
+			cs.logger.Info().Msg("pageviews ring buffer done, sending last batch...")
 			cs.sendBatch(batch, promLabels)
-			cs.logger.Info().Msg("last batch of page view events sent.")
+			cs.logger.Info().Msg("last batch of pageview events sent.")
 			batchDone <- struct{}{}
 			return
 		}
@@ -143,17 +161,73 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 			ev.Timestamp,
 			ev.PageUri.Host(),
 			ev.PageUri.Path(),
-			ev.Client.OperatingSystem,
-			ev.Client.BrowserFamily,
-			ev.Client.Device,
-			ev.ReferrerUri.HostOrDirect(),
-			ev.CountryCode,
 			ev.VisitorId,
 			ev.SessionId,
-			ev.EntryTimestamp,
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append pageview to batch")
+		}
+
+		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {
+			go cs.sendBatch(batch, promLabels)
+			batch = nil
+		}
+	}
+}
+
+func (cs *clickhouseService) batchSessionLoop(batchDone chan<- struct{}) {
+	var batch driver.Batch
+	var err error
+	batchCreationDate := time.Now()
+
+	promLabels := prometheus.Labels{
+		"type": "session",
+	}
+
+	for {
+		if batch == nil {
+			batch, err = cs.conn.PrepareBatch(
+				context.Background(),
+				"INSERT INTO sessions VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+			)
+			if err != nil {
+				cs.logger.Err(err).Msg("failed to prepare next session batch")
+				continue
+			}
+
+			batchCreationDate = time.Now()
+		}
+
+		// Wait for next event.
+		ev, done, dropped := cs.sessionRingBuf.Next()
+		// Ring buffer context was cancelled.
+		if done {
+			cs.logger.Info().Msg("sessions ring buffer done, sending last batch...")
+			cs.sendBatch(batch, promLabels)
+			cs.logger.Info().Msg("last batch of sessions sent.")
+			batchDone <- struct{}{}
+			return
+		}
+		if dropped > 0 {
+			cs.logger.Info().Int("dropped", dropped).Msg("sessions dropped")
+		}
+
+		// Append to batch.
+		cs.logger.Debug().Any("session", ev).Msg("appending session to batch...")
+		err = batch.Append(
+			ev.Timestamp,
+			ev.PageUri.Host(),
+			ev.PageUri.Path(),
+			ev.Client.OperatingSystem,
+			ev.Client.BrowserFamily,
+			ev.Client.Device,
+			ev.ReferrerUri.Host(),
+			ev.CountryCode,
+			ev.VisitorId,
+			ev.SessionUuid,
+		)
+		if err != nil {
+			cs.logger.Err(err).Msg("failed to append session to batch")
 		}
 
 		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {
@@ -176,7 +250,7 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 		if batch == nil {
 			batch, err = cs.conn.PrepareBatch(
 				context.Background(),
-				"INSERT INTO events_custom VALUES ($1, $2, $3, $4, $5, $6)",
+				"INSERT INTO events_custom VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
 			)
 			if err != nil {
 				cs.logger.Err(err).Msg("failed to prepare next custom events batch")
@@ -207,16 +281,11 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 			ev.Timestamp,
 			ev.PageUri.Host(),
 			ev.PageUri.Path(),
-			ev.Client.OperatingSystem,
-			ev.Client.BrowserFamily,
-			ev.Client.Device,
-			ev.ReferrerUri.HostOrDirect(),
-			ev.CountryCode,
 			ev.VisitorId,
+			ev.SessionId,
 			ev.Name,
 			ev.Keys,
 			ev.Values,
-			ev.SessionId,
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append custom event to batch")

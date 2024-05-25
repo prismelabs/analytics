@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"math/big"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -33,31 +34,32 @@ func ProvidePostEventsCustom(
 
 		customEv := event.Custom{}
 
-		// Parse user agent.
-		userAgent := utils.CopyBytes(c.Request().Header.UserAgent())
-		customEv.Client = uaParserService.ParseUserAgent(utils.UnsafeString(userAgent))
-		if customEv.Client.IsBot {
-			return nil
-		}
-
-		// Event date and name.
-		customEv.Timestamp = time.Now().UTC()
-		customEv.Name = utils.CopyString(c.Params("name"))
-
 		// Referrer of the POST request, that is the viewed page.
-		requestReferrer := peekReferrerHeader(c)
-		err := customEv.PageUri.Parse(requestReferrer)
+		err := customEv.PageUri.Parse(peekReferrerHeader(c))
 		if err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 		}
 
-		err = customEv.ReferrerUri.Parse(c.Request().Header.Peek("X-Prisme-Document-Referrer"))
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, "invalid X-Prisme-Document-Referrer")
-		}
+		// Compute visitor ID.
+		customEv.VisitorId = computeVisitorId(
+			c.Request().Header.UserAgent(), saltManagerService.DailySalt().Bytes(),
+			utils.UnsafeBytes(c.IP()), customEv.PageUri.Host(),
+		)
 
-		// Find country code for given IP.
-		customEv.CountryCode = ipGeolocatorService.FindCountryCodeForIP(c.IP())
+		// Retrieve session.
+		sessionIdBytes, err := storage.Get(sessionKey(customEv.VisitorId))
+		if err != nil {
+			logger.Err(err).Msg("failed to retrieve session id")
+			return fiber.NewError(fiber.StatusInternalServerError, "failed to retrieve session id")
+		}
+		if sessionIdBytes == nil {
+			return fiber.NewError(fiber.StatusBadRequest, "session missing")
+		}
+		customEv.SessionId = big.NewInt(0).SetBytes(sessionIdBytes)
+
+		// Event date and name.
+		customEv.Timestamp = time.Now().UTC()
+		customEv.Name = utils.CopyString(c.Params("name"))
 
 		// Validate properties.
 		body := utils.CopyBytes(c.Body())
@@ -72,24 +74,6 @@ func ProvidePostEventsCustom(
 				return true
 			})
 		}
-
-		// Compute visitor ID.
-		customEv.VisitorId = computeVisitorId(
-			userAgent, saltManagerService.DailySalt().Bytes(), []byte(c.IP()),
-			customEv.PageUri.Host(),
-		)
-
-		// Retrieve session ID.
-		sessionBytes, err := storage.Get(sessionKey(customEv.VisitorId))
-		if err != nil {
-			logger.Err(err).Msg("failed to retrieve session id")
-			return fiber.NewError(fiber.StatusInternalServerError, "failed to retrieve session id")
-		}
-		if sessionBytes == nil {
-			return fiber.NewError(fiber.StatusBadRequest, "entry page missing")
-		}
-		session := unsafeBytesToSessionCast(sessionBytes)
-		customEv.SessionId = session.id
 
 		// Store event.
 		err = eventStore.StoreCustom(c.UserContext(), &customEv)
