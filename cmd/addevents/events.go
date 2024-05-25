@@ -1,8 +1,21 @@
 package main
 
-import "time"
+import (
+	"math/big"
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Pageview struct {
+	timestamp time.Time
+	domain    string
+	pathname  string
+	visitorId string
+	sessionId *big.Int
+}
+
+type Session struct {
 	timestamp      time.Time
 	domain         string
 	pathname       string
@@ -12,6 +25,5 @@ type Pageview struct {
 	referrerDomain string
 	countryCode    string
 	visitorId      string
-	sessionId      uint64
-	entryTimestamp time.Time
+	sessionId      uuid.UUID
 }

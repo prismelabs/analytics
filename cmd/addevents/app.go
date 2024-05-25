@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 	"runtime"
 	"sync"
 	"time"
@@ -39,7 +41,7 @@ func (a App) pageviewsScenario() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ch := make(chan *Pageview, a.cfg.BatchSize)
+	ch := make(chan any, a.cfg.BatchSize)
 
 	timeStep := time.Since(a.cfg.FromDate) / time.Duration(a.cfg.BatchCount)
 
@@ -89,36 +91,63 @@ func (a App) pageviewsScenario() {
 	wg.Wait()
 }
 
-func (a App) pageviewBatch(ctx context.Context, batchId int, ch <-chan *Pageview) {
-	batch, err := a.ch.Conn.PrepareBatch(ctx, "INSERT INTO prisme.events_pageviews")
+func (a App) pageviewBatch(ctx context.Context, batchId int, ch <-chan any) {
+	sessionBatch, err := a.ch.Conn.PrepareBatch(ctx, "INSERT INTO prisme.sessions")
+	if err != nil {
+		a.logger.Panic().Err(err).Msg("failed to prepare batch")
+	}
+	_ = sessionBatch
+
+	pageViewBatch, err := a.ch.Conn.PrepareBatch(ctx, "INSERT INTO prisme.events_pageviews")
 	if err != nil {
 		a.logger.Panic().Err(err).Msg("failed to prepare batch")
 	}
 
 	for j := 0; j < a.cfg.BatchSize; j++ {
-		pageview := <-ch
+		ev := <-ch
+		switch event := ev.(type) {
+		case *Pageview:
+			err := pageViewBatch.Append(
+				event.timestamp,
+				event.domain,
+				event.pathname,
+				event.visitorId,
+				event.sessionId,
+			)
+			if err != nil {
+				a.logger.Panic().Err(err).Msg("failed to append pageview to batch")
+			}
 
-		err := batch.Append(
-			pageview.timestamp,
-			pageview.domain,
-			pageview.pathname,
-			pageview.os,
-			pageview.browser,
-			pageview.device,
-			pageview.referrerDomain,
-			pageview.countryCode,
-			pageview.visitorId,
-			pageview.sessionId,
-			pageview.entryTimestamp,
-		)
-		if err != nil {
-			a.logger.Panic().Err(err).Msg("failed to append to batch")
+		case *Session:
+			err := sessionBatch.Append(
+				event.timestamp,
+				event.domain,
+				event.pathname,
+				event.os,
+				event.browser,
+				event.device,
+				event.referrerDomain,
+				event.countryCode,
+				event.visitorId,
+				event.sessionId,
+			)
+			if err != nil {
+				a.logger.Panic().Err(err).Msg("failed to append session to batch")
+			}
+
+		default:
+			panic(fmt.Errorf("unknown event type %v", reflect.TypeOf(ev)))
 		}
+
 	}
 
-	err = batch.Send()
+	err = sessionBatch.Send()
 	if err != nil {
-		a.logger.Panic().Err(err).Msg("failed to send to batch")
+		a.logger.Panic().Err(err).Msg("failed to send session batch")
+	}
+	err = pageViewBatch.Send()
+	if err != nil {
+		a.logger.Panic().Err(err).Msg("failed to send pageview batch")
 	}
 	a.metrics.events.Add(uint64(a.cfg.BatchSize))
 	a.logger.Info().

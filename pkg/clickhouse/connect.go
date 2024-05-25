@@ -29,6 +29,7 @@ func Connect(logger zerolog.Logger, cfg config.Clickhouse, maxRetry int) (conn d
 			Username: cfg.User.ExposeSecret(),
 			Password: cfg.Password.ExposeSecret(),
 		},
+		MaxIdleConns: 1000,
 		ClientInfo: clickhouse.ClientInfo{
 			Products: []struct {
 				Name    string

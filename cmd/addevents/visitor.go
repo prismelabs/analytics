@@ -1,41 +1,38 @@
 package main
 
 import (
+	"math/big"
 	"math/rand"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Execute routine of a pageview visitor.
-func (a App) pageviewVisitor(ch chan<- *Pageview, entryPageviewTime time.Time) {
+func (a App) pageviewVisitor(ch chan<- any, entryPageviewTime time.Time) {
 	domain := randomItem(a.cfg.Domains)
-	os := randomOS()
-	browser := randomBrowser()
-	device := "benchbot"
 	visitorId := randomVisitorId(a.cfg.VisitorIdsRange)
-	countryCode := randomCountryCode()
-	sessionId := rand.Uint64()
 
-	entryPageview := Pageview{
+	session := Session{
 		timestamp:      entryPageviewTime,
 		domain:         domain,
 		pathname:       randomPathName(),
-		os:             os,
-		browser:        browser,
-		device:         device,
+		os:             randomOS(),
+		browser:        randomBrowser(),
+		device:         "benchbot",
 		referrerDomain: "direct",
-		countryCode:    countryCode,
+		countryCode:    randomCountryCode(),
 		visitorId:      visitorId,
-		sessionId:      sessionId,
-		entryTimestamp: entryPageviewTime,
+		sessionId:      uuid.Must(uuid.NewV7()),
 	}
 
 	isExternal := rand.Float64() > a.cfg.DirectTrafficRate
 	if isExternal {
-		entryPageview.referrerDomain = randomExternalReferrerDomain()
+		session.referrerDomain = randomExternalReferrerDomain()
 	}
 
-	ch <- &entryPageview
-	a.metrics.visits.Add(1)
+	ch <- &session
+	a.metrics.sessions.Add(1)
 
 	if rand.Float64() < a.cfg.BounceRate {
 		// Bounce.
@@ -46,17 +43,11 @@ func (a App) pageviewVisitor(ch chan<- *Pageview, entryPageviewTime time.Time) {
 	for {
 		entryPageviewTime = entryPageviewTime.Add(-randomMinute())
 		pageview := Pageview{
-			timestamp:      entryPageviewTime,
-			domain:         domain,
-			pathname:       randomPathName(),
-			os:             os,
-			browser:        browser,
-			device:         device,
-			referrerDomain: domain, // Internal traffic.
-			countryCode:    countryCode,
-			visitorId:      visitorId,
-			sessionId:      sessionId,
-			entryTimestamp: entryPageviewTime,
+			timestamp: entryPageviewTime,
+			domain:    domain,
+			pathname:  randomPathName(),
+			visitorId: visitorId,
+			sessionId: big.NewInt(0).SetBytes(session.sessionId[:]),
 		}
 
 		ch <- &pageview
