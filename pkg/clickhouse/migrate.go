@@ -11,8 +11,9 @@ import (
 )
 
 // migrate starts migrating a clickhouse instance to the latest version.
-func migrate(logger zerolog.Logger, db *sql.DB, source source.Driver) {
+func migrate(logger zerolog.Logger, db *sql.DB, dbName string, source source.Driver) {
 	driver, err := clickhouse.WithInstance(db, &clickhouse.Config{
+		DatabaseName:          dbName,
 		MigrationsTable:       "migrations",
 		MigrationsTableEngine: "MergeTree",
 		MultiStatementEnabled: true,
@@ -21,7 +22,7 @@ func migrate(logger zerolog.Logger, db *sql.DB, source source.Driver) {
 		logger.Panic().Msgf("failed to create golang-migrate driver for clickhouse migration: %v", err.Error())
 	}
 
-	m, err := gomigrate.NewWithInstance("migrations", source, "analytics", driver)
+	m, err := gomigrate.NewWithInstance("migrations", source, dbName, driver)
 	if err != nil {
 		logger.Panic().Msgf("failed to create go-migrate.Migrate instance: %v", err.Error())
 	}

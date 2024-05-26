@@ -21,5 +21,5 @@ PRIMARY KEY (domain, name)
 ORDER BY (domain, name, path, toDate(timestamp), operating_system, browser_family, device, referrer_domain, country_code)
 PARTITION BY toYYYYMM(timestamp);
 
-CREATE FUNCTION event_property AS (key) -> values[indexOf(keys, key)];
+CREATE FUNCTION IF NOT EXISTS event_property AS (key) -> values[indexOf(keys, key)];
 
