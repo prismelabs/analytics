@@ -3,7 +3,7 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... }@inputs:
+  outputs = { self, nixpkgs, flake-utils, ... }:
     let
       outputsWithoutSystem = { };
       outputsWithSystem = flake-utils.lib.eachDefaultSystem
@@ -12,22 +12,24 @@
             pkgs = import nixpkgs {
               inherit system;
             };
-            lib = pkgs.lib;
+            # lib = pkgs.lib;
           in
           {
             devShells = {
               default = pkgs.mkShell {
                 buildInputs = with pkgs; [
                   go
-                  mockgen
-                  gopls
-                  golangci-lint
-                  wire
-                  go-migrate
-                  bunyan-rs
-                  entr
-                  bun
-                  minify
+                  mockgen # Go mock generator
+                  gopls # Go LSP
+                  golangci-lint # Go linter
+                  wire # Go dependency injection
+                  go-migrate # Go SQL migration
+                  bunyan-rs # Bunyan format pretty print
+                  entr # FS watcher
+                  bun # Bun JS runtime
+                  minify # JS minifier
+                  clickhouse # clickhouse client
+                  hyperfine # binary benchmarks
                 ];
               };
             };
