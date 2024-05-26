@@ -1,0 +1,8 @@
+services:
+  addevents:
+    image: prismelabs/analytics:dev
+    env_file: ../../prisme.env
+    working_dir: "/app"
+    command: "/app/prisme ${ARGS:-}"
+    volumes:
+      - "${repository_root}/:/app:ro"

@@ -2,16 +2,16 @@
 all: setup .WAIT all/events all/trusted-proxy all/trusted-proxy-custom-header all/untrusted-proxy
 	@true
 
-all/%: start/% .WAIT test/% .WAIT clean/%
+all/%: FORCE start/% .WAIT test/% .WAIT clean/%
 	@true
 
-start/%:
+start/%: FORCE
 	$(MAKE) -C $* start
 
-test/%:
+test/%: FORCE
 	$(MAKE) -C $* test
 
-clean/%:
+clean/%: FORCE
 	$(MAKE) -C $* clean
 
 .PHONY: lint
@@ -27,3 +27,4 @@ setup: node_modules
 node_modules:
 	$(DOCKER) run --rm -v $$PWD:/app -w /app docker.io/oven/bun bun install
 
+FORCE:

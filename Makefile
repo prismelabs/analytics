@@ -10,8 +10,8 @@ COMPOSE_PROJECT_NAME ?= $(notdir $(CURDIR))
 .PHONY: start
 start: start/server
 
-start/%: .env codegen
-	go build -o prisme -race ./cmd/$*
+start/%: .env
+	$(MAKE) go/build/$*
 	source ./.env \
 	&& $(DOCKER_COMPOSE) \
 		-f ./docker-compose.$${PRISME_MODE}.yml \
@@ -103,8 +103,17 @@ test/integ: .env
 test/e2e:
 	$(MAKE) -C ./tests
 
-.PHONY: build
-build:
+tests/%: FORCE
+	$(MAKE) -C ./tests $*
+
+.PHONY: go/build
+go/build: go/build/server
+
+go/build/%: FORCE codegen
+	go build -o prisme -race ./cmd/$*
+
+.PHONY: nix/build
+nix/build:
 	nix build -L .#default
 
 .PHONY: docker/build
@@ -112,3 +121,5 @@ docker/build:
 	nix build -L .#docker
 	$(DOCKER) load < result
 	if [ "$${REMOVE_RESULT:=1}" = "1" ]; then rm -f result; fi
+
+FORCE:
