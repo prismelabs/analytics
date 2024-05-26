@@ -7,9 +7,9 @@ referrer_domain="'direct', 'twitter.com', 'facebook.com'"
 country_code="'FR', 'BG', 'US'"
 
 cat <<EOF
-WITH visitor_visits AS (
-  SELECT visitor_id, COUNT(*) AS visits
-  FROM pageviews
+WITH visitor_sessions AS (
+  SELECT session_id, COUNT(*) AS visits
+  FROM sessions
   WHERE timestamp >= $timestamp
     AND domain IN ($domain)
     AND path IN ($path)
@@ -17,7 +17,7 @@ WITH visitor_visits AS (
     AND browser_family IN ($browser_family)
     AND referrer_domain IN ($referrer_domain)
     AND country_code IN ($country_code)
-  GROUP BY visitor_id
+  GROUP BY session_id
 )
-SELECT COUNT(*) FROM visitor_visits WHERE visits = 1
+SELECT COUNT(*) FROM visitor_sessions WHERE visits = 1
 EOF

@@ -9,13 +9,17 @@ country_code="'FR', 'BG', 'US'"
 cat <<EOF
 SELECT toStartOfInterval(timestamp, INTERVAL 60 second) AS time, COUNT(*)
 FROM entry_pageviews
-WHERE timestamp >= $timestamp
-  AND domain IN ($domain)
-  AND path IN ($path)
-  AND operating_system IN ($operating_system)
-  AND browser_family IN ($browser_family)
-  AND referrer_domain IN ($referrer_domain)
-  AND country_code IN ($country_code)
+WHERE session_id IN (
+  SELECT session_id FROM sessions
+  WHERE timestamp >= $timestamp
+    AND domain IN ($domain)
+    AND path IN ($path)
+    AND operating_system IN ($operating_system)
+    AND browser_family IN ($browser_family)
+    AND referrer_domain IN ($referrer_domain)
+    AND country_code IN ($country_code)
+  SETTINGS use_query_cache = true
+)
 GROUP BY time
 ORDER BY time
 EOF

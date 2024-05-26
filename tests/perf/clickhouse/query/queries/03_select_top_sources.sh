@@ -8,7 +8,7 @@ country_code="'FR', 'BG', 'US'"
 
 cat <<EOF
 SELECT referrer_domain, COUNT(*) as count
-FROM entry_pageviews
+FROM sessions
 WHERE timestamp >= $timestamp
   AND domain IN ($domain)
   AND path IN ($path)

@@ -7,9 +7,9 @@ referrer_domain="'direct', 'twitter.com', 'facebook.com'"
 country_code="'FR', 'BG', 'US'"
 
 cat <<EOF
-SELECT DISTINCT(name) AS country, COUNT(*) AS pageview
-FROM entry_pageviews
-JOIN countries ON entry_pageviews.country_code = countries.code
+SELECT DISTINCT(name) AS country, COUNT(*) AS sessions
+FROM sessions
+JOIN countries ON sessions.country_code = countries.code
 WHERE timestamp >= $timestamp
   AND domain IN ($domain)
   AND path IN ($path)
@@ -18,5 +18,5 @@ WHERE timestamp >= $timestamp
   AND referrer_domain IN ($referrer_domain)
   AND country_code IN ($country_code)
 GROUP BY country
-ORDER BY pageview DESC
+ORDER BY sessions DESC
 EOF

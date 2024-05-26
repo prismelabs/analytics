@@ -7,13 +7,17 @@ referrer_domain="'direct', 'twitter.com', 'facebook.com'"
 country_code="'FR', 'BG', 'US'"
 
 cat <<EOF
-SELECT avg(timestamp - entry_timestamp) AS "Visit duration"
-FROM exit_pageviews_no_bounce
-WHERE timestamp >= $timestamp
-  AND domain IN ($domain)
-  AND path IN ($path)
-  AND operating_system IN ($operating_system)
-  AND browser_family IN ($browser_family)
-  AND referrer_domain IN ($referrer_domain)
-  AND country_code IN ($country_code)
+SELECT avg(exit.timestamp - timestamp) AS "Visit duration"
+FROM entry_exit_pageviews
+WHERE session_id IN (
+  SELECT session_id FROM sessions
+  WHERE timestamp >= $timestamp
+    AND domain IN ($domain)
+    AND path IN ($path)
+    AND operating_system IN ($operating_system)
+    AND browser_family IN ($browser_family)
+    AND referrer_domain IN ($referrer_domain)
+    AND country_code IN ($country_code)
+  SETTINGS use_query_cache = true
+)
 EOF

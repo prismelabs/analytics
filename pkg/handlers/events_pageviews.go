@@ -66,6 +66,7 @@ func ProvidePostEventsPageViews(
 				return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 			}
 			session.Timestamp = time.Unix(session.SessionUuid.Time().UnixTime()).UTC()
+			session.PageView.SessionId = big.NewInt(0).SetBytes(session.SessionUuid[:])
 
 			// Store session id in KV store.
 			err := storage.Set(

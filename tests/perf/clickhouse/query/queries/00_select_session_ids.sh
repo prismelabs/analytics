@@ -7,8 +7,7 @@ referrer_domain="'direct', 'twitter.com', 'facebook.com'"
 country_code="'FR', 'BG', 'US'"
 
 cat <<EOF
-SELECT COUNT(DISTINCT(visitor_id))
-FROM sessions
+SELECT session_id FROM sessions
 WHERE timestamp >= $timestamp
   AND domain IN ($domain)
   AND path IN ($path)

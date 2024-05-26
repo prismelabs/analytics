@@ -72,17 +72,38 @@ INSERT INTO events_pageviews
   SELECT timestamp, domain, path, visitor_id, 0 AS session_id
   FROM pageviews;
 
-DROP TABLE pageviews;
-
--- Insert entry pages into pageviews table.
+-- Store entry pageviews in events_pageviews.
 CREATE MATERIALIZED VIEW events_pageviews_mv TO events_pageviews AS
   SELECT timestamp, domain, path, visitor_id, session_id
-  FROM prisme.sessions;
+  FROM sessions;
 
--- Entry pages views.
-CREATE VIEW prisme.entry_pageviews AS
+DROP TABLE pageviews;
+
+-- Entry pagesviews.
+CREATE VIEW entry_pageviews AS
   SELECT timestamp, domain, path, visitor_id, session_id
-  FROM prisme.sessions;
+  FROM sessions;
+
+-- Exit pageviews.
+CREATE TABLE exit_pageviews (
+  timestamp DateTime('UTC'),
+  domain String,
+  path String,
+  visitor_id String,
+  session_id UInt128
+)
+ENGINE = ReplacingMergeTree(session_id)
+ORDER BY session_id
+PARTITION BY toYYYYMM(timestamp);
+
+CREATE MATERIALIZED VIEW exit_pageviews_mv TO exit_pageviews AS
+SELECT * FROM prisme.events_pageviews;
+
+-- Entry exit pageviews.
+CREATE VIEW entry_exit_pageviews AS
+SELECT * FROM entry_pageviews
+LEFT ANY JOIN exit_pageviews AS exit
+ON exit_pageviews.session_id = entry_pageviews.session_id;
 
 -- Recreate custom events table.
 RENAME TABLE events_custom TO events_custom_old;
