@@ -6,57 +6,26 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/prismelabs/analytics/pkg/services/uaparser"
 )
 
-var OSs = []string{
-	"Windows",
-	"Linux",
-	"Mac OS X",
-	"iOS",
-	"Android",
+func init() {
 }
 
-func randomOS() string {
-	return randomItem(OSs)
+func randomDesktopClient() uaparser.Client {
+	return randomItem(desktopClients)
 }
 
-var browsers = []string{
-	"Firefox",
-	"Chrome",
-	"Edge",
-	"Opera",
-	"Safari",
-}
-
-func randomBrowser() string {
-	return randomItem(browsers)
-}
-
-var pathnames = []string{
-	"/foo/bar/qux",
-	"/foo/bar/",
-	"/foo/bar",
-	"/foo",
-	"/blog",
-	"/blog/misc/a-nice-post",
-	"/blog/misc/another-nice-post",
-	"/contact",
-	"/terms-of-service",
-	"/privacy",
+func randomMobileClient() uaparser.Client {
+	return randomItem(mobileClients)
 }
 
 func randomPathName() string {
-	return randomItem(pathnames)
+	return randomItem(pathnamesList)
 }
 
-var externalReferrerDomains = []string{
-	"twitter.com",
-	"facebook.com",
-	"google.com",
-}
-
-func randomExternalReferrerDomain() string {
-	return randomItem(externalReferrerDomains)
+func randomExternalDomain() string {
+	return randomItem(externalDomainsList)
 }
 
 func randomMinute() time.Duration {
@@ -90,31 +59,8 @@ func randomVisitorId(idsRange uint64) string {
 	return fmt.Sprintf("prisme_%X", rand.Uint64()%idsRange)
 }
 
-var countryCodes = []string{
-	"AF", "AX", "AL", "DZ", "AS", "AD", "AO", "AI", "AQ", "AG", "AR", "AM", "AW",
-	"AU", "AT", "AZ", "BS", "BH", "BD", "BB", "BY", "BE", "BZ", "BJ", "BM", "BT",
-	"BO", "BQ", "BA", "BW", "BV", "BR", "IO", "BN", "BG", "BF", "BI", "CV",
-	"KH", "CM", "CA", "KY", "CF", "TD", "CL", "CN", "CX", "CC", "CO", "KM", "CD",
-	"CG", "CK", "CR", "CI", "HR", "CU", "CW", "CY", "CZ", "DK", "DJ", "DM", "DO",
-	"EC", "EG", "SV", "GQ", "ER", "EE", "SZ", "ET", "FK", "FO", "FJ", "FI", "FR",
-	"GF", "PF", "TF", "GA", "GM", "GE", "DE", "GH", "GI", "GR", "GL", "GD", "GP",
-	"GU", "GT", "GG", "GN", "GW", "GY", "HT", "HM", "VA", "HN", "HK", "HU", "IS",
-	"IN", "ID", "IR", "IQ", "IE", "IM", "IL", "IT", "JM", "JP", "JE", "JO", "KZ",
-	"KE", "KI", "KP", "KR", "KW", "KG", "LA", "LV", "LB", "LS", "LR", "LY", "LI",
-	"LT", "LU", "MO", "MG", "MW", "MY", "MV", "ML", "MT", "MH", "MQ", "MR", "MU",
-	"YT", "MX", "FM", "MD", "MC", "MN", "ME", "MS", "MA", "MZ", "MM", "NA", "NR",
-	"NP", "NL", "NC", "NZ", "NI", "NE", "NG", "NU", "NF", "MK", "MP", "NO", "OM",
-	"PK", "PW", "PS", "PA", "PG", "PY", "PE", "PH", "PN", "PL", "PT", "PR", "QA",
-	"RE", "RO", "RU", "RW", "BL", "SH", "KN", "LC", "MF", "PM", "VC", "WS", "SM",
-	"ST", "SA", "SN", "RS", "SC", "SL", "SG", "SX", "SK", "SI", "SB", "SO", "ZA",
-	"GS", "SS", "ES", "LK", "SD", "SR", "SJ", "SE", "CH", "SY", "TW", "TJ", "TZ",
-	"TH", "TL", "TG", "TK", "TO", "TT", "TN", "TR", "TM", "TC", "TV", "UG", "UA",
-	"AE", "GB", "UM", "US", "UY", "UZ", "VU", "VE", "VN", "VG", "VI", "WF", "EH",
-	"YE", "ZM", "ZW", "XX",
-}
-
 func randomCountryCode() string {
-	return randomItem(countryCodes)
+	return randomItem(countryCodesList)
 }
 
 func randomCustomEvent() (string, []string, []string) {
@@ -145,3 +91,55 @@ func randomCustomEvent() (string, []string, []string) {
 		panic("not implemented")
 	}
 }
+
+var (
+	pathnamesList = []string{
+		"/foo/bar/qux",
+		"/foo/bar/",
+		"/foo/bar",
+		"/foo",
+		"/blog",
+		"/blog/misc/a-nice-post",
+		"/blog/misc/another-nice-post",
+		"/contact",
+		"/terms-of-service",
+		"/privacy",
+	}
+	externalDomainsList = []string{
+		"youtube.com", "www.google.com", "www.blogger.com", "cloudflare.com",
+		"apple.com", "linkedin.com", "googleusercontent.com", "support.google.com",
+		"docs.google.com", "microsoft.com", "wordpress.org", "whatsapp.com",
+		"maps.google.com", "play.google.com", "en.wikipedia.org", "plus.google.com",
+		"sites.google.com", "accounts.google.com", "t.me", "europa.eu",
+		"bp.blogspot.com", "youtu.be", "drive.google.com", "mozilla.org", "vk.com",
+		"adobe.com", "facebook.com", "vimeo.com", "uol.com.br",
+		"policies.google.com", "g.page", "istockphoto.com", "amazon.com",
+		"github.com", "paypal.com", "tiktok.com", "tools.google.com",
+		"brandbucket.com", "ok.ru", "gravatar.com", "wikimedia.org",
+		"news.google.com", "opera.com", "dropbox.com", "feedburner.com",
+		"netvibes.com", "files.wordpress.com", "draft.blogger.com",
+		"googleblog.com", "myspace.com",
+	}
+	countryCodesList = []string{
+		"AF", "AX", "AL", "DZ", "AS", "AD", "AO", "AI", "AQ", "AG", "AR", "AM", "AW",
+		"AU", "AT", "AZ", "BS", "BH", "BD", "BB", "BY", "BE", "BZ", "BJ", "BM", "BT",
+		"BO", "BQ", "BA", "BW", "BV", "BR", "IO", "BN", "BG", "BF", "BI", "CV",
+		"KH", "CM", "CA", "KY", "CF", "TD", "CL", "CN", "CX", "CC", "CO", "KM", "CD",
+		"CG", "CK", "CR", "CI", "HR", "CU", "CW", "CY", "CZ", "DK", "DJ", "DM", "DO",
+		"EC", "EG", "SV", "GQ", "ER", "EE", "SZ", "ET", "FK", "FO", "FJ", "FI", "FR",
+		"GF", "PF", "TF", "GA", "GM", "GE", "DE", "GH", "GI", "GR", "GL", "GD", "GP",
+		"GU", "GT", "GG", "GN", "GW", "GY", "HT", "HM", "VA", "HN", "HK", "HU", "IS",
+		"IN", "ID", "IR", "IQ", "IE", "IM", "IL", "IT", "JM", "JP", "JE", "JO", "KZ",
+		"KE", "KI", "KP", "KR", "KW", "KG", "LA", "LV", "LB", "LS", "LR", "LY", "LI",
+		"LT", "LU", "MO", "MG", "MW", "MY", "MV", "ML", "MT", "MH", "MQ", "MR", "MU",
+		"YT", "MX", "FM", "MD", "MC", "MN", "ME", "MS", "MA", "MZ", "MM", "NA", "NR",
+		"NP", "NL", "NC", "NZ", "NI", "NE", "NG", "NU", "NF", "MK", "MP", "NO", "OM",
+		"PK", "PW", "PS", "PA", "PG", "PY", "PE", "PH", "PN", "PL", "PT", "PR", "QA",
+		"RE", "RO", "RU", "RW", "BL", "SH", "KN", "LC", "MF", "PM", "VC", "WS", "SM",
+		"ST", "SA", "SN", "RS", "SC", "SL", "SG", "SX", "SK", "SI", "SB", "SO", "ZA",
+		"GS", "SS", "ES", "LK", "SD", "SR", "SJ", "SE", "CH", "SY", "TW", "TJ", "TZ",
+		"TH", "TL", "TG", "TK", "TO", "TT", "TN", "TR", "TM", "TC", "TV", "UG", "UA",
+		"AE", "GB", "UM", "US", "UY", "UZ", "VU", "VE", "VN", "VG", "VI", "WF", "EH",
+		"YE", "ZM", "ZW", "XX",
+	}
+)

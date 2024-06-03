@@ -11,6 +11,10 @@ import (
 	"github.com/prismelabs/analytics/pkg/wired"
 )
 
+import (
+	_ "embed"
+)
+
 // Injectors from wire.go:
 
 func Initialize(logger wired.BootstrapLogger) App {

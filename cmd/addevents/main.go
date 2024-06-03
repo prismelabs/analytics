@@ -17,13 +17,9 @@ func main() {
 	app.logger.Info().Any("config", app.cfg).Msg("initialization done.")
 
 	start := time.Now()
-	if app.cfg.EventType == "pageview" {
-		app.pageviewsScenario()
-	} else {
-		app.AddCustomEvents()
-	}
+
+	app.executeScenario(emulateSession)
 
 	app.logger.Info().
-		Object("metrics", app.metrics).
 		Stringer("duration", time.Since(start)).Msg("scenario done")
 }
