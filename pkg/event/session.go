@@ -11,6 +11,9 @@ import (
 
 // Session holds data about visitor's/user's session/visit.
 type Session struct {
+	// This data struct must not contains data changing over pageviews (except
+	// Pageviews field which is used as version field).
+
 	PageUri     *Uri
 	ReferrerUri *ReferrerUri
 	Client      uaparser.Client

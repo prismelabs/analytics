@@ -246,24 +246,13 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 		// Append to batch.
 		err = batch.Append(
 			ev.Timestamp,
-			ev.PageUri.Host(),
+			ev.Session.PageUri.Host(),
 			ev.PageUri.Path(),
-			ev.Client.OperatingSystem,
-			ev.Client.BrowserFamily,
-			ev.Client.Device,
-			ev.ReferrerUri.HostOrDirect(),
-			ev.CountryCode,
-			ev.VisitorId,
+			ev.Session.VisitorId,
+			ev.Session.SessionUuid,
 			ev.Name,
 			ev.Keys,
 			ev.Values,
-			ev.SessionUuid,
-			ev.SessionTimestamp(),
-			"",
-			"",
-			"",
-			"",
-			"",
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append custom event to batch")
