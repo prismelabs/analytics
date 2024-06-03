@@ -1,6 +1,6 @@
 services:
   clickhouse:
-    image: "docker.io/clickhouse/clickhouse-server:23.9.1-alpine"
+    image: "docker.io/clickhouse/clickhouse-server:24.5.1.1763-alpine"
     # ports:
     #   - 8123:8123 # HTTP interface
     ulimits:
