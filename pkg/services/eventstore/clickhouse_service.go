@@ -26,6 +26,7 @@ func ProvideService(
 	logger = logger.With().
 		Str("service", "eventstore").
 		Str("service_impl", "clickhouse").
+		Uint64("ring_buffers_factor", cfg.RingBuffersFactor).
 		Uint64("max_batch_size", cfg.MaxBatchSize).
 		Stringer("max_batch_timeout", cfg.MaxBatchTimeout).
 		Logger()
@@ -51,18 +52,18 @@ func ProvideService(
 		maxBatchTimeout: cfg.MaxBatchTimeout,
 		pageViewRingBuf: ringo.NewWaiter(
 			ringo.NewManyToOne(
-				int(cfg.MaxBatchSize*10),
+				int(cfg.MaxBatchSize*cfg.RingBuffersFactor),
 				ringo.WithManyToOneCollisionHandler[*event.PageView](ringo.CollisionHandlerFunc(func(_ any) {
-					logger.Warn().Msg("pageview events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+					logger.Warn().Msg("pageview events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_RING_BUFFERS_FACTOR or PRISME_EVENTSTORE_MAX_BATCH_SIZE")
 				})),
 			),
 			ringo.WithWaiterContext[*event.PageView](ctx),
 		),
 		customEventRingBuf: ringo.NewWaiter(
 			ringo.NewManyToOne(
-				int(cfg.MaxBatchSize*10),
+				int(cfg.MaxBatchSize*cfg.RingBuffersFactor),
 				ringo.WithManyToOneCollisionHandler[*event.Custom](ringo.CollisionHandlerFunc(func(_ any) {
-					logger.Warn().Msg("custom events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+					logger.Warn().Msg("custom events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_RING_BUFFERS_FACTOR or PRISME_EVENTSTORE_MAX_BATCH_SIZE")
 				})),
 			),
 			ringo.WithWaiterContext[*event.Custom](ctx),
@@ -113,7 +114,11 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 		if batch == nil {
 			batch, err = cs.conn.PrepareBatch(
 				context.Background(),
-				"INSERT INTO events_pageviews VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+				// pageviews table is a materialized view derived from sessions.
+				// sessions table engine is VersionedCollapsedMergeTree so we can
+				// keep appending row with the same Session UUID.
+				// See https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/versionedcollapsingmergetree
+				"INSERT INTO sessions",
 			)
 			if err != nil {
 				cs.logger.Err(err).Msg("failed to prepare next pageviews batch")
@@ -139,18 +144,54 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 
 		// Append to batch.
 		cs.logger.Debug().Any("pageview_event", ev).Msg("appending pageview event to batch...")
+
+		// Session already stored.
+		if ev.Session.Pageviews > 1 {
+			// Cancel previous session.
+			err = batch.Append(
+				ev.Session.PageUri.Host(),
+				ev.Session.PageUri.Path(),
+				ev.Timestamp.UTC(),
+				ev.PageUri.Path(),
+				ev.Session.VisitorId,
+				ev.Session.SessionUuid,
+				ev.Session.Client.OperatingSystem,
+				ev.Session.Client.BrowserFamily,
+				ev.Session.Client.Device,
+				ev.Session.ReferrerUri.HostOrDirect(),
+				ev.Session.CountryCode,
+				ev.Session.Utm.Source,
+				ev.Session.Utm.Medium,
+				ev.Session.Utm.Campaign,
+				ev.Session.Utm.Term,
+				ev.Session.Utm.Content,
+				ev.Session.Pageviews-1, // Cancel previous version.
+				-1,
+			)
+			if err != nil {
+				cs.logger.Err(err).Msg("failed to add cancel session row to batch")
+			}
+		}
+
 		err = batch.Append(
-			ev.Timestamp,
-			ev.PageUri.Host(),
+			ev.Session.PageUri.Host(),
+			ev.Session.PageUri.Path(),
+			ev.Timestamp.UTC(),
 			ev.PageUri.Path(),
-			ev.Client.OperatingSystem,
-			ev.Client.BrowserFamily,
-			ev.Client.Device,
-			ev.ReferrerUri.HostOrDirect(),
-			ev.CountryCode,
-			ev.VisitorId,
-			ev.SessionId,
-			ev.EntryTimestamp,
+			ev.Session.VisitorId,
+			ev.Session.SessionUuid,
+			ev.Session.Client.OperatingSystem,
+			ev.Session.Client.BrowserFamily,
+			ev.Session.Client.Device,
+			ev.Session.ReferrerUri.HostOrDirect(),
+			ev.Session.CountryCode,
+			ev.Session.Utm.Source,
+			ev.Session.Utm.Medium,
+			ev.Session.Utm.Campaign,
+			ev.Session.Utm.Term,
+			ev.Session.Utm.Content,
+			ev.Session.Pageviews,
+			1,
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append pageview to batch")
@@ -216,7 +257,13 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 			ev.Name,
 			ev.Keys,
 			ev.Values,
-			ev.SessionId,
+			ev.SessionUuid,
+			ev.SessionTimestamp(),
+			"",
+			"",
+			"",
+			"",
+			"",
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append custom event to batch")
