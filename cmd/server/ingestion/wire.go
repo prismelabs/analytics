@@ -12,6 +12,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/originregistry"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
+	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/wired"
@@ -38,6 +39,8 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		middlewares.ProvideStatic,
 		originregistry.ProvideEnvVarService,
 		saltmanager.ProvideService,
+		sessionstorage.ProvideConfig,
+		sessionstorage.ProvideService,
 		teardown.ProvideService,
 		uaparser.ProvideService,
 		wired.ProvideApp,

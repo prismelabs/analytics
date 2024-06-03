@@ -3,6 +3,7 @@ package event
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/rs/zerolog"
@@ -18,10 +19,16 @@ type Custom struct {
 	Client      uaparser.Client
 	CountryCode ipgeolocator.CountryCode
 	VisitorId   string
-	SessionId   uint64
+	SessionUuid uuid.UUID
+	Utm         UtmParams
 	Name        string
 	Keys        []string
 	Values      []string
+}
+
+// SessionTimestamp returns session creation datetime.
+func (c *Custom) SessionTimestamp() time.Time {
+	return time.Unix(c.SessionUuid.Time().UnixTime()).UTC()
 }
 
 // MarshalZerologObject implements zerolog.LogObjectMarshaler.
@@ -33,7 +40,8 @@ func (c *Custom) MarshalZerologObject(e *zerolog.Event) {
 		Object("client", c.Client).
 		Stringer("country_code", c.CountryCode).
 		Str("visitor_id", c.VisitorId).
-		Uint64("session_id", c.SessionId).
+		Stringer("session_uuid", c.SessionUuid).
+		Object("utm_params", &c.Utm).
 		Str("name", c.Name).
 		Strs("keys", c.Keys).
 		Strs("values", c.Values)

@@ -16,6 +16,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/originregistry"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
+	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/wired"
@@ -50,7 +51,9 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger, registry)
 	saltmanagerService := saltmanager.ProvideService(zerologLogger)
 	postEventsCustom := handlers.ProvidePostEventsCustom(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, storage)
-	postEventsPageview := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, storage)
+	sessionstorageConfig := sessionstorage.ProvideConfig()
+	sessionstorageService := sessionstorage.ProvideService(zerologLogger, sessionstorageConfig)
+	postEventsPageview := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, sessionstorageService)
 	app := ProvideFiber(eventsCors, eventsRateLimiter, minimalFiber, nonRegisteredOriginFilter, postEventsCustom, postEventsPageview)
 	promhttpLogger := wired.ProvidePromHttpLogger(server, zerologLogger)
 	configGrafana := wired.ProvideGrafanaConfig(logger)
