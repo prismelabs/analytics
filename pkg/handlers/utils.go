@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"encoding/binary"
 	"fmt"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/valyala/fasthttp"
 )
 
 func peekReferrerHeader(c *fiber.Ctx) []byte {
@@ -44,14 +44,21 @@ func xxh3(bytesSlice ...[]byte) uint64 {
 	return hash.Sum64()
 }
 
-func sessionKey(visitorId string) string {
-	return fmt.Sprintf("session_id[%q]", visitorId)
-}
+func extractUtmParams(args *fasthttp.Args) event.UtmParams {
+	utmParams := event.UtmParams{}
+	if args.Len() == 0 {
+		return utmParams
+	}
 
-func computeSessionId(pageView *event.PageView) uint64 {
-	return xxh3(
-		binary.LittleEndian.AppendUint64(nil, uint64(pageView.Timestamp.UnixNano())),
-		utils.UnsafeBytes(pageView.VisitorId),
-		pageView.PageUri.Host(),
-	)
+	utmParams.Source = string(args.Peek("utm_source"))
+	if utmParams.Source == "" {
+		utmParams.Source = string(args.Peek("ref"))
+	}
+
+	utmParams.Medium = string(args.Peek("utm_medium"))
+	utmParams.Campaign = string(args.Peek("utm_campaign"))
+	utmParams.Term = string(args.Peek("utm_term"))
+	utmParams.Content = string(args.Peek("utm_content"))
+
+	return utmParams
 }

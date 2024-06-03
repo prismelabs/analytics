@@ -1,15 +1,17 @@
 package handlers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
-	"github.com/gofiber/storage"
+	"github.com/google/uuid"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
+	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/rs/zerolog"
 )
@@ -23,81 +25,77 @@ func ProvidePostEventsPageViews(
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
-	storage storage.Storage,
+	sessionStorage sessionstorage.Service,
 ) PostEventsPageview {
 	return func(c *fiber.Ctx) error {
 		// Referrer of the POST request, that is the viewed page.
 		requestReferrer := peekReferrerHeader(c)
 
+		referrerUri := event.ReferrerUri{}
 		pageView := event.PageView{}
 
-		// Parse user agent.
-		userAgent := utils.CopyBytes(c.Request().Header.UserAgent())
-		pageView.Client = uaParserService.ParseUserAgent(utils.UnsafeString(userAgent))
-		if pageView.Client.IsBot {
-			return nil
-		}
-
-		// Event date.
-		pageView.Timestamp = time.Now().UTC()
-
-		err := pageView.PageUri.Parse(requestReferrer)
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
-		}
-
-		err = pageView.ReferrerUri.Parse(c.Request().Header.Peek("X-Prisme-Document-Referrer"))
+		// Parse referrer URI.
+		err := referrerUri.Parse(utils.CopyBytes(c.Request().Header.Peek("X-Prisme-Document-Referrer")))
 		if err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, "invalid X-Prisme-Document-Referrer")
 		}
 
-		// Find country code for given IP.
-		pageView.CountryCode = ipGeolocatorService.FindCountryCodeForIP(c.IP())
-
-		// Compute visitor id.
-		pageView.VisitorId = computeVisitorId(
-			userAgent, saltManagerService.DailySalt().Bytes(), []byte(c.IP()),
-			pageView.PageUri.Host(),
-		)
-
-		newSession := !equalBytes(pageView.ReferrerUri.Host(), pageView.PageUri.Host())
-		var session session
-		if newSession {
-			// Compute session ID.
-			session.id = computeSessionId(&pageView)
-			session.entryTime = pageView.Timestamp
-
-			// Store it.
-			err := storage.Set(
-				sessionKey(pageView.VisitorId),
-				unsafeSessionToBytesCast(&session),
-				24*time.Hour,
-			)
-			if err != nil {
-				return fiber.NewError(fiber.StatusInternalServerError, err.Error())
-			}
-		} else {
-			// Retrieve session.
-			sessionBytes, err := storage.Get(sessionKey(pageView.VisitorId))
-			if err != nil {
-				logger.Err(err).Msg("failed to retrieve session id")
-				return fiber.NewError(fiber.StatusInternalServerError, "failed to retrieve session id")
-			}
-			if sessionBytes == nil {
-				return fiber.NewError(fiber.StatusBadRequest, "entry page missing")
-			}
-
-			session = *unsafeBytesToSessionCast(sessionBytes)
+		// Parse page URI.
+		err = pageView.PageUri.Parse(utils.CopyBytes(requestReferrer))
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 		}
 
-		// Add session related fields.
-		pageView.SessionId = session.id
-		pageView.EntryTimestamp = session.entryTime
+		userAgent := c.Request().Header.UserAgent()
+		visitorId := computeVisitorId(
+			userAgent, saltManagerService.DailySalt().Bytes(),
+			utils.UnsafeBytes(c.IP()), pageView.PageUri.Host(),
+		)
+
+		newSession := !equalBytes(referrerUri.Host(), pageView.PageUri.Host())
+		if newSession {
+			sessionUuid, err := uuid.NewV7()
+			if err != nil {
+				return fmt.Errorf("failed to generate session uuid: %w", err)
+			}
+
+			pageView.Session = event.Session{
+				PageUri:     &pageView.PageUri,
+				ReferrerUri: &referrerUri,
+				Client:      uaParserService.ParseUserAgent(utils.UnsafeString(userAgent)),
+				CountryCode: ipGeolocatorService.FindCountryCodeForIP(c.IP()),
+				VisitorId:   visitorId,
+				SessionUuid: sessionUuid,
+				Utm:         extractUtmParams(pageView.PageUri.QueryArgs()),
+				Pageviews:   1,
+			}
+			pageView.Timestamp = pageView.Session.SessionTime()
+
+		} else { // session should already exists
+			var ok bool
+			pageView.Session, ok = sessionStorage.GetSession(visitorId)
+
+			// Session not found.
+			// This can happen if tracking script is not installed on all pages or
+			// prisme instance was restarted.
+			if !ok {
+				return fiber.NewError(fiber.StatusBadRequest, "session not found")
+			}
+
+			pageView.Session.Pageviews++
+			pageView.Timestamp = time.Now().UTC()
+		}
+
+		// Update session in storage.
+		upserted := sessionStorage.UpsertSession(pageView.Session)
+		if !upserted {
+			logger.Debug().Msg("session upsert was ignored, pageview ignored")
+			return nil
+		}
 
 		err = eventStore.StorePageView(c.UserContext(), &pageView)
 		if err != nil {
-			logger.Err(err).Msg("failed to store page view event")
-			return fiber.NewError(fiber.StatusInternalServerError, "failed to store page view event")
+			return fmt.Errorf("failed to store pageview event: %w", err)
 		}
 
 		return nil
