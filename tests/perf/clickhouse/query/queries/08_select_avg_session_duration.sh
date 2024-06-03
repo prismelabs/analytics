@@ -7,9 +7,14 @@ referrer_domain="'direct', 'twitter.com', 'facebook.com'"
 country_code="'FR', 'BG', 'US'"
 
 cat <<EOF
+WITH exit_pageviews AS (
+	SELECT max(timestamp) timestamp, session_id FROM events_pageviews GROUP BY session_id
+)
+
 SELECT avg(timestamp - entry_timestamp) AS "Visit duration"
-FROM exit_pageviews_no_bounce
+FROM events_pageviews
 WHERE timestamp >= $timestamp
+  AND timestamp IN (SELECT timestamp FROM exit_pageviews WHERE exit_pageviews.session_id = events_pageviews.session_id )
   AND domain IN ($domain)
   AND path IN ($path)
   AND operating_system IN ($operating_system)

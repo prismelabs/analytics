@@ -7,8 +7,11 @@ referrer_domain="'direct', 'twitter.com', 'facebook.com'"
 country_code="'FR', 'BG', 'US'"
 
 cat <<EOF
-SELECT path, COUNT(*) AS pageviews
-FROM exit_pageviews_no_bounce
+WITH exit_pageviews AS (
+	SELECT max(timestamp) timestamp, session_id FROM events_pageviews GROUP BY session_id
+)
+SELECT session_id, path, COUNT(*) AS pageviews
+FROM events_pageviews
 WHERE timestamp >= $timestamp
   AND domain IN ($domain)
   AND path IN ($path)

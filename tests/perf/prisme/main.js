@@ -3,7 +3,7 @@ import { Counter } from 'k6/metrics';
 import { sleep } from 'k6';
 
 const directTrafficRate = 0.1;
-const customEventRate = 0.3;
+const customEventRate = 0.0;
 const errorRate = 0.1;
 const bounceRate = 0.5;
 const exitRate = 0.1;

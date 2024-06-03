@@ -8,8 +8,9 @@ country_code="'FR', 'BG', 'US'"
 
 cat <<EOF
 SELECT toStartOfInterval(timestamp, INTERVAL 60 second) AS time, COUNT(*)
-FROM entry_pageviews
+FROM events_pageviews
 WHERE timestamp >= $timestamp
+  AND is_entry = true
   AND domain IN ($domain)
   AND path IN ($path)
   AND operating_system IN ($operating_system)

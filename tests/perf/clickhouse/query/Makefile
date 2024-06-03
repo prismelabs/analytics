@@ -5,8 +5,6 @@ include $(repository_root)/variables.mk
 COMPOSE_PROJECT_NAME ?= prisme-perf
 export COMPOSE_PROJECT_NAME
 
-QUERIES := $(shell find ./queries -type f)
-
 .PHONY: all
 all: start test clean
 
@@ -29,7 +27,7 @@ start:
 test:
 	set -e \
 	&& source ../../prisme.env \
-	&& for query in $(QUERIES); do \
+	&& for query in ./queries/*.sh; do\
 		echo "$$query" \
 		&& bash "$$query" \
 		&& $(DOCKER) exec ${COMPOSE_PROJECT_NAME}-clickhouse-1 clickhouse-benchmark \

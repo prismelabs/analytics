@@ -8,7 +8,7 @@ country_code="'FR', 'BG', 'US'"
 
 cat <<EOF
 SELECT path, COUNT(*) AS pageviews
-FROM pageviews
+FROM events_pageviews
 WHERE timestamp >= $timestamp
   AND domain IN ($domain)
   AND path IN ($path)
