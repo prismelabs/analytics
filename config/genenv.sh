@@ -12,7 +12,6 @@ setenv PRISME_ACCESS_LOG "/dev/stdout"
 setenv PRISME_DEBUG "true"
 setenv PRISME_PORT "8000"
 setenv PRISME_TRUST_PROXY "false"
-setenv PRISME_PROFILER_HOSTPORT "0.0.0.0:6060"
 
 # Clickhouse related options.
 setenv PRISME_CLICKHOUSE_TLS "false"

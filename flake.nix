@@ -37,7 +37,7 @@
               default = pkgs.buildGoModule {
                 pname = "prisme";
                 version = "0.15.0";
-                vendorHash = "sha256-90NC32QsMnF3rwUmtB2x9aEqpNiRn+hIRuFfaFfv6w4=";
+                vendorHash = "sha256-ILeTewHQGd41xcS9RTIoKKid6pOOKMuGb5fiCl09v2w=";
 
                 src = ./.;
                 # Skip go test.
@@ -64,6 +64,7 @@
                 config = {
                   Cmd = [ "${self.packages.${system}.default}/bin/prisme" ];
                   WorkingDir = "/app";
+                  Env = [ "PRISME_ADMIN_HOSTPORT=0.0.0.0:9090" ];
                 };
               };
 
