@@ -63,33 +63,43 @@ func randomCountryCode() string {
 	return randomItem(countryCodesList)
 }
 
-func randomCustomEvent() (string, []string, []string) {
-	name := randomItem([]string{"click", "download", "sign_up", "subscription", "lot_of_props"})
-	switch name {
+func randomCustomEvent(session Session) CustomEvent {
+	customEv := CustomEvent{
+		session: session,
+	}
+
+	customEv.name = randomItem([]string{"click", "download", "sign_up", "subscription", "lot_of_props"})
+	switch customEv.name {
 	case "click":
-		return name, []string{"x", "y"}, []string{fmt.Sprint(rand.Intn(3000)), fmt.Sprint(rand.Intn(2000))}
+		customEv.keys = []string{"x", "y"}
+		customEv.values = []string{fmt.Sprint(rand.Intn(3000)), fmt.Sprint(rand.Intn(2000))}
+
 	case "download":
-		return name, []string{"doc"}, []string{fmt.Sprintf("%v.pdf", randomString(alphaLower, 3))}
+		customEv.keys = []string{"doc"}
+		customEv.values = []string{fmt.Sprintf("%v.pdf", randomString(alphaLower, 3))}
 
 	case "sign_up":
-		return name, []string{}, []string{}
+		customEv.keys = []string{}
+		customEv.values = []string{}
 
 	case "subscription":
-		return name, []string{"plan"}, []string{randomItem([]string{"growth", "premium", "enterprise"})}
+		customEv.keys = []string{"plan"}
+		customEv.values = []string{randomItem([]string{"growth", "premium", "enterprise"})}
 
 	case "lot_of_props":
-		keys := make([]string, 64)
-		values := make([]string, len(keys))
-		for i := 0; i < len(keys); i++ {
-			keys[i] = randomString(alphaLower, 3)
-			values[i] = randomString(alpha, 9)
-		}
 
-		return name, keys, values
+		customEv.keys = make([]string, 64)
+		customEv.values = make([]string, len(customEv.keys))
+		for i := 0; i < len(customEv.keys); i++ {
+			customEv.keys[i] = randomString(alphaLower, 3)
+			customEv.values[i] = randomString(alpha, 9)
+		}
 
 	default:
 		panic("not implemented")
 	}
+
+	return customEv
 }
 
 var (

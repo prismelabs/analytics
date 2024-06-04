@@ -12,10 +12,11 @@ type Config struct {
 	TotalEvents       uint64
 	BatchSize         uint64
 	Domains           []string
-	EventType         string
 	FromDate          time.Time
+	CustomEventsRate  float64
 	BounceRate        float64
 	ExitRate          float64
+	MobileRate        float64
 	VisitorIdsRange   uint64
 	DirectTrafficRate float64
 }
@@ -33,9 +34,10 @@ func ProvideConfig() Config {
 	flag.StringVar(&domains, "domains", domains, "comma separated extra list of domains with events")
 	flag.IntVar(&extraDomains, "extra-domains", 10, "number of random domains generated added to the domains list")
 	flag.IntVar(&extraPaths, "extra-paths", 10, "number of random paths generated added to the paths list")
-	flag.StringVar(&cfg.EventType, "event-type", "pageview", "event type to send (pageview, custom)")
+	flag.Float64Var(&cfg.CustomEventsRate, "custom-events-rate", 0.3, "custom events rate per viewed page")
 	flag.Float64Var(&cfg.BounceRate, "bounce-rate", 0.56, "bounce rate")
 	flag.Float64Var(&cfg.ExitRate, "exit-rate", 0.3, "exit rate when no bounce")
+	flag.Float64Var(&cfg.MobileRate, "mobile-rate", 0.3, "mobile client rate")
 	flag.Uint64Var(&cfg.VisitorIdsRange, "visitor-ids", math.MaxUint64, "range of visitor ids")
 	flag.Float64Var(&cfg.DirectTrafficRate, "direct-rate", 0.5, "direct traffic rate against external traffic")
 	flag.Parse()

@@ -34,7 +34,7 @@ func (s *Session) SessionTimestamp() time.Time {
 	return time.Unix(s.sessionUuid.Time().UnixTime()).UTC()
 }
 
-// Row encode session as a flat []any slice.
+// Row encode session as a flat []any slice ready to be sent to ClickHouse.
 func (s *Session) Row() (record []any) {
 	// Order must match sessions table column order.
 	record = append(record,
@@ -62,7 +62,7 @@ func (s *Session) Row() (record []any) {
 }
 
 // emulateSession emulates a single sessions and returns the number of events generated.
-func emulateSession(entryTime time.Time, cfg Config, rowsChan chan<- []any) uint64 {
+func emulateSession(entryTime time.Time, cfg Config, rowsChan chan<- any) uint64 {
 	var eventsCount uint64 = 1
 
 	entryTime = entryTime.Add(randomMinute()).UTC()
@@ -75,7 +75,7 @@ func emulateSession(entryTime time.Time, cfg Config, rowsChan chan<- []any) uint
 	sessionUuid[6] = 0x70 // version byte.
 	entryPath := randomPathName()
 
-	session := &Session{
+	session := Session{
 		domain:         domain,
 		entryPath:      entryPath,
 		exitTimestamp:  entryTime,
@@ -94,6 +94,10 @@ func emulateSession(entryTime time.Time, cfg Config, rowsChan chan<- []any) uint
 		sign:           1,
 	}
 
+	if rand.Float64() < cfg.MobileRate {
+		session.client = randomMobileClient()
+	}
+
 	isExternal := rand.Float64() > cfg.DirectTrafficRate
 	if isExternal {
 		session.referrerDomain = randomExternalDomain()
@@ -105,7 +109,12 @@ func emulateSession(entryTime time.Time, cfg Config, rowsChan chan<- []any) uint
 		session.utmContent = randomItem([]string{"logolink", "textlink"})
 	}
 
-	rowsChan <- session.Row()
+	rowsChan <- session
+
+	for rand.Float64() < cfg.CustomEventsRate {
+		rowsChan <- randomCustomEvent(session)
+		eventsCount++
+	}
 
 	if rand.Float64() < cfg.BounceRate {
 		// Bounce.
@@ -115,15 +124,20 @@ func emulateSession(entryTime time.Time, cfg Config, rowsChan chan<- []any) uint
 	for {
 		// Cancel previous session.
 		session.sign = -1
-		rowsChan <- session.Row()
+		rowsChan <- session
 
 		// Add new session event.
 		session.exitTimestamp = session.exitTimestamp.Add(randomMinute())
 		session.exitPath = randomPathName()
 		session.sign = 1
 		session.pageviews++
-		rowsChan <- session.Row()
+		rowsChan <- session
 		eventsCount++
+
+		for rand.Float64() < cfg.CustomEventsRate {
+			rowsChan <- randomCustomEvent(session)
+			eventsCount++
+		}
 
 		if rand.Float64() < cfg.ExitRate {
 			// Exit.
