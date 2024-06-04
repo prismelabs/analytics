@@ -140,6 +140,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 		}
 		if dropped > 0 {
 			cs.logger.Info().Int("dropped", dropped).Msg("pageview events dropped")
+			cs.metrics.droppedEvents.With(promLabels).Add(float64(dropped))
 		}
 
 		// Append to batch.
@@ -239,6 +240,7 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 		}
 		if dropped > 0 {
 			cs.logger.Info().Int("dropped", dropped).Msg("custom events dropped")
+			cs.metrics.droppedEvents.With(promLabels).Add(float64(dropped))
 		}
 
 		cs.logger.Debug().Object("custom_event", ev).Msg("appending custom event to batch...")

@@ -103,8 +103,8 @@ github.com/moby/term v0.5.0/go.mod h1:8FzsFHVUBGZdbDsJw/ot+X+d5HLUbvklYLJ9uGfcI3
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFWZD2D7SIkUc=
 github.com/morikuni/aec v1.0.0 h1:nP9CBfwrvYnBRgY6qfDQkygYDmYwOilePFkwzv4dU8A=
 github.com/morikuni/aec v1.0.0/go.mod h1:BbKIizmSmc5MMPqRYbxO4ZU0S0+P200+tUnFx7PXmsc=
-github.com/negrel/ringo v0.5.0 h1:o29JXp+aWN5b8o+2U40JhXUXx7FVHnQ3O66h9E8RKgw=
-github.com/negrel/ringo v0.5.0/go.mod h1:cDSDvU1fY2PcKCOj0OB53CBqSt1m1uKWUqcIJlaCvL4=
+github.com/negrel/ringo v0.7.0 h1:pNeF5Y5GJyE4+/ra/9ol2OFIWxemooyCYKnTCQx0ETs=
+github.com/negrel/ringo v0.7.0/go.mod h1:cDSDvU1fY2PcKCOj0OB53CBqSt1m1uKWUqcIJlaCvL4=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.0-rc5 h1:Ygwkfw9bpDvs+c9E34SdgGOj41dX/cbdlwvlWt0pnFI=

@@ -6,6 +6,7 @@ type metrics struct {
 	batchDropped      *prometheus.CounterVec
 	batchRetry        *prometheus.CounterVec
 	eventsCounter     *prometheus.CounterVec
+	droppedEvents     *prometheus.CounterVec
 	sendBatchDuration *prometheus.HistogramVec
 	batchSize         *prometheus.HistogramVec
 }
@@ -24,6 +25,10 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 			Name: "eventstore_events_total",
 			Help: "Number of events sent to ClickHouse",
 		}, []string{"type"}),
+		droppedEvents: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "eventstore_ring_buffers_dropped_events_total",
+			Help: "Number of events dropped by non blocking ring buffer",
+		}, []string{"type"}),
 		sendBatchDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Name:    "eventstore_send_batch_duration_seconds",
 			Help:    "Duration of send batch operation",
@@ -40,6 +45,7 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 		m.batchDropped,
 		m.batchRetry,
 		m.eventsCounter,
+		m.droppedEvents,
 		m.sendBatchDuration,
 		m.batchSize,
 	)

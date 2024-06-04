@@ -13,7 +13,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
-	github.com/negrel/ringo v0.5.0
+	github.com/negrel/ringo v0.7.0
 	github.com/oschwald/maxminddb-golang v1.12.0
 	github.com/prometheus/client_golang v1.19.0
 	github.com/prometheus/client_model v0.5.0
