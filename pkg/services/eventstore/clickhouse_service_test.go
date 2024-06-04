@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/prismelabs/analytics/pkg/event"
@@ -26,33 +27,41 @@ func TestIntegService(t *testing.T) {
 	logger := log.NewLogger("eventstore_service_test", io.Discard, true)
 	ch := clickhouse.ProvideCh(logger, config.ClickhouseFromEnv(), clickhouse.ProvideEmbeddedSourceDriver(logger))
 	teardownService := teardown.ProvideService()
+	cfg := Config{
+		MaxBatchSize:      1,
+		MaxBatchTimeout:   time.Millisecond,
+		RingBuffersFactor: 1,
+	}
 
 	t.Run("SinglePageView", func(t *testing.T) {
 		promRegistry := prometheus.NewRegistry()
-		service := ProvideService(Config{
-			MaxBatchSize:    1,
-			MaxBatchTimeout: time.Millisecond,
-		}, ch, logger, promRegistry, teardownService)
+		service := ProvideService(cfg, ch, logger, promRegistry, teardownService)
 
 		// Add event to batch.
 		eventTime := time.Now().UTC().Round(time.Second)
 		err := service.StorePageView(context.Background(), &event.PageView{
-			Timestamp:   eventTime,
-			PageUri:     event.Uri{},
-			ReferrerUri: event.ReferrerUri{},
-			Client:      uaparser.Client{},
-			CountryCode: ipgeolocator.CountryCode{},
-			VisitorId:   "singlePageViewTestCase",
+			Timestamp: eventTime,
+			PageUri:   event.Uri{},
+			Session: event.Session{
+				PageUri:     &event.Uri{},
+				ReferrerUri: &event.ReferrerUri{},
+				Client:      uaparser.Client{},
+				CountryCode: ipgeolocator.CountryCode{},
+				VisitorId:   "singlePageViewTestCase",
+				SessionUuid: uuid.Must(uuid.NewV7()),
+				Utm:         event.UtmParams{},
+				Pageviews:   1,
+			},
 		})
 		require.NoError(t, err)
 
-		// Wait for event to be stored.
+		// Ensure events are stored.
 		time.Sleep(10 * time.Millisecond)
 
 		// Ensure event is stored.
 		row := ch.QueryRow(
 			context.Background(),
-			"SELECT timestamp FROM prisme.pageviews WHERE timestamp = $1 AND visitor_id = 'singlePageViewTestCase'",
+			"SELECT timestamp FROM prisme.pageviews WHERE session_uuid IN (SELECT session_uuid FROM prisme.sessions WHERE visitor_id = 'singlePageViewTestCase')",
 			eventTime,
 		)
 		var storedEventTime time.Time
@@ -71,6 +80,9 @@ func TestIntegService(t *testing.T) {
 		require.Equal(t, float64(1),
 			testutils.CounterValue(t, promRegistry, "eventstore_events_total",
 				labels))
+		require.Equal(t, float64(0),
+			testutils.CounterValue(t, promRegistry, "eventstore_ring_buffers_dropped_events_total",
+				labels))
 		require.Greater(t, float64(1),
 			testutils.HistogramSumValue(t, promRegistry, "eventstore_send_batch_duration_seconds",
 				labels))
@@ -84,42 +96,54 @@ func TestIntegService(t *testing.T) {
 
 	t.Run("MultipleEvents", func(t *testing.T) {
 		promRegistry := prometheus.NewRegistry()
-		service := ProvideService(Config{
-			MaxBatchSize:    10,
-			MaxBatchTimeout: time.Millisecond,
-		}, ch, logger, promRegistry, teardownService)
+		service := ProvideService(cfg, ch, logger, promRegistry, teardownService)
 
 		testStartTime := time.Now().UTC()
 		// Store events.
-		totalEventsCount := 10
-		for i := 0; i < totalEventsCount; i++ {
-			if i%2 == 0 {
-				// Add event to batch.
-				eventTime := time.Now().UTC().Round(time.Second)
-				err := service.StoreCustom(context.Background(), &event.Custom{
-					Timestamp:   eventTime,
-					PageUri:     event.Uri{},
-					ReferrerUri: event.ReferrerUri{},
-					Client:      uaparser.Client{},
-					CountryCode: ipgeolocator.CountryCode{},
-					VisitorId:   "multipleEventsTestCase",
-				})
-				require.NoError(t, err)
-			} else {
-				// Add event to batch.
-				eventTime := time.Now().UTC().Round(time.Second)
-				err := service.StorePageView(context.Background(), &event.PageView{
-					Timestamp:   eventTime,
-					PageUri:     event.Uri{},
-					ReferrerUri: event.ReferrerUri{},
-					Client:      uaparser.Client{},
-					CountryCode: ipgeolocator.CountryCode{},
-					VisitorId:   "multipleEventsTestCase",
-				})
-				require.NoError(t, err)
-			}
+		sessionsCount := 10
+		for i := 0; i < sessionsCount; i++ {
+			sessionUuid := uuid.Must(uuid.NewV7())
 
-			// Wait for batch time out
+			// Pageview to create entry in sessions table.
+			eventTime := time.Now().UTC().Round(time.Second)
+			err := service.StorePageView(context.Background(), &event.PageView{
+				Timestamp: eventTime,
+				PageUri:   event.Uri{},
+				Session: event.Session{
+					PageUri:     &event.Uri{},
+					ReferrerUri: &event.ReferrerUri{},
+					Client:      uaparser.Client{},
+					CountryCode: ipgeolocator.CountryCode{},
+					VisitorId:   "multipleEventsTestCase",
+					SessionUuid: sessionUuid,
+					Utm:         event.UtmParams{},
+					Pageviews:   1,
+				},
+			})
+			require.NoError(t, err)
+
+			// Custom event associated to the same session.
+			eventTime = time.Now().UTC().Round(time.Second)
+			err = service.StoreCustom(context.Background(), &event.Custom{
+				Timestamp: eventTime,
+				PageUri:   event.Uri{},
+				Session: event.Session{
+					PageUri:     &event.Uri{},
+					ReferrerUri: &event.ReferrerUri{},
+					Client:      uaparser.Client{},
+					CountryCode: ipgeolocator.CountryCode{},
+					VisitorId:   "multipleEventsTestCase",
+					SessionUuid: sessionUuid,
+					Utm:         event.UtmParams{},
+					Pageviews:   0,
+				},
+				Name:   "foo",
+				Keys:   []string{},
+				Values: []string{},
+			})
+			require.NoError(t, err)
+
+			// Ensure events are stored.
 			time.Sleep(10 * time.Millisecond)
 		}
 
@@ -127,26 +151,26 @@ func TestIntegService(t *testing.T) {
 		{
 			row := ch.QueryRow(
 				context.Background(),
-				"SELECT COUNT(*) FROM prisme.pageviews WHERE timestamp >= $1 AND visitor_id = 'multipleEventsTestCase'",
+				"SELECT COUNT(*) FROM prisme.pageviews WHERE timestamp >= $1 AND session_uuid IN (SELECT session_uuid FROM prisme.sessions WHERE visitor_id = 'multipleEventsTestCase')",
 				testStartTime,
 			)
 			var pageviewsCount uint64
 			err := row.Scan(&pageviewsCount)
 			require.NoError(t, err)
-			require.Equal(t, uint64(totalEventsCount/2), pageviewsCount)
+			require.Equal(t, uint64(sessionsCount), pageviewsCount)
 		}
 
 		// Ensure custom events are stored.
 		{
 			row := ch.QueryRow(
 				context.Background(),
-				"SELECT COUNT(*) FROM prisme.events_custom WHERE timestamp >= $1 AND visitor_id = 'multipleEventsTestCase'",
+				"SELECT COUNT(*) FROM prisme.events_custom WHERE timestamp >= $1 AND session_uuid IN (SELECT session_uuid FROM prisme.sessions WHERE visitor_id = 'multipleEventsTestCase')",
 				testStartTime,
 			)
 			var customEventsCount uint64
 			err := row.Scan(&customEventsCount)
 			require.NoError(t, err)
-			require.Equal(t, uint64(totalEventsCount/2), customEventsCount)
+			require.Equal(t, uint64(sessionsCount), customEventsCount)
 		}
 
 		// Check pageview metrics.
@@ -158,13 +182,16 @@ func TestIntegService(t *testing.T) {
 			require.Equal(t, float64(0),
 				testutils.CounterValue(t, promRegistry, "eventstore_batch_retry_total",
 					labels))
-			require.Equal(t, float64(totalEventsCount/2),
+			require.Equal(t, float64(sessionsCount),
 				testutils.CounterValue(t, promRegistry, "eventstore_events_total",
 					labels))
-			require.Greater(t, float64(1),
-				testutils.HistogramSumValue(t, promRegistry, "eventstore_send_batch_duration_seconds",
+			require.Equal(t, float64(0),
+				testutils.CounterValue(t, promRegistry, "eventstore_ring_buffers_dropped_events_total",
 					labels))
-			require.Equal(t, float64(totalEventsCount/2),
+			require.Greater(t,
+				testutils.HistogramSumValue(t, promRegistry, "eventstore_send_batch_duration_seconds", labels),
+				float64(0))
+			require.Equal(t, float64(sessionsCount),
 				testutils.HistogramSumValue(t, promRegistry, "eventstore_batch_size_events",
 					labels))
 		}
@@ -178,15 +205,54 @@ func TestIntegService(t *testing.T) {
 			require.Equal(t, float64(0),
 				testutils.CounterValue(t, promRegistry, "eventstore_batch_retry_total",
 					labels))
-			require.Equal(t, float64(5),
+			require.Equal(t, float64(sessionsCount),
 				testutils.CounterValue(t, promRegistry, "eventstore_events_total",
 					labels))
-			require.Greater(t, float64(1),
-				testutils.HistogramSumValue(t, promRegistry, "eventstore_send_batch_duration_seconds",
+			require.Equal(t, float64(0),
+				testutils.CounterValue(t, promRegistry, "eventstore_ring_buffers_dropped_events_total",
 					labels))
-			require.Equal(t, float64(totalEventsCount/2),
+			require.Greater(t,
+				testutils.HistogramSumValue(t, promRegistry, "eventstore_send_batch_duration_seconds", labels),
+				float64(0))
+			require.Equal(t, float64(sessionsCount),
 				testutils.HistogramSumValue(t, promRegistry, "eventstore_batch_size_events",
 					labels))
+		}
+	})
+
+	t.Run("RingBufferDroppedEvents", func(t *testing.T) {
+		promRegistry := prometheus.NewRegistry()
+		service := ProvideService(cfg, ch, logger, promRegistry, teardownService)
+
+		// Send hundreds of event without pause.
+		for i := 0; i < 100; i++ {
+			eventTime := time.Now().UTC().Round(time.Second)
+			err := service.StorePageView(context.Background(), &event.PageView{
+				Timestamp: eventTime,
+				PageUri:   event.Uri{},
+				Session: event.Session{
+					PageUri:     &event.Uri{},
+					ReferrerUri: &event.ReferrerUri{},
+					Client:      uaparser.Client{},
+					CountryCode: ipgeolocator.CountryCode{},
+					VisitorId:   "singlePageViewTestCase",
+					SessionUuid: uuid.Must(uuid.NewV7()),
+					Utm:         event.UtmParams{},
+					Pageviews:   1,
+				},
+			})
+			require.NoError(t, err)
+		}
+
+		// Ensure events are stored.
+		time.Sleep(10 * time.Millisecond)
+
+		// Check pageview metrics.
+		{
+			labels := prometheus.Labels{"type": "pageview"}
+			require.Greater(t,
+				testutils.CounterValue(t, promRegistry, "eventstore_ring_buffers_dropped_events_total", labels),
+				float64(0))
 		}
 	})
 }
