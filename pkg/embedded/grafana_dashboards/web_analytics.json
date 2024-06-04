@@ -99,7 +99,7 @@
 					{
 						"matcher": {
 							"id": "byName",
-							"options": "Visits change"
+							"options": "Sessions change"
 						},
 						"properties": [
 							{
@@ -135,7 +135,7 @@
 					{
 						"matcher": {
 							"id": "byName",
-							"options": "Views per visit change"
+							"options": "Views per session change"
 						},
 						"properties": [
 							{
@@ -171,12 +171,12 @@
 					{
 						"matcher": {
 							"id": "byName",
-							"options": "Visits over time Visits over time"
+							"options": "Sessions over time Sessions over time"
 						},
 						"properties": [
 							{
 								"id": "displayName",
-								"value": "Total visits"
+								"value": "Total sessions"
 							}
 						]
 					},
@@ -274,9 +274,9 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.6",
+					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) * ${sample}\nFROM prisme.entry_pageviews\nSAMPLE 1/${sample}\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})",
+					"rawSql": "SELECT COUNT(DISTINCT(visitor_id))\nFROM sessions\nWHERE exit_timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND exit_timestamp <= $__fromTime\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})",
 					"refId": "Total visitors previous period"
 				},
 				{
@@ -297,9 +297,9 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.6",
+					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT $__timeInterval(timestamp) AS time, COUNT(DISTINCT(visitor_id)) * ${sample}\nFROM prisme.entry_pageviews\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\nGROUP BY time\nORDER BY time",
+					"rawSql": "WITH exit_timestamps AS (\n  SELECT \n    argMax(exit_timestamp, pageviews) AS timestamp, \n    argMax(visitor_id, pageviews) AS visitor_id\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT $__timeInterval(timestamp) AS time, COUNT(DISTINCT(visitor_id))\nFROM exit_timestamps\nGROUP BY time\nORDER BY time",
 					"refId": "Visitors over time"
 				},
 				{
@@ -308,7 +308,7 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "Visits over time",
+					"expression": "Visitors over time",
 					"hide": true,
 					"reducer": "sum",
 					"refId": "Total visitors",
@@ -346,10 +346,10 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.6",
+					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(*) * ${sample}\nFROM prisme.entry_pageviews\nSAMPLE 1/${sample}\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\n",
-					"refId": "Total visits previous period"
+					"rawSql": "SELECT COUNT(DISTINCT(session_uuid)) FROM sessions\nWHERE exit_timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND exit_timestamp <= $__fromTime\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})",
+					"refId": "Total sessions previous period"
 				},
 				{
 					"datasource": {
@@ -369,10 +369,10 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.6",
+					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT $__timeInterval(timestamp) AS time, COUNT(*) * ${sample}\nFROM prisme.entry_pageviews\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})\nGROUP BY time\nORDER BY time\n",
-					"refId": "Visits over time"
+					"rawSql": "WITH exit_timestamps AS (\n  SELECT \n    argMax(exit_timestamp, pageviews) AS timestamp, \n    argMax(visitor_id, pageviews) AS visitor_id\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT $__timeInterval(timestamp) AS time, COUNT(*)\nFROM exit_timestamps\nGROUP BY time\nORDER BY time",
+					"refId": "Sessions over time"
 				},
 				{
 					"datasource": {
@@ -380,10 +380,13 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "Visits over time",
+					"expression": "Sessions over time",
 					"hide": true,
 					"reducer": "sum",
-					"refId": "Total visits",
+					"refId": "Total sessions",
+					"settings": {
+						"mode": "dropNN"
+					},
 					"type": "reduce"
 				},
 				{
@@ -392,9 +395,9 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "(${Total visits} / ${Total visits previous period} - 1) * 100",
+					"expression": "(${Total sessions} / ${Total sessions previous period} - 1) * 100",
 					"hide": false,
-					"refId": "Visits change",
+					"refId": "Sessions change",
 					"type": "math"
 				},
 				{
@@ -423,9 +426,9 @@
 							"table": "pageviews"
 						}
 					},
-					"pluginVersion": "4.0.6",
+					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(*) * ${sample}\nFROM prisme.pageviews\nSAMPLE 1/${sample}\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\n",
+					"rawSql": "SELECT COUNT(*)\nFROM pageviews\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE exit_timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\n  AND exit_timestamp <= $__fromTime\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)",
 					"refId": "Total page views previous period"
 				},
 				{
@@ -446,9 +449,9 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.6",
+					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT $__timeInterval(timestamp) AS time, COUNT(*) * ${sample}\nFROM prisme.pageviews\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY time\nORDER BY time",
+					"rawSql": "SELECT $__timeInterval(timestamp) AS time, COUNT(*)\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nGROUP BY time\nORDER BY time",
 					"refId": "Page views over time"
 				},
 				{
@@ -472,7 +475,7 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "100 * (${Total page views} / ${Total page views previous period}) - 100",
+					"expression": "(${Total page views} / ${Total page views previous period} - 1) * 100",
 					"hide": false,
 					"refId": "Page views change",
 					"type": "math"
@@ -483,9 +486,9 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "${Total page views} / ${Total visits}",
+					"expression": "${Total page views} / ${Total sessions}",
 					"hide": false,
-					"refId": "Views per visit",
+					"refId": "Views per session",
 					"type": "math"
 				},
 				{
@@ -494,9 +497,9 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "${Total page views previous period} / ${Total visits previous period}",
+					"expression": "${Total page views previous period} / ${Total sessions previous period}",
 					"hide": true,
-					"refId": "Views per visit previous period",
+					"refId": "Views per session previous period",
 					"type": "math"
 				},
 				{
@@ -505,9 +508,9 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "(${Views per visit} / ${Views per visit previous period} - 1) * 100",
+					"expression": "(${Views per session} / ${Views per session previous period} - 1) * 100",
 					"hide": false,
-					"refId": "Views per visit change",
+					"refId": "Views per session change",
 					"type": "math"
 				}
 			],
@@ -574,6 +577,7 @@
 					},
 					"editorType": "sql",
 					"format": 1,
+					"hide": false,
 					"meta": {
 						"builderOptions": {
 							"columns": [],
@@ -584,9 +588,9 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.6",
+					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) * ${sample} AS \"Live visitors\"\nFROM prisme.pageviews\nSAMPLE 1/${sample}\nWHERE timestamp > subtractMinutes(now(), 15)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})",
+					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) AS \"Live visitors\"\nFROM sessions\nWHERE addMinutes(exit_timestamp, 15) > now()\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})",
 					"refId": "A"
 				}
 			],
@@ -667,10 +671,10 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.6",
+					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "WITH visitor_visits AS (\n  SELECT visitor_id, COUNT(*) AS visits\n  FROM prisme.pageviews\n  WHERE $__timeFilter(timestamp)\n  AND domain IN (${domains:sqlstring})\n  AND path IN (${pathnames:sqlstring})\n  AND operating_system IN (${operating_systems:sqlstring})\n  AND browser_family IN (${browsers:sqlstring})\n  AND referrer_domain IN (${referrals:sqlstring})\n  AND country_code IN (${locations:sqlstring})\n  GROUP BY visitor_id\n)\nSELECT COUNT(*) FROM visitor_visits WHERE visits = 1",
-					"refId": "Total number of visitors viewing a single page"
+					"rawSql": "WITH bounces AS (\n  SELECT argMax(pageviews, pageviews) AS pageviews\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n  HAVING pageviews = 1\n)\nSELECT COUNT(*) AS bounces FROM bounces",
+					"refId": "Total number of sessions with a single pageview"
 				},
 				{
 					"datasource": {
@@ -690,10 +694,10 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.6",
+					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) * ${sample}\nFROM prisme.pageviews\nSAMPLE 1/${sample}\nWHERE $__timeFilter(timestamp)\nAND addMinutes(timestamp, 15) < now()\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})",
-					"refId": "Total number of visitors"
+					"rawSql": "SELECT COUNT(DISTINCT(session_uuid))\nFROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})",
+					"refId": "Total number of sessions"
 				},
 				{
 					"datasource": {
@@ -701,7 +705,7 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "${Total number of visitors viewing a single page} / ${Total number of visitors} * 100",
+					"expression": "${Total number of sessions with a single pageview} / ${Total number of sessions} * 100",
 					"hide": false,
 					"refId": "Bounce rate",
 					"type": "math"
@@ -779,9 +783,9 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.6",
+					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT avg(timestamp - entry_timestamp) AS \"Visit duration\"\nFROM prisme.exit_pageviews_no_bounce\nWHERE $__timeFilter(timestamp)\nAND addMinutes(timestamp, 15) < now();",
+					"rawSql": "WITH sessions_duration AS (\n  SELECT argMax(exit_timestamp, pageviews) - argMax(session_timestamp, pageviews) AS duration\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND session_timestamp != exit_timestamp\n  GROUP BY session_uuid\n)\nSELECT avg(duration) AS \"Average session duration\"\nFROM sessions_duration\n",
 					"refId": "A"
 				}
 			],
@@ -873,17 +877,17 @@
 					{
 						"matcher": {
 							"id": "byName",
-							"options": "Visits over time Visits over time"
+							"options": "Sessions over time Sessions over time"
 						},
 						"properties": [
 							{
 								"id": "displayName",
-								"value": "Visits"
+								"value": "Sessions"
 							},
 							{
 								"id": "color",
 								"value": {
-									"fixedColor": "purple",
+									"fixedColor": "super-light-green",
 									"mode": "fixed"
 								}
 							}
@@ -898,6 +902,13 @@
 							{
 								"id": "displayName",
 								"value": "Visitors"
+							},
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "purple",
+									"mode": "fixed"
+								}
 							}
 						]
 					}
@@ -965,7 +976,8 @@
 								"mode": "percentage",
 								"steps": [
 									{
-										"color": "super-light-blue"
+										"color": "super-light-blue",
+										"value": null
 									}
 								]
 							},
@@ -978,7 +990,7 @@
 						"h": 12,
 						"w": 11,
 						"x": 1,
-						"y": 9
+						"y": 20
 					},
 					"id": 13,
 					"options": {
@@ -1019,9 +1031,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.6",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT referrer_domain, COUNT(*) as count\nFROM prisme.entry_pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY referrer_domain\nORDER BY count DESC",
+							"rawSql": "WITH referrals AS (\n  SELECT argMax(referrer_domain, pageviews) AS referrer_domain\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT referrer_domain, COUNT(*) AS session_count\nFROM referrals\nWHERE $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nGROUP BY referrer_domain\nORDER BY session_count DESC",
 							"refId": "A"
 						}
 					],
@@ -1071,22 +1083,7 @@
 							{
 								"matcher": {
 									"id": "byName",
-									"options": "internal Internal"
-								},
-								"properties": [
-									{
-										"id": "color",
-										"value": {
-											"fixedColor": "semi-dark-blue",
-											"mode": "fixed"
-										}
-									}
-								]
-							},
-							{
-								"matcher": {
-									"id": "byName",
-									"options": "direct Direct"
+									"options": "Direct"
 								},
 								"properties": [
 									{
@@ -1110,6 +1107,10 @@
 											"fixedColor": "semi-dark-purple",
 											"mode": "fixed"
 										}
+									},
+									{
+										"id": "displayName",
+										"value": "External"
 									}
 								]
 							}
@@ -1119,7 +1120,7 @@
 						"h": 12,
 						"w": 11,
 						"x": 12,
-						"y": 9
+						"y": 20
 					},
 					"id": 19,
 					"options": {
@@ -1164,9 +1165,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.3",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT COUNT() AS Internal\nFROM prisme.pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain = domain\nAND country_code IN (${locations:sqlstring})",
+							"rawSql": "SELECT COUNT(*) AS \"Internal\"\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\n",
 							"refId": "internal"
 						},
 						{
@@ -1187,9 +1188,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.3",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT COUNT(*) AS Direct\nFROM prisme.pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain = 'direct'\nAND country_code IN (${locations:sqlstring})",
+							"rawSql": "WITH referrals AS (\n  SELECT \n    argMax(referrer_domain, pageviews) AS referrer_domain,\n    argMax(domain, pageviews) AS domain\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT COUNT(*) AS \"Direct\"\nFROM referrals\nWHERE referrer_domain = 'direct'\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n",
 							"refId": "direct"
 						},
 						{
@@ -1210,9 +1211,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.3",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT COUNT(*) AS External\nFROM prisme.pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND referrer_domain != 'direct' AND referrer_domain != domain\nAND country_code IN (${locations:sqlstring})",
+							"rawSql": "WITH referrals AS (\n  SELECT \n    argMax(referrer_domain, pageviews) AS referrer_domain,\n    argMax(domain, pageviews) AS domain\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT COUNT(*) AS \"External\"\nFROM referrals\nWHERE referrer_domain != 'direct'\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})",
 							"refId": "external"
 						}
 					],
@@ -1250,7 +1251,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green"
+										"color": "green",
+										"value": null
 									}
 								]
 							},
@@ -1263,7 +1265,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 1,
-						"y": 9
+						"y": 33
 					},
 					"id": 25,
 					"options": {
@@ -1304,9 +1306,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.6",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT path, COUNT(*) AS pageviews\nFROM prisme.entry_pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY path\nORDER BY pageviews DESC",
+							"rawSql": "WITH entry_pageviews AS (\n  SELECT argMax(entry_path, pageviews) AS path\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT path, COUNT(*) AS session_count\nFROM entry_pageviews\nGROUP BY path\nORDER BY session_count DESC",
 							"refId": "A"
 						}
 					],
@@ -1330,7 +1332,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green"
+										"color": "green",
+										"value": null
 									},
 									{
 										"color": "red",
@@ -1347,7 +1350,7 @@
 						"h": 13,
 						"w": 8,
 						"x": 8,
-						"y": 9
+						"y": 33
 					},
 					"id": 14,
 					"options": {
@@ -1388,9 +1391,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.3",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT path, COUNT(*) AS pageviews\nFROM prisme.pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY path\nORDER BY pageviews DESC",
+							"rawSql": "SELECT path, COUNT(*) AS pageviews\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND session_uuid IN (\n  SELECT argMax(session_uuid, pageviews) FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nGROUP BY path\nORDER BY pageviews DESC",
 							"refId": "A"
 						}
 					],
@@ -1419,7 +1422,7 @@
 						"type": "grafana-clickhouse-datasource",
 						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
-					"description": "Top 10 of most visited exit pages (bounces excluded)",
+					"description": "Top 10 of most visited exit pages.",
 					"fieldConfig": {
 						"defaults": {
 							"color": {
@@ -1431,7 +1434,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green"
+										"color": "green",
+										"value": null
 									}
 								]
 							},
@@ -1444,7 +1448,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 16,
-						"y": 9
+						"y": 33
 					},
 					"id": 26,
 					"options": {
@@ -1485,9 +1489,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.6",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT path, COUNT(*) AS pageviews\nFROM prisme.exit_pageviews_no_bounce\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY path\nORDER BY pageviews DESC",
+							"rawSql": "WITH exit_pageviews AS (\n  SELECT argMax(exit_path, pageviews) AS path\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT path, COUNT(*) AS pageviews\nFROM exit_pageviews\nGROUP BY path\nORDER BY pageviews DESC",
 							"refId": "A"
 						}
 					],
@@ -1532,7 +1536,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "blue"
+										"color": "blue",
+										"value": null
 									}
 								]
 							},
@@ -1545,7 +1550,7 @@
 						"h": 13,
 						"w": 15,
 						"x": 1,
-						"y": 23
+						"y": 22
 					},
 					"id": 15,
 					"options": {
@@ -1650,9 +1655,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.3",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT country_code, COUNT(*) AS pageview\nFROM prisme.entry_pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY country_code\nORDER BY country_code",
+							"rawSql": "WITH sessions_locations AS (\n  SELECT argMax(country_code, pageviews) AS country_code\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT country_code, COUNT(*) AS pageview\nFROM sessions_locations\nWHERE $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nGROUP BY country_code",
 							"refId": "A"
 						}
 					],
@@ -1676,7 +1681,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "red"
+										"color": "red",
+										"value": null
 									}
 								]
 							},
@@ -1689,7 +1695,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 16,
-						"y": 23
+						"y": 22
 					},
 					"id": 18,
 					"options": {
@@ -1731,9 +1737,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.6",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT DISTINCT(name) AS country, COUNT(*) AS pageview\nFROM prisme.entry_pageviews\nJOIN prisme.countries ON prisme.entry_pageviews.country_code = prisme.countries.code\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY country\nORDER BY pageview DESC",
+							"rawSql": "WITH sessions_locations AS (\n  SELECT argMax(country_code, pageviews) AS country_code\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT name AS country, COUNT(*) AS session_count\nFROM sessions_locations\nJOIN countries ON sessions_locations.country_code = countries.code\nWHERE $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nGROUP BY country\nORDER BY session_count DESC",
 							"refId": "A"
 						}
 					],
@@ -1801,13 +1807,13 @@
 						"h": 13,
 						"w": 11,
 						"x": 1,
-						"y": 24
+						"y": 23
 					},
 					"id": 4,
 					"options": {
 						"displayLabels": [
-							"percent",
-							"name"
+							"name",
+							"percent"
 						],
 						"legend": {
 							"displayMode": "list",
@@ -1820,7 +1826,7 @@
 							"calcs": [
 								"lastNotNull"
 							],
-							"fields": "/^count$/",
+							"fields": "/^COUNT\\(browser\\)$/",
 							"values": true
 						},
 						"tooltip": {
@@ -1828,7 +1834,7 @@
 							"sort": "none"
 						}
 					},
-					"pluginVersion": "10.2.2",
+					"pluginVersion": "10.3.3",
 					"targets": [
 						{
 							"datasource": {
@@ -1873,9 +1879,9 @@
 									"table": "pageviews"
 								}
 							},
-							"pluginVersion": "4.0.3",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT replaceRegexpAll(browser_family, '(.*) (Mobile|iOS)|Mobile (.*)', '\\\\1\\\\2') AS browser_family, COUNT(browser_family) AS count\nFROM prisme.entry_pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY browser_family",
+							"rawSql": "WITH sessions_browsers AS (\n  SELECT argMax(browser_family, pageviews) AS browser\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT browser, COUNT(browser)\nFROM sessions_browsers\nGROUP BY browser",
 							"refId": "A"
 						}
 					],
@@ -1901,6 +1907,7 @@
 									"viz": false
 								}
 							},
+							"displayName": "${__field.labels[os]}",
 							"mappings": [],
 							"unit": "short",
 							"unitScale": true
@@ -1911,7 +1918,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 12,
-						"y": 24
+						"y": 23
 					},
 					"id": 5,
 					"options": {
@@ -1927,10 +1934,10 @@
 						"pieType": "pie",
 						"reduceOptions": {
 							"calcs": [
-								"lastNotNull"
+								"sum"
 							],
-							"fields": "",
-							"values": false
+							"fields": "/^COUNT\\(os\\)$/",
+							"values": true
 						},
 						"tooltip": {
 							"mode": "single",
@@ -1974,33 +1981,14 @@
 									"table": "pageviews"
 								}
 							},
-							"pluginVersion": "4.0.3",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT operating_system, COUNT(operating_system) AS count\nFROM prisme.entry_pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY operating_system",
+							"rawSql": "WITH sessions_os AS (\n  SELECT argMax(operating_system, pageviews) AS os\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT os, COUNT(os)\nFROM sessions_os\nGROUP BY os",
 							"refId": "A"
 						}
 					],
 					"title": "Operating Systems (OS)",
-					"transformations": [
-						{
-							"id": "partitionByValues",
-							"options": {
-								"fields": [
-									"operating_system"
-								],
-								"naming": {
-									"asLabels": true
-								}
-							}
-						},
-						{
-							"id": "renameByRegex",
-							"options": {
-								"regex": "count (.*)",
-								"renamePattern": "$1"
-							}
-						}
-					],
+					"transformations": [],
 					"type": "piechart"
 				}
 			],
@@ -2034,7 +2022,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green"
+										"color": "green",
+										"value": null
 									},
 									{
 										"color": "red",
@@ -2051,7 +2040,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 1,
-						"y": 38
+						"y": 24
 					},
 					"id": 21,
 					"options": {
@@ -2092,9 +2081,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.6",
+							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT name, COUNT(*) AS count\nFROM prisme.events_custom\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\nAND country_code IN (${locations:sqlstring})\nGROUP BY name\nORDER BY count DESC\n",
+							"rawSql": "SELECT name, COUNT(*) AS count\nFROM events_custom\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${paths:sqlstring})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n)\nGROUP BY name\nORDER BY count DESC",
 							"refId": "A"
 						}
 					],
@@ -2125,19 +2114,48 @@
 					"type": "grafana-clickhouse-datasource",
 					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
-				"definition": "SELECT DISTINCT(domain) FROM prisme.pageviews",
-				"description": "Website domain.",
+				"definition": "SELECT DISTINCT(domain) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))",
+				"description": "Website domains.",
 				"hide": 0,
 				"includeAll": true,
-				"label": "Domain",
+				"label": "Domains",
 				"multi": true,
 				"name": "domains",
 				"options": [],
-				"query": "SELECT DISTINCT(domain) FROM prisme.pageviews",
+				"query": "SELECT DISTINCT(domain) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))",
 				"refresh": 2,
 				"regex": "",
 				"skipUrlSync": false,
 				"sort": 1,
+				"type": "query"
+			},
+			{
+				"current": {
+					"selected": true,
+					"text": [
+						"All"
+					],
+					"value": [
+						"$__all"
+					]
+				},
+				"datasource": {
+					"type": "grafana-clickhouse-datasource",
+					"uid": "{{ .DatasourceClickhouseUid }}"
+				},
+				"definition": "SELECT DISTINCT(argMax(entry_path, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nGROUP BY session_uuid",
+				"description": "Path of first page viewed by visitors.",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Entry Paths",
+				"multi": true,
+				"name": "entry_paths",
+				"options": [],
+				"query": "SELECT DISTINCT(argMax(entry_path, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nGROUP BY session_uuid",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
 				"type": "query"
 			},
 			{
@@ -2155,36 +2173,7 @@
 					"type": "grafana-clickhouse-datasource",
 					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
-				"definition": "SELECT DISTINCT(path) FROM prisme.pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})",
-				"description": "URL path names.",
-				"hide": 0,
-				"includeAll": true,
-				"label": "Path",
-				"multi": true,
-				"name": "pathnames",
-				"options": [],
-				"query": "SELECT DISTINCT(path) FROM prisme.pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})",
-				"refresh": 2,
-				"regex": "",
-				"skipUrlSync": false,
-				"sort": 1,
-				"type": "query"
-			},
-			{
-				"current": {
-					"selected": true,
-					"text": [
-						"All"
-					],
-					"value": [
-						"$__all"
-					]
-				},
-				"datasource": {
-					"type": "grafana-clickhouse-datasource",
-					"uid": "{{ .DatasourceClickhouseUid }}"
-				},
-				"definition": "SELECT DISTINCT(operating_system) FROM prisme.pageviews WHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\n\n",
+				"definition": "SELECT DISTINCT(argMax(operating_system, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nGROUP BY session_uuid\n\n",
 				"description": "Visitors operating systems.",
 				"hide": 0,
 				"includeAll": true,
@@ -2192,7 +2181,7 @@
 				"multi": true,
 				"name": "operating_systems",
 				"options": [],
-				"query": "SELECT DISTINCT(operating_system) FROM prisme.pageviews WHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\n\n",
+				"query": "SELECT DISTINCT(argMax(operating_system, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nGROUP BY session_uuid\n\n",
 				"refresh": 2,
 				"regex": "",
 				"skipUrlSync": false,
@@ -2213,7 +2202,7 @@
 					"type": "grafana-clickhouse-datasource",
 					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
-				"definition": "SELECT DISTINCT(browser_family) FROM prisme.pageviews WHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\n",
+				"definition": "SELECT DISTINCT(argMax(browser_family, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nGROUP BY session_uuid\n",
 				"description": "Visitors browsers.",
 				"hide": 0,
 				"includeAll": true,
@@ -2221,7 +2210,7 @@
 				"multi": true,
 				"name": "browsers",
 				"options": [],
-				"query": "SELECT DISTINCT(browser_family) FROM prisme.pageviews WHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\n",
+				"query": "SELECT DISTINCT(argMax(browser_family, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nGROUP BY session_uuid\n",
 				"refresh": 2,
 				"regex": "",
 				"skipUrlSync": false,
@@ -2242,7 +2231,7 @@
 					"type": "grafana-clickhouse-datasource",
 					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
-				"definition": "SELECT DISTINCT(referrer_domain) FROM prisme.pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\n",
+				"definition": "SELECT DISTINCT(argMax(referrer_domain, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nGROUP BY session_uuid",
 				"description": "Domain from which visitor page was requested.",
 				"hide": 0,
 				"includeAll": true,
@@ -2250,7 +2239,7 @@
 				"multi": true,
 				"name": "referrals",
 				"options": [],
-				"query": "SELECT DISTINCT(referrer_domain) FROM prisme.pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\n",
+				"query": "SELECT DISTINCT(argMax(referrer_domain, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nGROUP BY session_uuid",
 				"refresh": 2,
 				"regex": "",
 				"skipUrlSync": false,
@@ -2271,15 +2260,15 @@
 					"type": "grafana-clickhouse-datasource",
 					"uid": "{{ .DatasourceClickhouseUid }}"
 				},
-				"definition": "SELECT DISTINCT(country_code) AS country_code FROM prisme.pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\n",
+				"definition": "WITH sessions_locations AS (\n  SELECT argMax(country_code, pageviews) AS country_code\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  GROUP BY session_uuid\n)\nSELECT name AS country\nFROM sessions_locations\nJOIN countries ON sessions_locations.country_code = countries.code\nGROUP BY country",
 				"description": "Visitor location.",
 				"hide": 0,
 				"includeAll": true,
-				"label": "Location",
+				"label": "Locations",
 				"multi": true,
-				"name": "locations",
+				"name": "countries_name",
 				"options": [],
-				"query": "SELECT DISTINCT(country_code) AS country_code FROM prisme.pageviews\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${pathnames:sqlstring})\nAND operating_system IN (${operating_systems:sqlstring})\nAND browser_family IN (${browsers:sqlstring})\nAND referrer_domain IN (${referrals:sqlstring})\n",
+				"query": "WITH sessions_locations AS (\n  SELECT argMax(country_code, pageviews) AS country_code\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  GROUP BY session_uuid\n)\nSELECT name AS country\nFROM sessions_locations\nJOIN countries ON sessions_locations.country_code = countries.code\nGROUP BY country",
 				"refresh": 2,
 				"regex": "",
 				"skipUrlSync": false,
@@ -2288,52 +2277,89 @@
 			},
 			{
 				"current": {
-					"selected": false,
-					"text": "1",
-					"value": "1"
+					"selected": true,
+					"text": [
+						"All"
+					],
+					"value": [
+						"$__all"
+					]
 				},
-				"description": "Data sampling fraction. Use 1 for no sampling, 2 to execute queries on 1/2 (50%) sample of data, etc.",
-				"hide": 0,
-				"includeAll": false,
-				"label": "Sample",
-				"multi": false,
-				"name": "sample",
-				"options": [
-					{
-						"selected": true,
-						"text": "1",
-						"value": "1"
-					},
-					{
-						"selected": false,
-						"text": "2",
-						"value": "2"
-					},
-					{
-						"selected": false,
-						"text": "5",
-						"value": "5"
-					},
-					{
-						"selected": false,
-						"text": "10",
-						"value": "10"
-					},
-					{
-						"selected": false,
-						"text": "100",
-						"value": "100"
-					},
-					{
-						"selected": false,
-						"text": "1000",
-						"value": "1000"
-					}
-				],
-				"query": "1, 2, 5, 10, 100, 1000",
-				"queryValue": "",
+				"datasource": {
+					"type": "grafana-clickhouse-datasource",
+					"uid": "{{ .DatasourceClickhouseUid }}"
+				},
+				"definition": "SELECT code FROM countries\nWHERE name IN (${countries_name:sqlstring})",
+				"hide": 2,
+				"includeAll": true,
+				"multi": true,
+				"name": "locations",
+				"options": [],
+				"query": "SELECT code FROM countries\nWHERE name IN (${countries_name:sqlstring})",
+				"refresh": 2,
+				"regex": "",
 				"skipUrlSync": false,
-				"type": "custom"
+				"sort": 0,
+				"type": "query"
+			},
+			{
+				"current": {
+					"selected": true,
+					"text": [
+						"All"
+					],
+					"value": [
+						"$__all"
+					]
+				},
+				"datasource": {
+					"type": "grafana-clickhouse-datasource",
+					"uid": "{{ .DatasourceClickhouseUid }}"
+				},
+				"definition": "SELECT DISTINCT(argMax(exit_path, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nGROUP BY session_uuid",
+				"description": "Path of the last page viewed by visitors.",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Exit Paths",
+				"multi": true,
+				"name": "exit_paths",
+				"options": [],
+				"query": "SELECT DISTINCT(argMax(exit_path, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nGROUP BY session_uuid",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			},
+			{
+				"allValue": "",
+				"current": {
+					"selected": true,
+					"text": [
+						"All"
+					],
+					"value": [
+						"$__all"
+					]
+				},
+				"datasource": {
+					"type": "grafana-clickhouse-datasource",
+					"uid": "{{ .DatasourceClickhouseUid }}"
+				},
+				"definition": "SELECT DISTINCT(path) FROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT argMax(session_uuid, pageviews) FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\n",
+				"description": "URL path names.",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Paths",
+				"multi": true,
+				"name": "paths",
+				"options": [],
+				"query": "SELECT DISTINCT(path) FROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT argMax(session_uuid, pageviews) FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\n",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 1,
+				"type": "query"
 			}
 		]
 	},
