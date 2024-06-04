@@ -88,3 +88,12 @@ func HistogramBucketValue(t *testing.T, registry *prometheus.Registry, name stri
 
 	return 0
 }
+
+func GaugeValue(t *testing.T, registry *prometheus.Registry, name string, labels prometheus.Labels) float64 {
+	metric := FindMetric(t, registry, io_prometheus_client.MetricType_GAUGE, name, labels)
+	if metric != nil {
+		return *metric.Gauge.Value
+	}
+
+	return 0
+}

@@ -49,7 +49,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	eventstoreService := eventstore.ProvideService(eventstoreConfig, ch, zerologLogger, registry, service)
 	saltmanagerService := saltmanager.ProvideService(zerologLogger)
 	sessionstorageConfig := sessionstorage.ProvideConfig()
-	sessionstorageService := sessionstorage.ProvideService(zerologLogger, sessionstorageConfig)
+	sessionstorageService := sessionstorage.ProvideService(zerologLogger, sessionstorageConfig, registry)
 	postEventsCustom := handlers.ProvidePostEventsCustom(zerologLogger, eventstoreService, saltmanagerService, sessionstorageService)
 	uaparserService := uaparser.ProvideService(zerologLogger, registry)
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger, registry)
