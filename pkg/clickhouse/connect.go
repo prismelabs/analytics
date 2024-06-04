@@ -37,6 +37,7 @@ func Connect(logger zerolog.Logger, cfg config.Clickhouse, maxRetry int) (conn d
 				{Name: "prismeanalytics.com", Version: "0.1"},
 			},
 		},
+		MaxIdleConns: 16,
 		Debugf: func(format string, v ...interface{}) {
 			logger.Debug().Msgf(format, v...)
 		},
