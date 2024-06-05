@@ -45,12 +45,17 @@ interface Metric {
 
 async function fetchMetrics (): Promise<string> {
   const resp = await fetch(PRISME_METRICS_URL)
+  if (!resp.ok) {
+    console.error(resp)
+    console.error(await resp.text())
+  }
   expect(resp.ok).toBeTrue()
 
-  return resp.text()
+  return await resp.text()
 }
 
 async function parseMetrics (prometheusMetrics: string): Promise<Metrics> {
+  console.log(prometheusMetrics)
   const metrics: Metrics = {
     counter: {},
     summary: {},
