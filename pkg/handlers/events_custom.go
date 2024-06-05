@@ -24,7 +24,9 @@ func ProvidePostEventsCustom(
 	sessionStorage sessionstorage.Service,
 ) PostEventsCustom {
 	return func(c *fiber.Ctx) error {
-		if utils.UnsafeString(c.Request().Header.ContentType()) != fiber.MIMEApplicationJSON {
+		// ContentType must be json if request has a body.
+		if c.Request().Header.ContentLength() != 0 &&
+			utils.UnsafeString(c.Request().Header.ContentType()) != fiber.MIMEApplicationJSON {
 			return fiber.NewError(fiber.StatusBadRequest, "content type is not application/json")
 		}
 
