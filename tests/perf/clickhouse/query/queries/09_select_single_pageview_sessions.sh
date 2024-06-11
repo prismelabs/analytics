@@ -1,23 +1,21 @@
+interval=43200 # seconds -> 12H
 timestamp=$(($(date '+%s') - 7257600)) # 3 months ago
-domain="'localhost', 'foo.mywebsite.localhost'"
-path="'/', '/foo', '/blog'"
-operating_system="'Windows', 'Linux', 'Mac OS X', 'iOS', 'Android'"
-browser_family="'Firefox', 'Chrome', 'Edge', 'Opera', 'Safari'"
-referrer_domain="'direct', 'twitter.com', 'facebook.com'"
-country_code="'FR', 'BG', 'US'"
+domains="'localhost', 'foo.mywebsite.localhost'"
+operating_systems="'Windows', 'Linux', 'Mac OS X', 'iOS', 'Android'"
 
 cat <<EOF
-WITH visitor_visits AS (
-  SELECT visitor_id, COUNT(*) AS visits
-  FROM pageviews
-  WHERE timestamp >= $timestamp
-    AND domain IN ($domain)
-    AND path IN ($path)
-    AND operating_system IN ($operating_system)
-    AND browser_family IN ($browser_family)
-    AND referrer_domain IN ($referrer_domain)
-    AND country_code IN ($country_code)
-  GROUP BY visitor_id
+WITH bounces AS (
+  SELECT argMax(pageviews, pageviews) AS pageviews
+  FROM sessions
+  WHERE (
+    (session_timestamp >= toDateTime(${timestamp}) AND session_timestamp <= now())
+  OR
+    (exit_timestamp >= toDateTime(${timestamp}) AND exit_timestamp <= now())
+  )
+  AND domain IN (${domains})
+  AND operating_system IN (${operating_systems})
+  GROUP BY session_uuid
+  HAVING pageviews = 1
 )
-SELECT COUNT(*) FROM visitor_visits WHERE visits = 1
+SELECT COUNT(*) AS bounces FROM bounces
 EOF

@@ -1,24 +1,22 @@
+interval=43200 # seconds -> 12H
 timestamp=$(($(date '+%s') - 7257600)) # 3 months ago
-domain="'localhost', 'foo.mywebsite.localhost'"
-path="'/', '/foo', '/blog'"
-operating_system="'Windows', 'Linux', 'Mac OS X', 'iOS', 'Android'"
-browser_family="'Firefox', 'Chrome', 'Edge', 'Opera', 'Safari'"
-referrer_domain="'direct', 'twitter.com', 'facebook.com'"
-country_code="'FR', 'BG', 'US'"
+domains="'localhost', 'foo.mywebsite.localhost'"
+entry_paths="'/foo', '/foo/bar', '/blog', '/blog/misc/a-nice-post'"
 
 cat <<EOF
-WITH exit_pageviews AS (
-	SELECT max(timestamp) timestamp, session_id FROM events_pageviews GROUP BY session_id
+WITH sessions_duration AS (
+  SELECT argMax(exit_timestamp, pageviews) - argMax(session_timestamp, pageviews) AS duration
+  FROM sessions
+  WHERE (
+    (session_timestamp >= toDateTime(${timestamp}) AND session_timestamp <= now())
+  OR
+    (exit_timestamp >= toDateTime(${timestamp}) AND exit_timestamp <= now())
+  )
+  AND domain IN (${domains})
+  AND entry_path IN (${entry_paths})
+  AND session_timestamp != exit_timestamp
+  GROUP BY session_uuid
 )
-
-SELECT avg(timestamp - entry_timestamp) AS "Visit duration"
-FROM events_pageviews
-WHERE timestamp >= $timestamp
-  AND timestamp IN (SELECT timestamp FROM exit_pageviews WHERE exit_pageviews.session_id = events_pageviews.session_id )
-  AND domain IN ($domain)
-  AND path IN ($path)
-  AND operating_system IN ($operating_system)
-  AND browser_family IN ($browser_family)
-  AND referrer_domain IN ($referrer_domain)
-  AND country_code IN ($country_code)
+SELECT avg(duration) AS "Average session duration"
+FROM sessions_duration
 EOF

@@ -1,22 +1,23 @@
+interval=43200 # seconds -> 12H
 timestamp=$(($(date '+%s') - 7257600)) # 3 months ago
-domain="'localhost', 'foo.mywebsite.localhost'"
-path="'/', '/foo', '/blog'"
-operating_system="'Windows', 'Linux', 'Mac OS X', 'iOS', 'Android'"
-browser_family="'Firefox', 'Chrome', 'Edge', 'Opera', 'Safari'"
-referrer_domain="'direct', 'twitter.com', 'facebook.com'"
-country_code="'FR', 'BG', 'US'"
+domains="'localhost', 'foo.mywebsite.localhost'"
+operating_systems="'Windows', 'Linux', 'Mac OS X', 'iOS', 'Android'"
 
 cat <<EOF
-SELECT referrer_domain, COUNT(*) as count
-FROM events_pageviews
-WHERE timestamp >= $timestamp
-  AND is_entry = true
-  AND domain IN ($domain)
-  AND path IN ($path)
-  AND operating_system IN ($operating_system)
-  AND browser_family IN ($browser_family)
-  AND referrer_domain IN ($referrer_domain)
-  AND country_code IN ($country_code)
-GROUP BY referrer_domain
-ORDER BY count DESC
+WITH referrals AS (
+  SELECT argMax(referrer_domain, pageviews) AS referrer
+  FROM sessions
+  WHERE (
+    (session_timestamp >= toDateTime(${timestamp}) AND session_timestamp <= now())
+  OR
+    (exit_timestamp >= toDateTime(${timestamp}) AND exit_timestamp <= now())
+  )
+  AND domain IN (${domains})
+  AND operating_system IN (${operating_systems})
+  GROUP BY session_uuid
+)
+SELECT referrer, COUNT(*) AS session_count
+FROM referrals
+GROUP BY referrer
+ORDER BY session_count DESC
 EOF

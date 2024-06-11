@@ -1,22 +1,23 @@
+interval=43200 # seconds -> 12H
 timestamp=$(($(date '+%s') - 7257600)) # 3 months ago
-domain="'localhost', 'foo.mywebsite.localhost'"
-path="'/', '/foo', '/blog'"
-operating_system="'Windows', 'Linux', 'Mac OS X', 'iOS', 'Android'"
-browser_family="'Firefox', 'Chrome', 'Edge', 'Opera', 'Safari'"
-referrer_domain="'direct', 'twitter.com', 'facebook.com'"
-country_code="'FR', 'BG', 'US'"
+domains="'localhost', 'foo.mywebsite.localhost'"
+referrals="'direct', 'twitter.com', 'facebook.com'"
 
 cat <<EOF
-SELECT DISTINCT(name) AS country, COUNT(*) AS pageview
-FROM entry_pageviews
-JOIN countries ON entry_pageviews.country_code = countries.code
-WHERE timestamp >= $timestamp
-  AND domain IN ($domain)
-  AND path IN ($path)
-  AND operating_system IN ($operating_system)
-  AND browser_family IN ($browser_family)
-  AND referrer_domain IN ($referrer_domain)
-  AND country_code IN ($country_code)
+WITH sessions_locations AS (
+  SELECT argMax(country_code, pageviews) AS code
+  FROM sessions
+  WHERE (
+    (session_timestamp >= toDateTime(${timestamp}) AND session_timestamp <= now())
+  OR
+    (exit_timestamp >= toDateTime(${timestamp}) AND exit_timestamp <= now())
+  )
+  AND referrer_domain IN (${referrals})
+  GROUP BY session_uuid
+)
+SELECT name AS country, COUNT(*) AS session_count
+FROM sessions_locations
+JOIN countries ON sessions_locations.code = countries.code
 GROUP BY country
-ORDER BY pageview DESC
+ORDER BY session_count DESC
 EOF

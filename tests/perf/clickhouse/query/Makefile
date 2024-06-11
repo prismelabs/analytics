@@ -30,6 +30,9 @@ test:
 	&& for query in ./queries/*.sh; do\
 		echo "$$query" \
 		&& bash "$$query" \
+		&& $(DOCKER) exec ${COMPOSE_PROJECT_NAME}-clickhouse-1 clickhouse-client \
+			--format Pretty --database "$$PRISME_CLICKHOUSE_DB" \
+			-q "$$(bash "$$query") LIMIT 10" \
 		&& $(DOCKER) exec ${COMPOSE_PROJECT_NAME}-clickhouse-1 clickhouse-benchmark \
 			--database "$$PRISME_CLICKHOUSE_DB" -i 10 -q "$$(bash "$$query")"; \
 	done

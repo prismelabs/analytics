@@ -1,22 +1,23 @@
+interval=43200 # seconds -> 12H
 timestamp=$(($(date '+%s') - 7257600)) # 3 months ago
-domain="'localhost', 'foo.mywebsite.localhost'"
-path="'/', '/foo', '/blog'"
-operating_system="'Windows', 'Linux', 'Mac OS X', 'iOS', 'Android'"
-browser_family="'Firefox', 'Chrome', 'Edge', 'Opera', 'Safari'"
-referrer_domain="'direct', 'twitter.com', 'facebook.com'"
-country_code="'FR', 'BG', 'US'"
+domains="'localhost', 'foo.mywebsite.localhost'"
+browsers="'Firefox', 'Chrome', 'Edge', 'Opera', 'Safari'"
 
 cat <<EOF
-SELECT path, COUNT(*) AS pageviews
-FROM events_pageviews
-WHERE timestamp >= $timestamp
-  AND is_entry = true
-  AND domain IN ($domain)
-  AND path IN ($path)
-  AND operating_system IN ($operating_system)
-  AND browser_family IN ($browser_family)
-  AND referrer_domain IN ($referrer_domain)
-  AND country_code IN ($country_code)
+WITH entry_pageviews AS (
+  SELECT argMax(entry_path, pageviews) AS path
+  FROM sessions
+  WHERE (
+    (session_timestamp >= toDateTime(${timestamp}) AND session_timestamp <= now())
+  OR
+    (exit_timestamp >= toDateTime(${timestamp}) AND exit_timestamp <= now())
+  )
+  AND domain IN (${domains})
+  AND browser_family IN (${browsers})
+  GROUP BY session_uuid
+)
+SELECT path, COUNT(*) AS session_count
+FROM entry_pageviews
 GROUP BY path
-ORDER BY pageviews DESC
+ORDER BY session_count DESC
 EOF

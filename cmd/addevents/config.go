@@ -51,7 +51,7 @@ func ProvideConfig() Config {
 	}
 
 	// Generate extra paths
-	for i := 0; i < 10_000; i++ {
+	for i := 0; i < 1000; i++ {
 		part := 1 + rand.Intn(8)
 		var path []string
 		for j := 0; j < part; j++ {
