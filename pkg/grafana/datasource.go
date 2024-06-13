@@ -1,14 +1,12 @@
 package grafana
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/valyala/fasthttp"
 )
 
@@ -16,44 +14,6 @@ var (
 	ErrGrafanaDatasourceAlreadyExists = errors.New("grafana datasource already exists")
 	ErrGrafanaDatasourceNotFound      = errors.New("grafana datasource not found")
 )
-
-// DatasourceId define a unique dashboard identifier.
-type DatasourceId uuid.UUID
-
-// ParseDatasourceId parses the given string and return a DatasourceId if its valid.
-// A valid DatasourceId is a valid UUID v4.
-func ParseDatasourceId(datasourceID string) (DatasourceId, error) {
-	id, err := uuid.Parse(datasourceID)
-	if err != nil {
-		return DatasourceId{}, err
-	}
-
-	return DatasourceId(id), nil
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (did *DatasourceId) UnmarshalJSON(rawJSON []byte) error {
-	rawJSON = bytes.TrimPrefix(rawJSON, []byte(`"`))
-	rawJSON = bytes.TrimSuffix(rawJSON, []byte(`"`))
-
-	var err error
-	*did, err = ParseDatasourceId(string(rawJSON))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// MarshalJSON implements json.Marshaler.
-func (did DatasourceId) MarshalJSON() ([]byte, error) {
-	return json.Marshal(uuid.UUID(did))
-}
-
-// String implements fmt.Stringer.
-func (did DatasourceId) String() string {
-	return uuid.UUID(did).String()
-}
 
 // Datasource define data sources for grafana dashboards.
 type Datasource struct {
@@ -70,7 +30,7 @@ type Datasource struct {
 	Type           string         `json:"type,omitempty"`
 	TypeLogoUrl    string         `json:"typeLogoUrl,omitempty"`
 	TypeName       string         `json:"typeName,omitempty"`
-	Uid            DatasourceId   `json:"uid,omitempty"`
+	Uid            Uid            `json:"uid,omitempty"`
 	URL            string         `json:"url,omitempty"`
 	User           string         `json:"user,omitempty"`
 	Version        uint           `json:"version,omitempty"`

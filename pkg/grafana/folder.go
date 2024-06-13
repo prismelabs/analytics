@@ -1,7 +1,6 @@
 package grafana
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -17,53 +16,11 @@ var (
 	ErrGrafanaFolderNotFound      = errors.New("folder not found")
 )
 
-// FolderId define a unique dashboard identifier.
-type FolderId uuid.UUID
-
-// ParseFolderId parses the given string and return a FolderId if its valid.
-// A valid FolderId is a valid UUID v4.
-func ParseFolderId(folderId string) (FolderId, error) {
-	id, err := uuid.Parse(folderId)
-	if err != nil {
-		return FolderId{}, err
-	}
-
-	return FolderId(id), nil
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (fid *FolderId) UnmarshalJSON(rawJSON []byte) error {
-	rawJSON = bytes.TrimPrefix(rawJSON, []byte(`"`))
-	rawJSON = bytes.TrimSuffix(rawJSON, []byte(`"`))
-
-	if len(rawJSON) == 0 {
-		return nil
-	}
-
-	var err error
-	*fid, err = ParseFolderId(string(rawJSON))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// MarshalJSON implements json.Marshaler.
-func (fid FolderId) MarshalJSON() ([]byte, error) {
-	return json.Marshal(uuid.UUID(fid))
-}
-
-// String implements fmt.Stringer.
-func (fid FolderId) String() string {
-	return uuid.UUID(fid).String()
-}
-
 type Folder struct {
 	Id        int64     `json:"id"`
 	ParentUid uuid.UUID `json:"parentUid"`
 	Title     string    `json:"title"`
-	Uid       FolderId  `json:"uid"`
+	Uid       Uid       `json:"uid"`
 }
 
 type FolderPermission struct {
@@ -174,8 +131,8 @@ func (c Client) ListFolders(ctx context.Context, orgId OrgId, limit int, page in
 }
 
 // GetFolderPermissions gets permissions associated to folder with the given
-// FolderId.
-func (c Client) GetFolderPermissions(ctx context.Context, orgId OrgId, folderId FolderId) ([]FolderPermission, error) {
+// Uid.
+func (c Client) GetFolderPermissions(ctx context.Context, orgId OrgId, folderId Uid) ([]FolderPermission, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
@@ -208,9 +165,9 @@ func (c Client) GetFolderPermissions(ctx context.Context, orgId OrgId, folderId 
 }
 
 // SetFolderPermissions sets permissions associated to folder with the given
-// FolderId. This operation will remove existing permissions if they're not included
+// Uid. This operation will remove existing permissions if they're not included
 // in the request.
-func (c Client) SetFolderPermissions(ctx context.Context, orgId OrgId, folderId FolderId, permissions ...FolderPermission) error {
+func (c Client) SetFolderPermissions(ctx context.Context, orgId OrgId, folderId Uid, permissions ...FolderPermission) error {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
@@ -248,8 +205,8 @@ func (c Client) SetFolderPermissions(ctx context.Context, orgId OrgId, folderId 
 	return nil
 }
 
-// DeleteFolder deletes folder with the given FolderId.
-func (c Client) DeleteFolder(ctx context.Context, orgId OrgId, folderId FolderId) error {
+// DeleteFolder deletes folder with the given Uid.
+func (c Client) DeleteFolder(ctx context.Context, orgId OrgId, folderId Uid) error {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 

@@ -85,7 +85,7 @@ func (s service) SetupDatasourceAndDashboards(ctx context.Context, orgId grafana
 	var generalDashboardJSON map[string]any
 	{
 		type GeneralTemplateData struct {
-			DatasourceClickhouseUid grafana.DatasourceId
+			DatasourceClickhouseUid grafana.Uid
 		}
 
 		buf := bytes.Buffer{}
@@ -104,7 +104,7 @@ func (s service) SetupDatasourceAndDashboards(ctx context.Context, orgId grafana
 	}
 
 	// Setup Built in folder.
-	var folderId grafana.FolderId
+	var folderId grafana.Uid
 	{
 		folderName := "Prisme Analytics"
 

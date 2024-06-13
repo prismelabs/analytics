@@ -43,7 +43,7 @@ services:
           - "clickhouse.localhost"
 
   grafana:
-    image: "docker.io/grafana/grafana-oss:10.3.3"
+    image: "docker.io/grafana/grafana-oss:11.0.0"
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
       timeout: 30s

@@ -28,8 +28,8 @@ func TestIntegCreateDatasource(t *testing.T) {
 		ds, err := cli.CreateDatasource(context.Background(), orgId, dsName, "grafana-clickhouse-datasource", false)
 		require.NoError(t, err)
 
-		require.NotEqual(t, DatasourceId{}, ds.Uid)
-		ds.Uid = DatasourceId{}
+		require.NotEqual(t, Uid{}, ds.Uid)
+		ds.Uid = Uid{}
 
 		require.NotEqual(t, int64(0), ds.Id)
 		ds.Id = 0
@@ -45,9 +45,9 @@ func TestIntegCreateDatasource(t *testing.T) {
 			OrgId:       orgId,
 			ReadOnly:    false,
 			Type:        "grafana-clickhouse-datasource",
-			TypeLogoUrl: "/public/plugins/grafana-clickhouse-datasource/img/logo.svg",
+			TypeLogoUrl: "public/plugins/grafana-clickhouse-datasource/img/logo.svg",
 			TypeName:    "",
-			Uid:         DatasourceId{},
+			Uid:         Uid{},
 			URL:         "",
 			User:        "",
 			Version:     1,
@@ -64,8 +64,8 @@ func TestIntegCreateDatasource(t *testing.T) {
 		ds, err := cli.CreateDatasource(context.Background(), orgId, dsName, "non-existent-datasource", false)
 		require.NoError(t, err)
 
-		require.NotEqual(t, DatasourceId{}, ds.Uid)
-		ds.Uid = DatasourceId{}
+		require.NotEqual(t, Uid{}, ds.Uid)
+		ds.Uid = Uid{}
 
 		require.NotEqual(t, int64(0), ds.Id)
 		ds.Id = 0
@@ -83,7 +83,7 @@ func TestIntegCreateDatasource(t *testing.T) {
 			Type:        "non-existent-datasource",
 			TypeLogoUrl: "public/img/icn-datasource.svg",
 			TypeName:    "",
-			Uid:         DatasourceId{},
+			Uid:         Uid{},
 			URL:         "",
 			User:        "",
 			Version:     1,
@@ -198,7 +198,7 @@ func TestIntegUpdateDatasource(t *testing.T) {
 			Type:        "",
 			TypeLogoUrl: "",
 			TypeName:    "",
-			Uid:         [16]byte{},
+			Uid:         Uid{},
 			URL:         "",
 			User:        "",
 			Version:     0,
