@@ -55,7 +55,6 @@ async function fetchMetrics (): Promise<string> {
 }
 
 async function parseMetrics (prometheusMetrics: string): Promise<Metrics> {
-  console.log(prometheusMetrics)
   const metrics: Metrics = {
     counter: {},
     summary: {},

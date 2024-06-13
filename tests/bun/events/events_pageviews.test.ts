@@ -82,6 +82,19 @@ test('internal traffic with no session associated is rejected', async () => {
   expect(response.status).toBe(400)
 })
 
+test('robot user agent is rejected', async () => {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'https://mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      Referer: 'https://mywebsite.localhost/foo?bar=baz#qux',
+      'User-Agent': 'Googlebot'
+    }
+  })
+  expect(response.status).toBe(400)
+})
+
 test('registered domain in Origin header and valid referrer is accepted', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',

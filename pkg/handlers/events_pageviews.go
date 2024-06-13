@@ -54,6 +54,12 @@ func ProvidePostEventsPageViews(
 
 		newSession := !equalBytes(referrerUri.Host(), pageView.PageUri.Host())
 		if newSession {
+			// Filter bot.
+			client := uaParserService.ParseUserAgent(utils.UnsafeString(userAgent))
+			if client.IsBot {
+				return fiber.NewError(fiber.StatusBadRequest, "bot session filtered")
+			}
+
 			sessionUuid, err := uuid.NewV7()
 			if err != nil {
 				return fmt.Errorf("failed to generate session uuid: %w", err)
@@ -62,7 +68,7 @@ func ProvidePostEventsPageViews(
 			pageView.Session = event.Session{
 				PageUri:     &pageView.PageUri,
 				ReferrerUri: &referrerUri,
-				Client:      uaParserService.ParseUserAgent(utils.UnsafeString(userAgent)),
+				Client:      client,
 				CountryCode: ipGeolocatorService.FindCountryCodeForIP(c.IP()),
 				VisitorId:   visitorId,
 				SessionUuid: sessionUuid,

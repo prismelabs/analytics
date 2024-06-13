@@ -14,5 +14,6 @@ type Client struct {
 func (c Client) MarshalZerologObject(e *zerolog.Event) {
 	e.Str("browser_family", c.BrowserFamily).
 		Str("operating_system", c.OperatingSystem).
-		Str("device", c.Device)
+		Str("device", c.Device).
+		Bool("is_bot", c.IsBot)
 }
