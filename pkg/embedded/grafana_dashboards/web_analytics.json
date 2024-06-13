@@ -44,8 +44,7 @@
 							}
 						]
 					},
-					"unit": "short",
-					"unitScale": false
+					"unit": "short"
 				},
 				"overrides": [
 					{
@@ -254,7 +253,7 @@
 				"textMode": "auto",
 				"wideLayout": true
 			},
-			"pluginVersion": "10.3.3",
+			"pluginVersion": "11.0.0",
 			"targets": [
 				{
 					"datasource": {
@@ -276,7 +275,7 @@
 					},
 					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(DISTINCT(visitor_id))\nFROM sessions\nWHERE exit_timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND exit_timestamp <= $__fromTime\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})",
+					"rawSql": "SELECT COUNT(DISTINCT(visitor_id))\nFROM sessions\nWHERE exit_timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND exit_timestamp <= $__fromTime\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\nAND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\nAND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})",
 					"refId": "Total visitors previous period"
 				},
 				{
@@ -299,7 +298,7 @@
 					},
 					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "WITH exit_timestamps AS (\n  SELECT \n    argMax(exit_timestamp, pageviews) AS timestamp, \n    argMax(visitor_id, pageviews) AS visitor_id\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT $__timeInterval(timestamp) AS time, COUNT(DISTINCT(visitor_id))\nFROM exit_timestamps\nGROUP BY time\nORDER BY time",
+					"rawSql": "WITH exit_timestamps AS (\n  SELECT \n    argMax(exit_timestamp, pageviews) AS timestamp, \n    argMax(visitor_id, pageviews) AS visitor_id\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT $__timeInterval(timestamp) AS time, COUNT(DISTINCT(visitor_id))\nFROM exit_timestamps\nGROUP BY time\nORDER BY time",
 					"refId": "Visitors over time"
 				},
 				{
@@ -348,7 +347,7 @@
 					},
 					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(DISTINCT(session_uuid)) FROM sessions\nWHERE exit_timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND exit_timestamp <= $__fromTime\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})",
+					"rawSql": "SELECT COUNT(DISTINCT(session_uuid)) FROM sessions\nWHERE exit_timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND exit_timestamp <= $__fromTime\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\nAND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\nAND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})",
 					"refId": "Total sessions previous period"
 				},
 				{
@@ -371,7 +370,7 @@
 					},
 					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "WITH exit_timestamps AS (\n  SELECT \n    argMax(exit_timestamp, pageviews) AS timestamp, \n    argMax(visitor_id, pageviews) AS visitor_id\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT $__timeInterval(timestamp) AS time, COUNT(*)\nFROM exit_timestamps\nGROUP BY time\nORDER BY time",
+					"rawSql": "WITH exit_timestamps AS (\n  SELECT \n    argMax(exit_timestamp, pageviews) AS timestamp, \n    argMax(visitor_id, pageviews) AS visitor_id\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT $__timeInterval(timestamp) AS time, COUNT(*)\nFROM exit_timestamps\nGROUP BY time\nORDER BY time",
 					"refId": "Sessions over time"
 				},
 				{
@@ -428,7 +427,7 @@
 					},
 					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(*)\nFROM pageviews\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE exit_timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\n  AND exit_timestamp <= $__fromTime\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)",
+					"rawSql": "SELECT COUNT(*)\nFROM pageviews\nWHERE timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\nAND timestamp <= $__fromTime\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE exit_timestamp >= fromUnixTimestamp(toUnixTimestamp($__fromTime) - (toUnixTimestamp($__toTime) - toUnixTimestamp($__fromTime)))\n  AND exit_timestamp <= $__fromTime\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)",
 					"refId": "Total page views previous period"
 				},
 				{
@@ -451,7 +450,7 @@
 					},
 					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT $__timeInterval(timestamp) AS time, COUNT(*)\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nGROUP BY time\nORDER BY time",
+					"rawSql": "SELECT $__timeInterval(timestamp) AS time, COUNT(*)\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nGROUP BY time\nORDER BY time",
 					"refId": "Page views over time"
 				},
 				{
@@ -540,8 +539,7 @@
 							}
 						]
 					},
-					"unit": "short",
-					"unitScale": true
+					"unit": "short"
 				},
 				"overrides": []
 			},
@@ -568,7 +566,7 @@
 				"textMode": "value_and_name",
 				"wideLayout": true
 			},
-			"pluginVersion": "10.3.3",
+			"pluginVersion": "11.0.0",
 			"targets": [
 				{
 					"datasource": {
@@ -590,7 +588,7 @@
 					},
 					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) AS \"Live visitors\"\nFROM sessions\nWHERE addMinutes(exit_timestamp, 15) > now()\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})",
+					"rawSql": "SELECT COUNT(DISTINCT(visitor_id)) AS \"Live visitors\"\nFROM sessions\nWHERE addMinutes(exit_timestamp, 15) > now()\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\nAND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\nAND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})",
 					"refId": "A"
 				}
 			],
@@ -623,8 +621,7 @@
 							}
 						]
 					},
-					"unit": "percent",
-					"unitScale": true
+					"unit": "percent"
 				},
 				"overrides": []
 			},
@@ -651,7 +648,7 @@
 				"textMode": "auto",
 				"wideLayout": true
 			},
-			"pluginVersion": "10.3.3",
+			"pluginVersion": "11.0.0",
 			"targets": [
 				{
 					"datasource": {
@@ -673,7 +670,7 @@
 					},
 					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "WITH bounces AS (\n  SELECT argMax(pageviews, pageviews) AS pageviews\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n  HAVING pageviews = 1\n)\nSELECT COUNT(*) AS bounces FROM bounces",
+					"rawSql": "WITH bounces AS (\n  SELECT argMax(pageviews, pageviews) AS pageviews\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n  HAVING pageviews = 1\n)\nSELECT COUNT(*) AS bounces FROM bounces",
 					"refId": "Total number of sessions with a single pageview"
 				},
 				{
@@ -696,7 +693,7 @@
 					},
 					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "SELECT COUNT(DISTINCT(session_uuid))\nFROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})",
+					"rawSql": "SELECT COUNT(DISTINCT(session_uuid))\nFROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\nAND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\nAND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})",
 					"refId": "Total number of sessions"
 				},
 				{
@@ -736,8 +733,7 @@
 							}
 						]
 					},
-					"unit": "s",
-					"unitScale": true
+					"unit": "s"
 				},
 				"overrides": []
 			},
@@ -764,7 +760,7 @@
 				"textMode": "value_and_name",
 				"wideLayout": true
 			},
-			"pluginVersion": "10.3.3",
+			"pluginVersion": "11.0.0",
 			"targets": [
 				{
 					"datasource": {
@@ -785,7 +781,7 @@
 					},
 					"pluginVersion": "4.0.8",
 					"queryType": "table",
-					"rawSql": "WITH sessions_duration AS (\n  SELECT argMax(exit_timestamp, pageviews) - argMax(session_timestamp, pageviews) AS duration\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND session_timestamp != exit_timestamp\n  GROUP BY session_uuid\n)\nSELECT avg(duration) AS \"Average session duration\"\nFROM sessions_duration\n",
+					"rawSql": "WITH sessions_duration AS (\n  SELECT argMax(exit_timestamp, pageviews) - argMax(session_timestamp, pageviews) AS duration\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  AND session_timestamp != exit_timestamp\n  GROUP BY session_uuid\n)\nSELECT avg(duration) AS \"Average session duration\"\nFROM sessions_duration\n",
 					"refId": "A"
 				}
 			],
@@ -851,8 +847,7 @@
 							}
 						]
 					},
-					"unit": "short",
-					"unitScale": false
+					"unit": "short"
 				},
 				"overrides": [
 					{
@@ -930,6 +925,7 @@
 					"showLegend": true
 				},
 				"tooltip": {
+					"maxHeight": 600,
 					"mode": "multi",
 					"sort": "asc"
 				}
@@ -945,7 +941,6 @@
 				}
 			],
 			"title": "Time Series",
-			"transformations": [],
 			"type": "timeseries"
 		},
 		{
@@ -981,8 +976,7 @@
 									}
 								]
 							},
-							"unit": "short",
-							"unitScale": true
+							"unit": "short"
 						},
 						"overrides": []
 					},
@@ -1012,7 +1006,7 @@
 						"sizing": "manual",
 						"valueMode": "text"
 					},
-					"pluginVersion": "10.3.3",
+					"pluginVersion": "11.0.0",
 					"targets": [
 						{
 							"datasource": {
@@ -1033,7 +1027,7 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "WITH referrals AS (\n  SELECT argMax(referrer_domain, pageviews) AS referrer_domain\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT referrer_domain, COUNT(*) AS session_count\nFROM referrals\nWHERE $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nGROUP BY referrer_domain\nORDER BY session_count DESC",
+							"rawSql": "WITH referrals AS (\n  SELECT argMax(referrer_domain, pageviews) AS referrer_domain\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT referrer_domain, COUNT(*) AS session_count\nFROM referrals\nWHERE $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nGROUP BY referrer_domain\nORDER BY session_count DESC",
 							"refId": "A"
 						}
 					],
@@ -1076,8 +1070,7 @@
 								}
 							},
 							"mappings": [],
-							"unit": "short",
-							"unitScale": true
+							"unit": "short"
 						},
 						"overrides": [
 							{
@@ -1143,6 +1136,7 @@
 							"values": true
 						},
 						"tooltip": {
+							"maxHeight": 600,
 							"mode": "single",
 							"sort": "none"
 						}
@@ -1167,7 +1161,7 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT COUNT(*) AS \"Internal\"\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\n",
+							"rawSql": "SELECT COUNT(*) - 1 AS \"Internal\"\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\n",
 							"refId": "internal"
 						},
 						{
@@ -1190,7 +1184,7 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "WITH referrals AS (\n  SELECT \n    argMax(referrer_domain, pageviews) AS referrer_domain,\n    argMax(domain, pageviews) AS domain\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT COUNT(*) AS \"Direct\"\nFROM referrals\nWHERE referrer_domain = 'direct'\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n",
+							"rawSql": "WITH referrals AS (\n  SELECT argMax(referrer_domain, pageviews) AS referrer\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT COUNT(*) AS \"Direct\"\nFROM referrals\nWHERE referrer = 'direct'\n\n",
 							"refId": "direct"
 						},
 						{
@@ -1213,7 +1207,7 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "WITH referrals AS (\n  SELECT \n    argMax(referrer_domain, pageviews) AS referrer_domain,\n    argMax(domain, pageviews) AS domain\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT COUNT(*) AS \"External\"\nFROM referrals\nWHERE referrer_domain != 'direct'\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})",
+							"rawSql": "WITH referrals AS (\n  SELECT argMax(referrer_domain, pageviews) AS referrer\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT COUNT(*) AS \"External\"\nFROM referrals\nWHERE referrer != 'direct'",
 							"refId": "external"
 						}
 					],
@@ -1256,8 +1250,7 @@
 									}
 								]
 							},
-							"unit": "short",
-							"unitScale": true
+							"unit": "short"
 						},
 						"overrides": []
 					},
@@ -1265,7 +1258,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 1,
-						"y": 33
+						"y": 21
 					},
 					"id": 25,
 					"options": {
@@ -1287,7 +1280,7 @@
 						"sizing": "manual",
 						"valueMode": "color"
 					},
-					"pluginVersion": "10.3.3",
+					"pluginVersion": "11.0.0",
 					"targets": [
 						{
 							"datasource": {
@@ -1308,7 +1301,7 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "WITH entry_pageviews AS (\n  SELECT argMax(entry_path, pageviews) AS path\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT path, COUNT(*) AS session_count\nFROM entry_pageviews\nGROUP BY path\nORDER BY session_count DESC",
+							"rawSql": "WITH entry_pageviews AS (\n  SELECT argMax(entry_path, pageviews) AS path\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT path, COUNT(*) AS session_count\nFROM entry_pageviews\nGROUP BY path\nORDER BY session_count DESC",
 							"refId": "A"
 						}
 					],
@@ -1341,8 +1334,7 @@
 									}
 								]
 							},
-							"unit": "short",
-							"unitScale": true
+							"unit": "short"
 						},
 						"overrides": []
 					},
@@ -1350,7 +1342,7 @@
 						"h": 13,
 						"w": 8,
 						"x": 8,
-						"y": 33
+						"y": 21
 					},
 					"id": 14,
 					"options": {
@@ -1372,7 +1364,7 @@
 						"sizing": "manual",
 						"valueMode": "color"
 					},
-					"pluginVersion": "10.3.3",
+					"pluginVersion": "11.0.0",
 					"targets": [
 						{
 							"datasource": {
@@ -1393,7 +1385,7 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT path, COUNT(*) AS pageviews\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND session_uuid IN (\n  SELECT argMax(session_uuid, pageviews) FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nGROUP BY path\nORDER BY pageviews DESC",
+							"rawSql": "SELECT path, COUNT(*) AS pageviews\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND session_uuid IN (\n  SELECT argMax(session_uuid, pageviews) FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nGROUP BY path\nORDER BY pageviews DESC",
 							"refId": "A"
 						}
 					],
@@ -1439,8 +1431,7 @@
 									}
 								]
 							},
-							"unit": "short",
-							"unitScale": true
+							"unit": "short"
 						},
 						"overrides": []
 					},
@@ -1448,7 +1439,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 16,
-						"y": 33
+						"y": 21
 					},
 					"id": 26,
 					"options": {
@@ -1470,7 +1461,7 @@
 						"sizing": "manual",
 						"valueMode": "color"
 					},
-					"pluginVersion": "10.3.3",
+					"pluginVersion": "11.0.0",
 					"targets": [
 						{
 							"datasource": {
@@ -1491,7 +1482,7 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "WITH exit_pageviews AS (\n  SELECT argMax(exit_path, pageviews) AS path\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT path, COUNT(*) AS pageviews\nFROM exit_pageviews\nGROUP BY path\nORDER BY pageviews DESC",
+							"rawSql": "WITH exit_pageviews AS (\n  SELECT argMax(exit_path, pageviews) AS path\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT path, COUNT(*) AS pageviews\nFROM exit_pageviews\nGROUP BY path\nORDER BY pageviews DESC",
 							"refId": "A"
 						}
 					],
@@ -1541,8 +1532,7 @@
 									}
 								]
 							},
-							"unit": "short",
-							"unitScale": true
+							"unit": "short"
 						},
 						"overrides": []
 					},
@@ -1550,7 +1540,7 @@
 						"h": 13,
 						"w": 15,
 						"x": 1,
-						"y": 22
+						"y": 35
 					},
 					"id": 15,
 					"options": {
@@ -1636,7 +1626,7 @@
 							"zoom": 10
 						}
 					},
-					"pluginVersion": "10.3.3",
+					"pluginVersion": "11.0.0",
 					"targets": [
 						{
 							"datasource": {
@@ -1657,7 +1647,7 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "WITH sessions_locations AS (\n  SELECT argMax(country_code, pageviews) AS country_code\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT country_code, COUNT(*) AS pageview\nFROM sessions_locations\nWHERE $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nGROUP BY country_code",
+							"rawSql": "WITH sessions_locations AS (\n  SELECT argMax(country_code, pageviews) AS country_code\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT country_code, COUNT(*) AS pageview\nFROM sessions_locations\nWHERE $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nGROUP BY country_code",
 							"refId": "A"
 						}
 					],
@@ -1686,8 +1676,7 @@
 									}
 								]
 							},
-							"unit": "short",
-							"unitScale": true
+							"unit": "short"
 						},
 						"overrides": []
 					},
@@ -1695,7 +1684,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 16,
-						"y": 22
+						"y": 35
 					},
 					"id": 18,
 					"options": {
@@ -1717,7 +1706,7 @@
 						"sizing": "manual",
 						"valueMode": "color"
 					},
-					"pluginVersion": "10.3.3",
+					"pluginVersion": "11.0.0",
 					"targets": [
 						{
 							"datasource": {
@@ -1739,7 +1728,7 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "WITH sessions_locations AS (\n  SELECT argMax(country_code, pageviews) AS country_code\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT name AS country, COUNT(*) AS session_count\nFROM sessions_locations\nJOIN countries ON sessions_locations.country_code = countries.code\nWHERE $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nGROUP BY country\nORDER BY session_count DESC",
+							"rawSql": "WITH sessions_locations AS (\n  SELECT argMax(country_code, pageviews) AS country_code\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT name AS country, COUNT(*) AS session_count\nFROM sessions_locations\nJOIN countries ON sessions_locations.country_code = countries.code\nWHERE $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nGROUP BY country\nORDER BY session_count DESC",
 							"refId": "A"
 						}
 					],
@@ -1798,8 +1787,7 @@
 							"displayName": "${__field.labels[browser_family]}",
 							"fieldMinMax": false,
 							"mappings": [],
-							"unit": "short",
-							"unitScale": true
+							"unit": "short"
 						},
 						"overrides": []
 					},
@@ -1807,7 +1795,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 1,
-						"y": 23
+						"y": 49
 					},
 					"id": 4,
 					"options": {
@@ -1830,6 +1818,7 @@
 							"values": true
 						},
 						"tooltip": {
+							"maxHeight": 600,
 							"mode": "single",
 							"sort": "none"
 						}
@@ -1881,12 +1870,11 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "WITH sessions_browsers AS (\n  SELECT argMax(browser_family, pageviews) AS browser\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT browser, COUNT(browser)\nFROM sessions_browsers\nGROUP BY browser",
+							"rawSql": "WITH sessions_browsers AS (\n  SELECT argMax(browser_family, pageviews) AS browser\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT browser, COUNT(browser)\nFROM sessions_browsers\nGROUP BY browser",
 							"refId": "A"
 						}
 					],
 					"title": "Browsers",
-					"transformations": [],
 					"type": "piechart"
 				},
 				{
@@ -1909,8 +1897,7 @@
 							},
 							"displayName": "${__field.labels[os]}",
 							"mappings": [],
-							"unit": "short",
-							"unitScale": true
+							"unit": "short"
 						},
 						"overrides": []
 					},
@@ -1918,7 +1905,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 12,
-						"y": 23
+						"y": 49
 					},
 					"id": 5,
 					"options": {
@@ -1940,6 +1927,7 @@
 							"values": true
 						},
 						"tooltip": {
+							"maxHeight": 600,
 							"mode": "single",
 							"sort": "none"
 						}
@@ -1983,12 +1971,11 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "WITH sessions_os AS (\n  SELECT argMax(operating_system, pageviews) AS os\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  GROUP BY session_uuid\n)\nSELECT os, COUNT(os)\nFROM sessions_os\nGROUP BY os",
+							"rawSql": "WITH sessions_os AS (\n  SELECT argMax(operating_system, pageviews) AS os\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT os, COUNT(os)\nFROM sessions_os\nGROUP BY os",
 							"refId": "A"
 						}
 					],
 					"title": "Operating Systems (OS)",
-					"transformations": [],
 					"type": "piechart"
 				}
 			],
@@ -2031,8 +2018,7 @@
 									}
 								]
 							},
-							"unit": "short",
-							"unitScale": true
+							"unit": "short"
 						},
 						"overrides": []
 					},
@@ -2062,7 +2048,7 @@
 						"sizing": "manual",
 						"valueMode": "color"
 					},
-					"pluginVersion": "10.3.3",
+					"pluginVersion": "11.0.0",
 					"targets": [
 						{
 							"datasource": {
@@ -2083,7 +2069,7 @@
 							},
 							"pluginVersion": "4.0.8",
 							"queryType": "table",
-							"rawSql": "SELECT name, COUNT(*) AS count\nFROM events_custom\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${paths:sqlstring})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n)\nGROUP BY name\nORDER BY count DESC",
+							"rawSql": "SELECT name, COUNT(*) AS count\nFROM events_custom\nWHERE $__timeFilter(timestamp)\nAND domain IN (${domains:sqlstring})\nAND path IN (${paths:sqlstring})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n)\nGROUP BY name\nORDER BY count DESC",
 							"refId": "A"
 						}
 					],
@@ -2359,6 +2345,152 @@
 				"regex": "",
 				"skipUrlSync": false,
 				"sort": 1,
+				"type": "query"
+			},
+			{
+				"allValue": "",
+				"current": {
+					"selected": true,
+					"text": [
+						"All"
+					],
+					"value": [
+						"$__all"
+					]
+				},
+				"datasource": {
+					"type": "grafana-clickhouse-datasource",
+					"uid": "{{ .DatasourceClickhouseUid }}"
+				},
+				"definition": "SELECT DISTINCT(argMax(utm_source, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND utm_source != ''\nGROUP BY session_uuid",
+				"description": "Identifies which site sent the traffic, and is a required parameter.",
+				"hide": 0,
+				"includeAll": true,
+				"label": "UTM Source",
+				"multi": true,
+				"name": "utm_sources",
+				"options": [],
+				"query": "SELECT DISTINCT(argMax(utm_source, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND utm_source != ''\nGROUP BY session_uuid",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			},
+			{
+				"current": {
+					"selected": true,
+					"text": [
+						"All"
+					],
+					"value": [
+						"$__all"
+					]
+				},
+				"datasource": {
+					"type": "grafana-clickhouse-datasource",
+					"uid": "{{ .DatasourceClickhouseUid }}"
+				},
+				"definition": "SELECT DISTINCT(argMax(utm_medium, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND utm_medium != ''\nGROUP BY session_uuid",
+				"description": "Identifies what type of link was used, such as email or pay-per-click advertising. ",
+				"hide": 0,
+				"includeAll": true,
+				"label": "UTM Medium",
+				"multi": true,
+				"name": "utm_mediums",
+				"options": [],
+				"query": "SELECT DISTINCT(argMax(utm_medium, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND utm_medium != ''\nGROUP BY session_uuid",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			},
+			{
+				"current": {
+					"selected": true,
+					"text": [
+						"All"
+					],
+					"value": [
+						"$__all"
+					]
+				},
+				"datasource": {
+					"type": "grafana-clickhouse-datasource",
+					"uid": "{{ .DatasourceClickhouseUid }}"
+				},
+				"definition": "SELECT DISTINCT(argMax(utm_campaign, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND utm_campaign != ''\nGROUP BY session_uuid",
+				"description": "Identifies a specific product promotion or strategic campaign. ",
+				"hide": 0,
+				"includeAll": true,
+				"label": "UTM Campaign",
+				"multi": true,
+				"name": "utm_campaigns",
+				"options": [],
+				"query": "SELECT DISTINCT(argMax(utm_campaign, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND utm_campaign != ''\nGROUP BY session_uuid",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			},
+			{
+				"current": {
+					"selected": true,
+					"text": [
+						"All"
+					],
+					"value": [
+						"$__all"
+					]
+				},
+				"datasource": {
+					"type": "grafana-clickhouse-datasource",
+					"uid": "{{ .DatasourceClickhouseUid }}"
+				},
+				"definition": "SELECT DISTINCT(argMax(utm_term, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\nAND utm_term != ''\nGROUP BY session_uuid",
+				"description": "Identifies search terms.",
+				"hide": 0,
+				"includeAll": true,
+				"label": "UTM Term",
+				"multi": true,
+				"name": "utm_terms",
+				"options": [],
+				"query": "SELECT DISTINCT(argMax(utm_term, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\nAND utm_term != ''\nGROUP BY session_uuid",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			},
+			{
+				"current": {
+					"selected": true,
+					"text": [
+						"All"
+					],
+					"value": [
+						"$__all"
+					]
+				},
+				"datasource": {
+					"type": "grafana-clickhouse-datasource",
+					"uid": "{{ .DatasourceClickhouseUid }}"
+				},
+				"definition": "SELECT DISTINCT(argMax(utm_content, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\nAND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\nAND utm_content != ''\nGROUP BY session_uuid",
+				"description": "Identifies what specifically was clicked to bring the user to the site, such as a banner ad or a text link.",
+				"hide": 0,
+				"includeAll": true,
+				"label": "UTM Content",
+				"multi": true,
+				"name": "utm_contents",
+				"options": [],
+				"query": "SELECT DISTINCT(argMax(utm_content, pageviews)) FROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\nAND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\nAND utm_content != ''\nGROUP BY session_uuid",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
 				"type": "query"
 			}
 		]
