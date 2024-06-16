@@ -35,21 +35,31 @@ func ProvidePostEventsCustom(
 
 		customEv := event.Custom{}
 
-		// Event date and name.
-		customEv.Timestamp = time.Now().UTC()
-		customEv.Name = utils.CopyString(c.Params("name"))
-
 		// Parse page URI.
 		err := customEv.PageUri.Parse(requestReferrer)
 		if err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 		}
 
-		userAgent := c.Request().Header.UserAgent()
-		customEv.Session.VisitorId = computeVisitorId(
-			userAgent, saltManagerService.DailySalt().Bytes(),
-			utils.UnsafeBytes(c.IP()), customEv.PageUri.Host(),
-		)
+		// Compute visitor id.
+		customEv.Session.VisitorId = requestVisitorId(c.Request())
+		if customEv.Session.VisitorId == "" {
+			customEv.Session.VisitorId = computeVisitorId("prisme_",
+				c.Request().Header.UserAgent(), saltManagerService.DailySalt().Bytes(),
+				utils.UnsafeBytes(c.IP()), customEv.PageUri.Host(),
+			)
+		}
+
+		var ok bool
+		customEv.Session, ok = sessionStorage.GetSession(customEv.Session.VisitorId)
+		// Session not found.
+		if !ok {
+			return fiber.NewError(fiber.StatusBadRequest, "session not found")
+		}
+
+		// Event date and name.
+		customEv.Timestamp = time.Now().UTC()
+		customEv.Name = utils.CopyString(c.Params("name"))
 
 		// Validate properties.
 		body := utils.CopyBytes(c.Body())
@@ -63,15 +73,6 @@ func ProvidePostEventsCustom(
 				customEv.Values = append(customEv.Values, value.Raw)
 				return true
 			})
-		}
-
-		var ok bool
-		customEv.Session, ok = sessionStorage.GetSession(customEv.Session.VisitorId)
-		// Session not found.
-		// This can happen if tracking script is not installed on all pages or
-		// prisme instance was restarted.
-		if !ok {
-			return fiber.NewError(fiber.StatusBadRequest, "session not found")
 		}
 
 		// Store event.

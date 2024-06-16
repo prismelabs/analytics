@@ -26,8 +26,22 @@ func equalBytes(a, b []byte) bool {
 	return utils.UnsafeString(a) == utils.UnsafeString(b)
 }
 
-func computeVisitorId(bytesSlice ...[]byte) string {
-	return fmt.Sprintf("prisme_%X", xxh3(bytesSlice...))
+func requestVisitorId(req *fasthttp.Request) string {
+	visitorId := req.Header.Peek("X-Prisme-Visitor-Id")
+	if len(visitorId) == 0 {
+		return ""
+	}
+
+	isAnon := utils.UnsafeString(req.Header.Peek("X-Prisme-Visitor-Anon")) == "1"
+	if isAnon {
+		return computeVisitorId("anon_", visitorId)
+	}
+
+	return computeVisitorId("", visitorId)
+}
+
+func computeVisitorId(prefix string, bytesSlice ...[]byte) string {
+	return fmt.Sprintf("%v%X", prefix, xxh3(bytesSlice...))
 }
 
 func xxh3(bytesSlice ...[]byte) uint64 {

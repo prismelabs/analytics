@@ -46,16 +46,42 @@ func ProvidePostEventsPageViews(
 			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 		}
 
-		userAgent := c.Request().Header.UserAgent()
-		visitorId := computeVisitorId(
-			userAgent, saltManagerService.DailySalt().Bytes(),
-			utils.UnsafeBytes(c.IP()), pageView.PageUri.Host(),
-		)
+		// Compute visitor id.
+		visitorId := requestVisitorId(c.Request())
+		if visitorId == "" {
+			visitorId = computeVisitorId("prisme_",
+				c.Request().Header.UserAgent(), saltManagerService.DailySalt().Bytes(),
+				utils.UnsafeBytes(c.IP()), pageView.PageUri.Host(),
+			)
+		}
 
-		newSession := !equalBytes(referrerUri.Host(), pageView.PageUri.Host())
+		isExternalReferrer := equalBytes(referrerUri.Host(), pageView.PageUri.Host())
+		newSession := !isExternalReferrer
+
+		// Retrieve session.
+		if !newSession {
+			var ok bool
+			pageView.Session, ok = sessionStorage.GetSession(visitorId)
+
+			// Session not found.
+			// This can happen if tracking script is not installed on all pages,
+			// visitor/session was upgraded (X-Prisme-Visitor-Id was added session
+			// after some pageview) to an authenticated one or prisme instance was
+			// restarted.
+			if !ok {
+				newSession = true
+			} else {
+				pageView.Session.Pageviews++
+				pageView.Timestamp = time.Now().UTC()
+			}
+		}
+
+		// Create session.
 		if newSession {
 			// Filter bot.
-			client := uaParserService.ParseUserAgent(utils.UnsafeString(userAgent))
+			client := uaParserService.ParseUserAgent(
+				utils.UnsafeString(c.Request().Header.UserAgent()),
+			)
 			if client.IsBot {
 				return fiber.NewError(fiber.StatusBadRequest, "bot session filtered")
 			}
@@ -76,20 +102,6 @@ func ProvidePostEventsPageViews(
 				Pageviews:   1,
 			}
 			pageView.Timestamp = pageView.Session.SessionTime()
-
-		} else { // session should already exists
-			var ok bool
-			pageView.Session, ok = sessionStorage.GetSession(visitorId)
-
-			// Session not found.
-			// This can happen if tracking script is not installed on all pages or
-			// prisme instance was restarted.
-			if !ok {
-				return fiber.NewError(fiber.StatusBadRequest, "session not found")
-			}
-
-			pageView.Session.Pageviews++
-			pageView.Timestamp = time.Now().UTC()
 		}
 
 		// Update session in storage.
@@ -99,6 +111,7 @@ func ProvidePostEventsPageViews(
 			return nil
 		}
 
+		// Store event.
 		err = eventStore.StorePageView(c.UserContext(), &pageView)
 		if err != nil {
 			return fmt.Errorf("failed to store pageview event: %w", err)
