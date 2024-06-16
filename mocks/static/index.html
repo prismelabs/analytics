@@ -2,24 +2,25 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Static site</title>
-	<script src="http://prisme.localhost:8000/static/m.js" defer></script>
-	<script>
-		document.addEventListener('DOMContentLoaded', () => {
-			document.addEventListener('click', (ev) => {
-				window.prisme.trigger('click', {x: ev.clientX, y: ev.clientY})
-			})
-		})
-	</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Static site</title>
+  <script src="http://prisme.localhost:8000/static/m.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('click', (ev) => {
+        window.prisme.trigger('click', {x: ev.clientX, y: ev.clientY})
+      })
+    })
+  </script>
 </head>
 
 <body>
-	<h1>Index</h1>
-	<a href="/">Home</a>
-	<a href="/manual.html">Manual tracking</a>
-	<a href="/pets/index.html">Pets</a>
+  <h1>Index</h1>
+  <a href="/">Home</a>
+  <a href="/login.html">Login</a>
+  <a href="/manual.html">Manual tracking</a>
+  <a href="/pets/index.html">Pets</a>
 </body>
 
 </html>
