@@ -69,11 +69,11 @@ lint/fix:
 	$(MAKE) -C ./tests lint/fix
 
 .PHONY: codegen
-codegen: ./pkg/embedded/static/m.js
+codegen: ./pkg/embedded/static/wa.js
 	wire ./...
 	go generate -skip="wire" ./...
 
-./pkg/embedded/static/m.js: ./tracker/prisme.js
+./pkg/embedded/static/wa.js: ./tracker/web_analytics.js
 	minify --js-version 2019 $^ > $@
 
 $(GENENV_FILE):
