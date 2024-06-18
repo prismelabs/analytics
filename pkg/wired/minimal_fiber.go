@@ -29,7 +29,7 @@ func ProvideMinimalFiber(
 	teardownService.RegisterProcedure(func() error {
 		logger.Info().Msg("shutting down fiber server...")
 		err := app.Shutdown()
-		logger.Err(err).Msg("fiber server shutdown.")
+		logger.Info().Err(err).Msg("fiber server shutdown.")
 
 		return err
 	})
