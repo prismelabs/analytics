@@ -13,13 +13,12 @@ import (
 type Service interface {
 	// GetSession retrieves stored session and returns it.
 	// Returned boolean flag is false is no session was found.
-	GetSession(visitorId string) (event.Session, bool)
-	// UpsertSession updates or insert a new session and return true if upsert
-	// wasn't ignored. Upsert are ignored if more recent session already exists.
-	// A session is considered more recent if stored session UUID differ and
-	// session.SessionTime() is more recent or if sessions shares same session
-	// UUIDs but session.Version() is greater than stored one.
-	UpsertSession(session event.Session) bool
+	GetSession(deviceId string) (event.Session, bool)
+	// InsertSession inserts session in session storage and associate it to the
+	// given deviceId.
+	InsertSession(deviceId string, session event.Session)
+	// IncSessionPageviewCount increments pageview and returns it.
+	IncSessionPageviewCount(deviceId string) (event.Session, bool)
 }
 
 type service struct {
@@ -63,9 +62,9 @@ func ProvideService(
 }
 
 // GetSession implements Service.
-func (s *service) GetSession(visitorId string) (event.Session, bool) {
+func (s *service) GetSession(deviceId string) (event.Session, bool) {
 	s.mu.RLock()
-	entry, ok := s.data[visitorId]
+	entry, ok := s.data[deviceId]
 	s.mu.RUnlock()
 
 	// Expired session.
@@ -79,40 +78,49 @@ func (s *service) GetSession(visitorId string) (event.Session, bool) {
 	return entry.session, ok
 }
 
-// UpsertSession implements Service.
-func (s *service) UpsertSession(session event.Session) bool {
+// InsertSession implements Service.
+func (s *service) InsertSession(deviceId string, session event.Session) {
 	s.mu.Lock()
-	sessionEntry, sessionExists := s.data[session.VisitorId]
+	currentSession, sessionExists := s.data[deviceId]
 
-	sameSession := session.SessionUuid == sessionEntry.session.SessionUuid
-	newSession := !sessionExists || (!sameSession && session.SessionTime().Sub(sessionEntry.session.SessionTime()) > 0)
-	updatedSession := sessionExists && sameSession && session.Version() > sessionEntry.session.Version()
-
-	upsert := newSession || updatedSession
-	if upsert {
-		s.data[session.VisitorId] = entry{
-			session: session,
-			expiry:  uint32(time.Now().Add(s.cfg.sessionInactiveTtl).Unix()),
-		}
+	// Store session.
+	s.data[deviceId] = entry{
+		session: session,
+		expiry:  s.newExpiry(),
 	}
 	s.mu.Unlock()
 
-	// New session.
-	if newSession {
-		s.metrics.sessionsCounter.With(prometheus.Labels{"type": "inserted"}).Inc()
-	}
-
-	// New session but no overwrite.
-	if newSession && !sessionExists {
+	// Compute metrics.
+	s.metrics.sessionsCounter.With(prometheus.Labels{"type": "inserted"}).Inc()
+	if !sessionExists {
 		s.metrics.activeSessions.Inc()
+	} else {
+		s.metrics.sessionsCounter.With(prometheus.Labels{"type": "overwritten"}).Inc()
+		s.metrics.sessionsPageviews.Observe(float64(currentSession.session.PageviewCount))
+	}
+}
+
+// IncSessionPageviewCount implements Service.
+func (s *service) IncSessionPageviewCount(deviceId string) (event.Session, bool) {
+	s.mu.Lock()
+	sessionEntry, ok := s.data[deviceId]
+	// Session not found.
+	if !ok {
+		s.mu.Unlock()
+		return event.Session{}, false
 	}
 
-	// New session with overwrite.
-	if newSession && sessionExists {
-		s.metrics.sessionsPageviews.Observe(float64(sessionEntry.session.Pageviews))
+	sessionEntry.session.Version++
+	sessionEntry.session.PageviewCount++
+
+	s.data[deviceId] = entry{
+		session: sessionEntry.session,
+		expiry:  s.newExpiry(),
 	}
 
-	return upsert
+	s.mu.Unlock()
+
+	return sessionEntry.session, true
 }
 
 // session garbage collector.
@@ -148,7 +156,7 @@ func (s *service) gc(gcInterval time.Duration) {
 			v := s.data[expired[i]]
 			if v.expiry != 0 && ts >= v.expiry {
 				expiredCounter++
-				expiredSessionPageviews = append(expiredSessionPageviews, v.session.Pageviews)
+				expiredSessionPageviews = append(expiredSessionPageviews, v.session.PageviewCount)
 
 				delete(s.data, expired[i])
 			}
@@ -164,4 +172,8 @@ func (s *service) gc(gcInterval time.Duration) {
 			s.metrics.sessionsPageviews.Observe(float64(pv))
 		}
 	}
+}
+
+func (s *service) newExpiry() uint32 {
+	return uint32(time.Now().Add(s.cfg.sessionInactiveTtl).Unix())
 }

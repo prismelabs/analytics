@@ -17,7 +17,7 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 		}),
 		sessionsCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "sessionstorage_sessions_total",
-			Help: "Number of inserted and expired sessions",
+			Help: "Number of inserted, overwritten and expired sessions",
 		}, []string{"type"}),
 		sessionsPageviews: prometheus.NewHistogram(prometheus.HistogramOpts{
 			Name:    "sessionstorage_sessions_pageviews",
