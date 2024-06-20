@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )
 
@@ -12,6 +13,8 @@ import (
 type Service interface {
 	// DailySalt returns today's salt.
 	DailySalt() Salt
+	// StaticSalt returns same salt until end of program.
+	StaticSalt() Salt
 }
 
 // ProvideService is a wire provider for hashing salt manager service.
@@ -20,11 +23,17 @@ func ProvideService(logger zerolog.Logger) Service {
 		Str("service", "saltmanager").
 		Logger()
 
-	srv := &service{
-		logger: logger,
+	staticSalt, err := uuid.NewRandom()
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to generate static salt")
 	}
 
-	err := srv.rotateSalt()
+	srv := &service{
+		logger:     logger,
+		staticSalt: Salt(staticSalt),
+	}
+
+	err = srv.rotateSalt()
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to rotate initial salt")
 	}
@@ -37,11 +46,17 @@ func ProvideService(logger zerolog.Logger) Service {
 type service struct {
 	logger      zerolog.Logger
 	currentSalt atomic.Pointer[Salt]
+	staticSalt  Salt
 }
 
 // DailySalt implements Service.
 func (s *service) DailySalt() Salt {
 	return *s.currentSalt.Load()
+}
+
+// StaticSalt implements Service.
+func (s *service) StaticSalt() Salt {
+	return s.staticSalt
 }
 
 func (s *service) rotateSaltLoop() {
