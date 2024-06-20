@@ -2,7 +2,8 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { COUNTRY_CODE_REGEX, PRISME_CUSTOM_EVENTS_URL, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
+import { COUNTRY_CODE_REGEX, PRISME_CUSTOM_EVENTS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
+import { randomIpWithSession } from '../utils'
 
 const seed = new Date().getTime()
 console.log('faker seed', seed)
@@ -64,6 +65,30 @@ test('content type different than application/json is rejected', async () => {
   expect(response.status).toBe(400)
 })
 
+test('invalid sessionless custom event', async () => {
+  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
+    method: 'POST',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      // No session associated with this ip.
+      'X-Forwarded-For': faker.internet.ip(),
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  })
+  expect(response.status).toBe(400)
+})
+
+test('valid test cases pause', async () => {
+  // Sleep so pageviews and identify timestamps are different for valid test
+  // cases.
+  // Without this sleep, getLatestXXX function may return rows from invalid test
+  // cases.
+  // This is not needed later as each getLatestXXX contains a 1s sleep.
+  Bun.sleepSync(1000)
+})
+
 test('valid custom event request without body and Content-Type header', async () => {
   const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
     method: 'POST',
@@ -107,21 +132,6 @@ test('valid custom event request without body and Content-Type header', async ()
       properties: {}
     }
   })
-})
-
-test('invalid sessionless custom event', async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
-    method: 'POST',
-    headers: {
-      Origin: 'http://mywebsite.localhost',
-      // No session associated with this ip.
-      'X-Forwarded-For': faker.internet.ip(),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({})
-  })
-  expect(response.status).toBe(400)
 })
 
 test('valid custom event with no properties', async () => {
@@ -522,7 +532,7 @@ test('valid custom event with Windows + Chrome user agent', async () => {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', userAgent),
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { userAgent }),
       Referer: 'http://mywebsite.localhost',
       'X-Prisme-Document-Referrer': 'https://www.example.com/foo',
       'Content-Type': 'application/json',
@@ -596,25 +606,4 @@ async function getLatestCustomEvent (): Promise<any> {
   delete customEvent.values
 
   return { event: customEvent, session }
-}
-
-async function randomIpWithSession (domain: string, userAgent?: string): Promise<string> {
-  const ip = faker.internet.ip()
-  const headers: HeadersInit = {
-    Origin: `http://${domain}`,
-    'X-Forwarded-For': ip,
-    'X-Prisme-Referrer': `http://${domain}/path`
-  }
-  if (userAgent !== undefined) {
-    headers['User-Agent'] = userAgent
-  }
-
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
-    headers
-  })
-
-  expect(response.status).toBe(200)
-
-  return ip
 }

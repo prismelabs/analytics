@@ -95,6 +95,15 @@ test('robot user agent is rejected', async () => {
   expect(response.status).toBe(400)
 })
 
+test('valid test cases pause', async () => {
+  // Sleep so pageviews and identify timestamps are different for valid test
+  // cases.
+  // Without this sleep, getLatestXXX function may return rows from invalid test
+  // cases.
+  // This is not needed later as each getLatestXXX contains a 1s sleep.
+  Bun.sleepSync(1000)
+})
+
 test('registered domain in Origin header and valid referrer is accepted', async () => {
   const response = await fetch(PRISME_PAGEVIEWS_URL, {
     method: 'POST',

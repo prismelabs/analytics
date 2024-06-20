@@ -10,4 +10,5 @@ import (
 type Service interface {
 	StorePageView(context.Context, *event.PageView) error
 	StoreCustom(context.Context, *event.Custom) error
+	StoreIdentifyEvent(context.Context, *event.Identify) error
 }

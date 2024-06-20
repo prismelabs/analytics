@@ -19,6 +19,9 @@ type Service interface {
 	InsertSession(deviceId string, session event.Session)
 	// IncSessionPageviewCount increments pageview and returns it.
 	IncSessionPageviewCount(deviceId string) (event.Session, bool)
+	// IdentifySession updates stored session visitor id. Updated session and
+	// boolean found flag are returned.
+	IdentifySession(deviceId string, visitorId string) (event.Session, bool)
 }
 
 type service struct {
@@ -110,7 +113,6 @@ func (s *service) IncSessionPageviewCount(deviceId string) (event.Session, bool)
 		return event.Session{}, false
 	}
 
-	sessionEntry.session.Version++
 	sessionEntry.session.PageviewCount++
 
 	s.data[deviceId] = entry{
@@ -118,6 +120,32 @@ func (s *service) IncSessionPageviewCount(deviceId string) (event.Session, bool)
 		expiry:  s.newExpiry(),
 	}
 
+	s.mu.Unlock()
+
+	return sessionEntry.session, true
+}
+
+// IdentifySession implements Service.
+func (s *service) IdentifySession(deviceId string, visitorId string) (event.Session, bool) {
+	s.mu.Lock()
+	sessionEntry, ok := s.data[deviceId]
+	if !ok {
+		s.mu.Unlock()
+		return event.Session{}, false
+	}
+
+	// No need for update.
+	if sessionEntry.session.VisitorId == visitorId {
+		s.mu.Unlock()
+		return sessionEntry.session, true
+	}
+
+	// Update visitor id.
+	sessionEntry.session.VisitorId = visitorId
+	s.data[deviceId] = entry{
+		session: sessionEntry.session,
+		expiry:  s.newExpiry(),
+	}
 	s.mu.Unlock()
 
 	return sessionEntry.session, true

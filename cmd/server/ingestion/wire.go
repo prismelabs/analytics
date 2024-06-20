@@ -27,6 +27,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		eventstore.ProvideConfig,
 		handlers.ProvideHealthCheck,
 		handlers.ProvidePostEventsCustom,
+		handlers.ProvidePostEventsIdentify,
 		handlers.ProvidePostEventsPageViews,
 		ipgeolocator.ProvideMmdbService,
 		middlewares.ProvideAccessLog,

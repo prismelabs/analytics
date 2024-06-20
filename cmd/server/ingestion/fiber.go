@@ -14,6 +14,7 @@ func ProvideFiber(
 	minimalFiber wired.MinimalFiber,
 	nonRegisteredOriginFilterMiddleware middlewares.NonRegisteredOriginFilter,
 	postCustomEventHandler handlers.PostEventsCustom,
+	postIdentifyEventHandler handlers.PostEventsIdentify,
 	postPageViewEventHandler handlers.PostEventsPageview,
 ) *fiber.App {
 	app := (*fiber.App)(minimalFiber)
@@ -25,6 +26,7 @@ func ProvideFiber(
 		fiber.Handler(nonRegisteredOriginFilterMiddleware),
 	)
 	app.Post("/api/v1/events/pageviews", fiber.Handler(postPageViewEventHandler))
+	app.Post("/api/v1/events/identify", fiber.Handler(postIdentifyEventHandler))
 	app.Post("/api/v1/events/custom/:name", fiber.Handler(postCustomEventHandler))
 
 	return app
