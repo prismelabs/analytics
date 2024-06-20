@@ -11,7 +11,6 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
 	"github.com/rs/zerolog"
-	"github.com/tidwall/gjson"
 )
 
 type PostEventsCustom fiber.Handler
@@ -41,17 +40,14 @@ func ProvidePostEventsCustom(
 			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 		}
 
-		// Compute visitor id.
-		customEv.Session.VisitorId = requestVisitorId(c.Request())
-		if customEv.Session.VisitorId == "" {
-			customEv.Session.VisitorId = computeVisitorId("prisme_",
-				c.Request().Header.UserAgent(), saltManagerService.DailySalt().Bytes(),
-				utils.UnsafeBytes(c.IP()), customEv.PageUri.Host(),
-			)
-		}
+		// Compute device id.
+		deviceId := computeDeviceId(
+			saltManagerService.StaticSalt().Bytes(), c.Request().Header.UserAgent(),
+			utils.UnsafeBytes(c.IP()), customEv.PageUri.Host(),
+		)
 
 		var ok bool
-		customEv.Session, ok = sessionStorage.GetSession(customEv.Session.VisitorId)
+		customEv.Session, ok = sessionStorage.GetSession(deviceId)
 		// Session not found.
 		if !ok {
 			return fiber.NewError(fiber.StatusBadRequest, "session not found")
@@ -62,17 +58,8 @@ func ProvidePostEventsCustom(
 		customEv.Name = utils.CopyString(c.Params("name"))
 
 		// Validate properties.
-		body := utils.CopyBytes(c.Body())
-		if len(body) > 0 {
-			result := gjson.GetManyBytes(utils.CopyBytes(c.Body()), "@keys", "@values")
-			result[0].ForEach(func(_, key gjson.Result) bool {
-				customEv.Keys = append(customEv.Keys, key.String())
-				return true
-			})
-			result[1].ForEach(func(_, value gjson.Result) bool {
-				customEv.Values = append(customEv.Values, value.Raw)
-				return true
-			})
+		if len(c.Body()) > 0 {
+			collectJsonKeyValues(c.Body(), &customEv.Keys, &customEv.Values)
 		}
 
 		// Store event.

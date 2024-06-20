@@ -43,14 +43,14 @@ func TestIntegService(t *testing.T) {
 			Timestamp: eventTime,
 			PageUri:   event.Uri{},
 			Session: event.Session{
-				PageUri:     &event.Uri{},
-				ReferrerUri: &event.ReferrerUri{},
-				Client:      uaparser.Client{},
-				CountryCode: ipgeolocator.CountryCode{},
-				VisitorId:   "singlePageViewTestCase",
-				SessionUuid: uuid.Must(uuid.NewV7()),
-				Utm:         event.UtmParams{},
-				Pageviews:   1,
+				PageUri:       &event.Uri{},
+				ReferrerUri:   &event.ReferrerUri{},
+				Client:        uaparser.Client{},
+				CountryCode:   ipgeolocator.CountryCode{},
+				VisitorId:     "singlePageViewTestCase",
+				SessionUuid:   uuid.Must(uuid.NewV7()),
+				Utm:           event.UtmParams{},
+				PageviewCount: 1,
 			},
 		})
 		require.NoError(t, err)
@@ -94,7 +94,7 @@ func TestIntegService(t *testing.T) {
 				labels, 10))
 	})
 
-	t.Run("MultipleEvents", func(t *testing.T) {
+	t.Run("MultipleEvents/PageviewsAndCustom", func(t *testing.T) {
 		promRegistry := prometheus.NewRegistry()
 		service := ProvideService(cfg, ch, logger, promRegistry, teardownService)
 
@@ -110,14 +110,14 @@ func TestIntegService(t *testing.T) {
 				Timestamp: eventTime,
 				PageUri:   event.Uri{},
 				Session: event.Session{
-					PageUri:     &event.Uri{},
-					ReferrerUri: &event.ReferrerUri{},
-					Client:      uaparser.Client{},
-					CountryCode: ipgeolocator.CountryCode{},
-					VisitorId:   "multipleEventsTestCase",
-					SessionUuid: sessionUuid,
-					Utm:         event.UtmParams{},
-					Pageviews:   1,
+					PageUri:       &event.Uri{},
+					ReferrerUri:   &event.ReferrerUri{},
+					Client:        uaparser.Client{},
+					CountryCode:   ipgeolocator.CountryCode{},
+					VisitorId:     "multipleEventsTestCase",
+					SessionUuid:   sessionUuid,
+					Utm:           event.UtmParams{},
+					PageviewCount: 1,
 				},
 			})
 			require.NoError(t, err)
@@ -128,14 +128,14 @@ func TestIntegService(t *testing.T) {
 				Timestamp: eventTime,
 				PageUri:   event.Uri{},
 				Session: event.Session{
-					PageUri:     &event.Uri{},
-					ReferrerUri: &event.ReferrerUri{},
-					Client:      uaparser.Client{},
-					CountryCode: ipgeolocator.CountryCode{},
-					VisitorId:   "multipleEventsTestCase",
-					SessionUuid: sessionUuid,
-					Utm:         event.UtmParams{},
-					Pageviews:   0,
+					PageUri:       &event.Uri{},
+					ReferrerUri:   &event.ReferrerUri{},
+					Client:        uaparser.Client{},
+					CountryCode:   ipgeolocator.CountryCode{},
+					VisitorId:     "multipleEventsTestCase",
+					SessionUuid:   sessionUuid,
+					Utm:           event.UtmParams{},
+					PageviewCount: 1,
 				},
 				Name:   "foo",
 				Keys:   []string{},
@@ -231,14 +231,14 @@ func TestIntegService(t *testing.T) {
 				Timestamp: eventTime,
 				PageUri:   event.Uri{},
 				Session: event.Session{
-					PageUri:     &event.Uri{},
-					ReferrerUri: &event.ReferrerUri{},
-					Client:      uaparser.Client{},
-					CountryCode: ipgeolocator.CountryCode{},
-					VisitorId:   "singlePageViewTestCase",
-					SessionUuid: uuid.Must(uuid.NewV7()),
-					Utm:         event.UtmParams{},
-					Pageviews:   1,
+					PageUri:       &event.Uri{},
+					ReferrerUri:   &event.ReferrerUri{},
+					Client:        uaparser.Client{},
+					CountryCode:   ipgeolocator.CountryCode{},
+					VisitorId:     "singlePageViewTestCase",
+					SessionUuid:   uuid.Must(uuid.NewV7()),
+					Utm:           event.UtmParams{},
+					PageviewCount: 1,
 				},
 			})
 			require.NoError(t, err)

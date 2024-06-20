@@ -46,32 +46,29 @@ func ProvidePostEventsPageViews(
 			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 		}
 
-		// Compute visitor id.
-		visitorId := requestVisitorId(c.Request())
-		if visitorId == "" {
-			visitorId = computeVisitorId("prisme_",
-				c.Request().Header.UserAgent(), saltManagerService.DailySalt().Bytes(),
-				utils.UnsafeBytes(c.IP()), pageView.PageUri.Host(),
-			)
-		}
+		// Compute device id.
+		deviceId := computeDeviceId(
+			saltManagerService.StaticSalt().Bytes(), c.Request().Header.UserAgent(),
+			utils.UnsafeBytes(c.IP()), pageView.PageUri.Host(),
+		)
 
 		isExternalReferrer := equalBytes(referrerUri.Host(), pageView.PageUri.Host())
 		newSession := !isExternalReferrer
 
 		// Retrieve session.
 		if !newSession {
-			var ok bool
-			pageView.Session, ok = sessionStorage.GetSession(visitorId)
+			_, ok := sessionStorage.GetSession(deviceId)
 
 			// Session not found.
 			// This can happen if tracking script is not installed on all pages,
-			// visitor/session was upgraded (X-Prisme-Visitor-Id was added session
-			// after some pageview) to an authenticated one or prisme instance was
-			// restarted.
+			// or prisme instance was restarted.
 			if !ok {
 				newSession = true
 			} else {
-				pageView.Session.Pageviews++
+				pageView.Session, ok = sessionStorage.IncSessionPageviewCount(deviceId)
+				if !ok {
+					logger.Panic().Msg("failed to increment session pageview count after GetSession returned a session: session not found")
+				}
 				pageView.Timestamp = time.Now().UTC()
 			}
 		}
@@ -91,24 +88,28 @@ func ProvidePostEventsPageViews(
 				return fmt.Errorf("failed to generate session uuid: %w", err)
 			}
 
+			// Peek or compute visitor id.
+			visitorId := string(c.Request().Header.Peek("X-Prisme-Visitor-Id"))
+			if visitorId == "" {
+				visitorId = computeVisitorId("prisme_",
+					saltManagerService.DailySalt().Bytes(), c.Request().Header.UserAgent(),
+					utils.UnsafeBytes(c.IP()), pageView.PageUri.Host(), []byte(deviceId),
+				)
+			}
+
 			pageView.Session = event.Session{
-				PageUri:     &pageView.PageUri,
-				ReferrerUri: &referrerUri,
-				Client:      client,
-				CountryCode: ipGeolocatorService.FindCountryCodeForIP(c.IP()),
-				VisitorId:   visitorId,
-				SessionUuid: sessionUuid,
-				Utm:         extractUtmParams(pageView.PageUri.QueryArgs()),
-				Pageviews:   1,
+				PageUri:       &pageView.PageUri,
+				ReferrerUri:   &referrerUri,
+				Client:        client,
+				CountryCode:   ipGeolocatorService.FindCountryCodeForIP(c.IP()),
+				VisitorId:     visitorId,
+				SessionUuid:   sessionUuid,
+				Utm:           extractUtmParams(pageView.PageUri.QueryArgs()),
+				PageviewCount: 1,
 			}
 			pageView.Timestamp = pageView.Session.SessionTime()
-		}
 
-		// Update session in storage.
-		upserted := sessionStorage.UpsertSession(pageView.Session)
-		if !upserted {
-			logger.Debug().Msg("session upsert was ignored, pageview ignored")
-			return nil
+			sessionStorage.InsertSession(deviceId, pageView.Session)
 		}
 
 		// Store event.

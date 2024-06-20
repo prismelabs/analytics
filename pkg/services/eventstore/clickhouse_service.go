@@ -147,7 +147,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 		cs.logger.Debug().Any("pageview_event", ev).Msg("appending pageview event to batch...")
 
 		// Session already stored.
-		if ev.Session.Pageviews > 1 {
+		if ev.Session.PageviewCount > 1 {
 			// Cancel previous session.
 			err = batch.Append(
 				ev.Session.PageUri.Host(),
@@ -166,7 +166,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 				ev.Session.Utm.Campaign,
 				ev.Session.Utm.Term,
 				ev.Session.Utm.Content,
-				ev.Session.Pageviews-1, // Cancel previous version.
+				ev.Session.PageviewCount-1, // Cancel previous version.
 				-1,
 			)
 			if err != nil {
@@ -191,7 +191,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 			ev.Session.Utm.Campaign,
 			ev.Session.Utm.Term,
 			ev.Session.Utm.Content,
-			ev.Session.Pageviews,
+			ev.Session.PageviewCount,
 			1,
 		)
 		if err != nil {
