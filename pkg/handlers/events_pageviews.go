@@ -52,21 +52,29 @@ func ProvidePostEventsPageViews(
 			utils.UnsafeBytes(c.IP()), pageView.PageUri.Host(),
 		)
 
+		// Peek visitor id.
+		visitorId := string(c.Request().Header.Peek("X-Prisme-Visitor-Id"))
+
 		isExternalReferrer := equalBytes(referrerUri.Host(), pageView.PageUri.Host())
 		newSession := !isExternalReferrer
 
 		// Retrieve session.
 		if !newSession {
-			_, ok := sessionStorage.GetSession(deviceId)
+			sessionExists := false
+			if visitorId != "" {
+				_, sessionExists = sessionStorage.IdentifySession(deviceId, visitorId)
+			} else {
+				_, sessionExists = sessionStorage.GetSession(deviceId)
+			}
 
 			// Session not found.
 			// This can happen if tracking script is not installed on all pages,
 			// or prisme instance was restarted.
-			if !ok {
+			if !sessionExists {
 				newSession = true
 			} else {
-				pageView.Session, ok = sessionStorage.IncSessionPageviewCount(deviceId)
-				if !ok {
+				pageView.Session, sessionExists = sessionStorage.IncSessionPageviewCount(deviceId)
+				if !sessionExists {
 					logger.Panic().Msg("failed to increment session pageview count after GetSession returned a session: session not found")
 				}
 				pageView.Timestamp = time.Now().UTC()
@@ -88,8 +96,7 @@ func ProvidePostEventsPageViews(
 				return fmt.Errorf("failed to generate session uuid: %w", err)
 			}
 
-			// Peek or compute visitor id.
-			visitorId := string(c.Request().Header.Peek("X-Prisme-Visitor-Id"))
+			// Compute visitor id if none was provided along request.
 			if visitorId == "" {
 				visitorId = computeVisitorId("prisme_",
 					saltManagerService.DailySalt().Bytes(), c.Request().Header.UserAgent(),

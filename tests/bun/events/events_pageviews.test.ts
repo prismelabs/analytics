@@ -625,6 +625,183 @@ test('valid consecutive pageviews', async () => {
   })
 })
 
+test('valid pageview with custom visitor id', async () => {
+  const visitorId = `visitor-id-${Math.random()}`
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'http://foo.mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      'X-Prisme-Visitor-Id': visitorId,
+      Referer: 'http://foo.mywebsite.localhost/'
+    }
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestPageview()
+
+  expect(data).toMatchObject({
+    session: {
+      domain: 'foo.mywebsite.localhost',
+      entry_path: '/',
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: '/',
+      operating_system: 'Other',
+      browser_family: 'Other',
+      device: 'Other',
+      referrer_domain: 'direct',
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: visitorId,
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      utm_content: '',
+      version: 1
+    },
+    pageview: {
+      timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      domain: 'foo.mywebsite.localhost',
+      path: '/',
+      visitor_id: visitorId,
+      session_uuid: expect.stringMatching(UUID_V7_REGEX)
+    }
+  })
+})
+
+test('valid pageview with empty visitor id fallback to auto generated visitor id', async () => {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'http://foo.mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      'X-Prisme-Visitor-Id': '',
+      Referer: 'http://foo.mywebsite.localhost/'
+    }
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestPageview()
+
+  expect(data).toMatchObject({
+    session: {
+      domain: 'foo.mywebsite.localhost',
+      entry_path: '/',
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: '/',
+      operating_system: 'Other',
+      browser_family: 'Other',
+      device: 'Other',
+      referrer_domain: 'direct',
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      utm_content: '',
+      version: 1
+    },
+    pageview: {
+      timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      domain: 'foo.mywebsite.localhost',
+      path: '/',
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX)
+    }
+  })
+})
+
+test('valid consecutive pageviews with visitor id defined on second event', async () => {
+  const ipAddr = faker.internet.ip()
+  let response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'http://foo.mywebsite.localhost',
+      'X-Forwarded-For': ipAddr,
+      Referer: 'http://foo.mywebsite.localhost/'
+    }
+  })
+  expect(response.status).toBe(200)
+
+  let data = await getLatestPageview()
+
+  expect(data).toMatchObject({
+    session: {
+      domain: 'foo.mywebsite.localhost',
+      entry_path: '/',
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: '/',
+      operating_system: 'Other',
+      browser_family: 'Other',
+      device: 'Other',
+      referrer_domain: 'direct',
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      utm_content: '',
+      version: 1
+    },
+    pageview: {
+      timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      domain: 'foo.mywebsite.localhost',
+      path: '/',
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX)
+    }
+  })
+
+  const visitorId = `visitor-id-${Math.random()}`
+  response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'http://foo.mywebsite.localhost',
+      'X-Forwarded-For': ipAddr,
+      Referer: 'http://foo.mywebsite.localhost/foo',
+      'X-Prisme-Visitor-Id': visitorId,
+      'X-Prisme-Document-Referrer': 'http://foo.mywebsite.localhost/'
+    }
+  })
+  expect(response.status).toBe(200)
+
+  data = await getLatestPageview()
+
+  expect(data).toMatchObject({
+    session: {
+      domain: 'foo.mywebsite.localhost',
+      entry_path: '/',
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: '/foo',
+      operating_system: 'Other',
+      browser_family: 'Other',
+      device: 'Other',
+      referrer_domain: 'direct',
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: visitorId,
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      utm_content: '',
+      version: 2
+    },
+    pageview: {
+      timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      domain: 'foo.mywebsite.localhost',
+      path: '/foo',
+      visitor_id: visitorId,
+      session_uuid: expect.stringMatching(UUID_V7_REGEX)
+    }
+  })
+})
+
 async function getLatestPageview (): Promise<any> {
   // Wait for clickhouse to ingest batch.
   Bun.sleepSync(1000)
