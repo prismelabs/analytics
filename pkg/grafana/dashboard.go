@@ -147,7 +147,6 @@ func (c Client) GetDashboardByUid(ctx context.Context, orgId OrgId, dashboardID 
 	}
 
 	var respBody Dashboard
-	println("!!!!!!!", string(resp.Body()))
 	err = json.Unmarshal(resp.Body(), &respBody)
 	if err != nil {
 		return Dashboard{}, fmt.Errorf("failed to parse grafana response: %w", err)
