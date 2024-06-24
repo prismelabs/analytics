@@ -13,6 +13,7 @@ func ProvideFiber(
 	eventsRateLimiterMiddleware middlewares.EventsRateLimiter,
 	minimalFiber wired.MinimalFiber,
 	nonRegisteredOriginFilterMiddleware middlewares.NonRegisteredOriginFilter,
+	getNoscriptPageViewEventHandler handlers.GetNoscriptEventsPageview,
 	postCustomEventHandler handlers.PostEventsCustom,
 	postIdentifyEventHandler handlers.PostEventsIdentify,
 	postPageViewEventHandler handlers.PostEventsPageview,
@@ -25,7 +26,10 @@ func ProvideFiber(
 		fiber.Handler(eventsRateLimiterMiddleware),
 		fiber.Handler(nonRegisteredOriginFilterMiddleware),
 	)
+
 	app.Post("/api/v1/events/pageviews", fiber.Handler(postPageViewEventHandler))
+	app.Get("/api/v1/noscript/events/pageviews", fiber.Handler(getNoscriptPageViewEventHandler))
+
 	app.Post("/api/v1/events/identify", fiber.Handler(postIdentifyEventHandler))
 	app.Post("/api/v1/events/custom/:name", fiber.Handler(postCustomEventHandler))
 

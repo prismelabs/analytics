@@ -25,6 +25,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		clickhouse.ProvideEmbeddedSourceDriver,
 		eventstore.ProvideService,
 		eventstore.ProvideConfig,
+		handlers.ProvideGetNoscriptEventsPageview,
 		handlers.ProvideHealthCheck,
 		handlers.ProvidePostEventsCustom,
 		handlers.ProvidePostEventsIdentify,
