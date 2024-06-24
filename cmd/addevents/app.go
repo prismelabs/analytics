@@ -71,6 +71,11 @@ func (a App) executeScenario(worker func(time.Time, Config, chan<- any) uint64) 
 					a.logger.Panic().Err(err).Msg("failed to prepare sessions batch")
 				}
 
+				identifyBatch, err := a.ch.PrepareBatch(context.Background(), "INSERT INTO prisme.events_identify")
+				if err != nil {
+					a.logger.Panic().Err(err).Msg("failed to prepare identify batch")
+				}
+
 				customEventsBatch, err := a.ch.PrepareBatch(context.Background(), "INSERT INTO prisme.events_custom")
 				if err != nil {
 					a.logger.Panic().Err(err).Msg("failed to prepare custom events batch")
@@ -85,6 +90,8 @@ func (a App) executeScenario(worker func(time.Time, Config, chan<- any) uint64) 
 					switch r := record.(type) {
 					case Session:
 						err = sessionsBatch.Append(r.Row()...)
+					case IdentifyEvent:
+						err = identifyBatch.Append(r.Row()...)
 					case CustomEvent:
 						err = customEventsBatch.Append(r.Row()...)
 					default:
@@ -92,13 +99,18 @@ func (a App) executeScenario(worker func(time.Time, Config, chan<- any) uint64) 
 					}
 
 					if err != nil {
-						a.logger.Panic().Err(err).Msg("failed to append event to batch")
+						a.logger.Panic().Err(err).Type("record_type", record).Msg("failed to append event to batch")
 					}
 				}
 
 				err = sessionsBatch.Send()
 				if err != nil {
 					a.logger.Panic().Err(err).Msg("failed to send sessions batch")
+				}
+
+				err = identifyBatch.Send()
+				if err != nil {
+					a.logger.Panic().Err(err).Msg("failed to send identify events batch")
 				}
 
 				err = customEventsBatch.Send()

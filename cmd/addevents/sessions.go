@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -110,6 +111,21 @@ func emulateSession(entryTime time.Time, cfg Config, rowsChan chan<- any) uint64
 	}
 
 	rowsChan <- session
+
+	// Authenticated session
+	if rand.Float64() < cfg.AuthRate {
+		visitorId = fmt.Sprintf("auth_%X", rand.Int())
+		rowsChan <- IdentifyEvent{
+			Timestamp:     entryTime,
+			VisitorId:     visitorId,
+			SessionUuid:   sessionUuid,
+			InitialKeys:   []string{},
+			InitialValues: []string{},
+			Keys:          []string{},
+			Values:        []string{},
+		}
+		eventsCount++
+	}
 
 	for rand.Float64() < cfg.CustomEventsRate {
 		rowsChan <- randomCustomEvent(session)
