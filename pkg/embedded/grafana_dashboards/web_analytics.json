@@ -182,18 +182,6 @@
 					{
 						"matcher": {
 							"id": "byName",
-							"options": "Visitors over time Visitors over time"
-						},
-						"properties": [
-							{
-								"id": "displayName",
-								"value": "Unique visitors"
-							}
-						]
-					},
-					{
-						"matcher": {
-							"id": "byName",
 							"options": "Visitors change"
 						},
 						"properties": [
@@ -296,10 +284,10 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.8",
+					"pluginVersion": "4.1.0",
 					"queryType": "table",
-					"rawSql": "WITH exit_timestamps AS (\n  SELECT \n    argMax(exit_timestamp, pageviews) AS timestamp, \n    argMax(visitor_id, pageviews) AS visitor_id\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT $__timeInterval(timestamp) AS time, COUNT(DISTINCT(visitor_id))\nFROM exit_timestamps\nGROUP BY time\nORDER BY time",
-					"refId": "Visitors over time"
+					"rawSql": "WITH visitors AS (\n  SELECT\n    argMax(visitor_id, pageviews) AS visitor_id\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT COUNT(DISTINCT(visitor_id)) AS \"Unique visitors\"\nFROM visitors",
+					"refId": "Unique visitors"
 				},
 				{
 					"datasource": {
@@ -307,22 +295,7 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "Visitors over time",
-					"hide": true,
-					"reducer": "sum",
-					"refId": "Total visitors",
-					"settings": {
-						"mode": "dropNN"
-					},
-					"type": "reduce"
-				},
-				{
-					"datasource": {
-						"name": "Expression",
-						"type": "__expr__",
-						"uid": "__expr__"
-					},
-					"expression": "(${Total visitors} / ${Total visitors previous period} - 1) * 100",
+					"expression": "(${Unique visitors} / ${Total visitors previous period} - 1) * 100",
 					"hide": false,
 					"refId": "Visitors change",
 					"type": "math"
@@ -368,10 +341,10 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.8",
+					"pluginVersion": "4.1.0",
 					"queryType": "table",
-					"rawSql": "WITH exit_timestamps AS (\n  SELECT \n    argMax(exit_timestamp, pageviews) AS timestamp, \n    argMax(visitor_id, pageviews) AS visitor_id\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT $__timeInterval(timestamp) AS time, COUNT(*)\nFROM exit_timestamps\nGROUP BY time\nORDER BY time",
-					"refId": "Sessions over time"
+					"rawSql": "WITH visitors AS (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT COUNT(session_uuid) AS \"Unique sessions\"\nFROM visitors",
+					"refId": "Unique sessions"
 				},
 				{
 					"datasource": {
@@ -379,22 +352,7 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "Sessions over time",
-					"hide": true,
-					"reducer": "sum",
-					"refId": "Total sessions",
-					"settings": {
-						"mode": "dropNN"
-					},
-					"type": "reduce"
-				},
-				{
-					"datasource": {
-						"name": "Expression",
-						"type": "__expr__",
-						"uid": "__expr__"
-					},
-					"expression": "(${Total sessions} / ${Total sessions previous period} - 1) * 100",
+					"expression": "(${Unique sessions} / ${Total sessions previous period} - 1) * 100",
 					"hide": false,
 					"refId": "Sessions change",
 					"type": "math"
@@ -448,7 +406,7 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.8",
+					"pluginVersion": "4.1.0",
 					"queryType": "table",
 					"rawSql": "SELECT $__timeInterval(timestamp) AS time, COUNT(*)\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nGROUP BY time\nORDER BY time",
 					"refId": "Page views over time"
@@ -485,7 +443,7 @@
 						"type": "__expr__",
 						"uid": "__expr__"
 					},
-					"expression": "${Total page views} / ${Total sessions}",
+					"expression": "${Total page views} / ${Unique sessions}",
 					"hide": false,
 					"refId": "Views per session",
 					"type": "math"
@@ -789,8 +747,8 @@
 		},
 		{
 			"datasource": {
-				"type": "datasource",
-				"uid": "-- Dashboard --"
+				"type": "grafana-clickhouse-datasource",
+				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
 			"description": "Number of page views over time.",
 			"fieldConfig": {
@@ -853,7 +811,7 @@
 					{
 						"matcher": {
 							"id": "byName",
-							"options": "Page views over time Page views over time"
+							"options": "Pageviews Pageviews"
 						},
 						"properties": [
 							{
@@ -872,7 +830,7 @@
 					{
 						"matcher": {
 							"id": "byName",
-							"options": "Sessions over time Sessions over time"
+							"options": "Sessions Sessions"
 						},
 						"properties": [
 							{
@@ -882,7 +840,7 @@
 							{
 								"id": "color",
 								"value": {
-									"fixedColor": "super-light-green",
+									"fixedColor": "dark-blue",
 									"mode": "fixed"
 								}
 							}
@@ -891,7 +849,7 @@
 					{
 						"matcher": {
 							"id": "byName",
-							"options": "Visitors over time Visitors over time"
+							"options": "Visitors Visitors"
 						},
 						"properties": [
 							{
@@ -916,7 +874,7 @@
 				"y": 7
 			},
 			"id": 6,
-			"maxDataPoints": 32,
+			"maxDataPoints": 16,
 			"options": {
 				"legend": {
 					"calcs": [],
@@ -933,11 +891,71 @@
 			"targets": [
 				{
 					"datasource": {
-						"type": "datasource",
-						"uid": "-- Dashboard --"
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
-					"panelId": 10,
-					"refId": "A"
+					"editorType": "sql",
+					"format": 1,
+					"meta": {
+						"builderOptions": {
+							"columns": [],
+							"database": "",
+							"limit": 1000,
+							"mode": "list",
+							"queryType": "table",
+							"table": ""
+						}
+					},
+					"pluginVersion": "4.1.0",
+					"queryType": "table",
+					"rawSql": "SELECT $__timeInterval(timestamp) AS time, COUNT(*) AS \"Pageviews\"\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nGROUP BY time\nORDER BY time",
+					"refId": "Pageviews"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"editorType": "sql",
+					"format": 1,
+					"hide": false,
+					"meta": {
+						"builderOptions": {
+							"columns": [],
+							"database": "",
+							"limit": 1000,
+							"mode": "list",
+							"queryType": "table",
+							"table": ""
+						}
+					},
+					"pluginVersion": "4.1.0",
+					"queryType": "table",
+					"rawSql": "SELECT $__timeInterval(session_timestamp) AS time, COUNT(*) AS \"Sessions\"\nFROM sessions\nWHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\nAND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\nAND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\nGROUP BY time\nORDER BY time",
+					"refId": "Sessions"
+				},
+				{
+					"datasource": {
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"editorType": "sql",
+					"format": 1,
+					"hide": false,
+					"meta": {
+						"builderOptions": {
+							"columns": [],
+							"database": "",
+							"limit": 1000,
+							"mode": "list",
+							"queryType": "table",
+							"table": ""
+						}
+					},
+					"pluginVersion": "4.1.0",
+					"queryType": "table",
+					"rawSql": "SELECT\n  $__timeInterval(entry_timestamp) AS time,\n  COUNT(DISTINCT(visitor_id)) AS \"Visitors\"\nFROM sessions\nWHERE ($__timeFilter(session_timestamp))\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\nAND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\nAND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\nAND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nAND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\nAND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\nAND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\nAND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\nAND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\nAND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\nAND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\nGROUP BY time\nORDER BY time",
+					"refId": "Visitors"
 				}
 			],
 			"title": "Time Series",
@@ -971,8 +989,7 @@
 								"mode": "percentage",
 								"steps": [
 									{
-										"color": "super-light-blue",
-										"value": null
+										"color": "super-light-blue"
 									}
 								]
 							},
@@ -984,7 +1001,7 @@
 						"h": 12,
 						"w": 11,
 						"x": 1,
-						"y": 20
+						"y": 28
 					},
 					"id": 13,
 					"options": {
@@ -1113,7 +1130,7 @@
 						"h": 12,
 						"w": 11,
 						"x": 12,
-						"y": 20
+						"y": 28
 					},
 					"id": 19,
 					"options": {
@@ -1245,8 +1262,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									}
 								]
 							},
@@ -1258,7 +1274,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 1,
-						"y": 21
+						"y": 29
 					},
 					"id": 25,
 					"options": {
@@ -1325,8 +1341,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									},
 									{
 										"color": "red",
@@ -1342,7 +1357,7 @@
 						"h": 13,
 						"w": 8,
 						"x": 8,
-						"y": 21
+						"y": 29
 					},
 					"id": 14,
 					"options": {
@@ -1426,8 +1441,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									}
 								]
 							},
@@ -1439,7 +1453,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 16,
-						"y": 21
+						"y": 29
 					},
 					"id": 26,
 					"options": {
@@ -1527,8 +1541,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "blue",
-										"value": null
+										"color": "blue"
 									}
 								]
 							},
@@ -1540,7 +1553,7 @@
 						"h": 13,
 						"w": 15,
 						"x": 1,
-						"y": 35
+						"y": 43
 					},
 					"id": 15,
 					"options": {
@@ -1671,8 +1684,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "red",
-										"value": null
+										"color": "red"
 									}
 								]
 							},
@@ -1684,7 +1696,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 16,
-						"y": 35
+						"y": 43
 					},
 					"id": 18,
 					"options": {
@@ -1795,7 +1807,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 1,
-						"y": 49
+						"y": 57
 					},
 					"id": 4,
 					"options": {
@@ -1905,7 +1917,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 12,
-						"y": 49
+						"y": 57
 					},
 					"id": 5,
 					"options": {
@@ -2009,8 +2021,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									},
 									{
 										"color": "red",
@@ -2026,7 +2037,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 1,
-						"y": 24
+						"y": 32
 					},
 					"id": 21,
 					"options": {
@@ -2499,6 +2510,7 @@
 		"from": "now-7d",
 		"to": "now"
 	},
+	"timeRangeUpdatedDuringEditOrView": false,
 	"timepicker": {
 		"refresh_intervals": [
 			"5m",

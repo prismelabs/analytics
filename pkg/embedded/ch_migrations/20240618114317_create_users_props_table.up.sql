@@ -2,8 +2,7 @@ CREATE TABLE events_identify(
   timestamp DateTime('UTC'),
   visitor_id String,
 
-  initial_session_uuid UUID,
-  latest_session_uuid UUID,
+  session_uuid UUID,
 
   -- Properties that are set only once.
   -- JSON keys and values string
@@ -39,8 +38,8 @@ CREATE MATERIALIZED VIEW events_identify_mv TO users_props_agg AS
 SELECT
   visitor_id,
   max(timestamp) AS updated_at,
-  argMinState(initial_session_uuid, timestamp) AS initial_session_uuid,
-  argMaxState(latest_session_uuid, timestamp) AS latest_session_uuid,
+  argMinState(session_uuid, timestamp) AS initial_session_uuid,
+  argMaxState(session_uuid, timestamp) AS latest_session_uuid,
   argMinState(initial_keys, timestamp) AS initial_keys,
   argMinState(initial_values, timestamp) AS initial_values,
   argMaxState(keys, timestamp) AS keys,
