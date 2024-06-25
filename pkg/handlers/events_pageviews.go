@@ -14,7 +14,9 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
+	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/rs/zerolog"
+	"github.com/valyala/fasthttp"
 )
 
 type PostEventsPageview fiber.Handler
@@ -59,19 +61,18 @@ func eventsPageviewsHandler(
 	sessionStorage sessionstorage.Service,
 	userAgent, documentReferrer, requestReferrer, ipAddr []byte,
 	visitorId string,
-) error {
-
+) (err error) {
 	referrerUri := event.ReferrerUri{}
 	pageView := event.PageView{}
 
 	// Parse referrer URI.
-	err := referrerUri.Parse(utils.CopyBytes(documentReferrer))
+	referrerUri, err = event.ParseReferrerUri(documentReferrer)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid X-Prisme-Document-Referrer")
 	}
 
 	// Parse page URI.
-	err = pageView.PageUri.Parse(utils.CopyBytes(requestReferrer))
+	pageView.PageUri, err = uri.ParseBytes(requestReferrer)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 	}
@@ -79,11 +80,11 @@ func eventsPageviewsHandler(
 	// Compute device id.
 	deviceId := computeDeviceId(
 		saltManagerService.StaticSalt().Bytes(), userAgent,
-		ipAddr, pageView.PageUri.Host(),
+		ipAddr, utils.UnsafeBytes(pageView.PageUri.Host()),
 	)
 
-	isExternalReferrer := equalBytes(referrerUri.Host(), pageView.PageUri.Host())
-	newSession := !isExternalReferrer
+	isExternalReferrer := referrerUri.Host() != pageView.PageUri.Host()
+	newSession := isExternalReferrer
 
 	// Retrieve session.
 	if !newSession {
@@ -128,18 +129,22 @@ func eventsPageviewsHandler(
 		if visitorId == "" {
 			visitorId = computeVisitorId("prisme_",
 				saltManagerService.DailySalt().Bytes(), userAgent,
-				ipAddr, pageView.PageUri.Host(), []byte(deviceId),
+				ipAddr, utils.UnsafeBytes(pageView.PageUri.Host()), []byte(deviceId),
 			)
 		}
 
+		// Parse page uri args.
+		args := fasthttp.Args{}
+		args.Parse(pageView.PageUri.QueryString())
+
 		pageView.Session = event.Session{
-			PageUri:       &pageView.PageUri,
-			ReferrerUri:   &referrerUri,
+			PageUri:       pageView.PageUri,
+			ReferrerUri:   referrerUri,
 			Client:        client,
 			CountryCode:   ipGeolocatorService.FindCountryCodeForIP(utils.UnsafeString(ipAddr)),
 			VisitorId:     visitorId,
 			SessionUuid:   sessionUuid,
-			Utm:           extractUtmParams(pageView.PageUri.QueryArgs()),
+			Utm:           extractUtmParams(&args),
 			PageviewCount: 1,
 		}
 		pageView.Timestamp = pageView.Session.SessionTime()

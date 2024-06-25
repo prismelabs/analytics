@@ -10,6 +10,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
+	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/rs/zerolog"
 	"github.com/tidwall/gjson"
 )
@@ -33,11 +34,10 @@ func ProvidePostEventsIdentify(
 		// Referrer of the POST request, that is the viewed page.
 		requestReferrer := peekReferrerHeader(c)
 
-		pageUri := event.Uri{}
 		identifyEvent := event.Identify{}
 
 		// Parse page URI.
-		err := pageUri.Parse(utils.CopyBytes(requestReferrer))
+		pageUri, err := uri.ParseBytes(requestReferrer)
 		if err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 		}
@@ -45,7 +45,7 @@ func ProvidePostEventsIdentify(
 		// Compute device id.
 		deviceId := computeDeviceId(
 			saltManagerService.StaticSalt().Bytes(), c.Request().Header.UserAgent(),
-			utils.UnsafeBytes(c.IP()), pageUri.Host(),
+			utils.UnsafeBytes(c.IP()), utils.UnsafeBytes(pageUri.Host()),
 		)
 
 		// Check if visitor id must be updated.
@@ -59,13 +59,13 @@ func ProvidePostEventsIdentify(
 			identifyEvent.Session, ok = sessionStorage.IdentifySession(deviceId, result.Str)
 			// Session not found.
 			if !ok {
-				return fiber.NewError(fiber.StatusBadRequest, "session not found")
+				return errSessionNotFound
 			}
 		} else {
 			var ok bool
 			identifyEvent.Session, ok = sessionStorage.GetSession(deviceId)
 			if !ok {
-				return fiber.NewError(fiber.StatusBadRequest, "session not found")
+				return errSessionNotFound
 			}
 		}
 

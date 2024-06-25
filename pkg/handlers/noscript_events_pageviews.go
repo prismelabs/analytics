@@ -12,18 +12,18 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type GetNoscriptEventsPageview fiber.Handler
+type GetNoscriptEventsPageviews fiber.Handler
 
 // ProvideGetNoscriptEventsPageview is a wire provider for
 // GET /api/v1/noscript/events/pageview handler.
-func ProvideGetNoscriptEventsPageview(
+func ProvideGetNoscriptEventsPageviews(
 	logger zerolog.Logger,
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstorage.Service,
-) GetNoscriptEventsPageview {
+) GetNoscriptEventsPageviews {
 	return func(c *fiber.Ctx) error {
 		// Referrer of the POST request, that is the viewed page.
 		requestReferrer := peekReferrerQueryOrHeader(c)
