@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/prismelabs/analytics/pkg/dataview"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
@@ -38,7 +39,7 @@ func ProvidePostEventsCustom(
 			c.Request().Header.UserAgent(),
 			utils.UnsafeBytes(c.IP()),
 			c.Params("name"),
-			jsonKeysValuesCollector{c},
+			dataview.JsonKvCollector{Json: c.Body()},
 		)
 	}
 }
@@ -50,7 +51,7 @@ func eventsCustomHandler(
 	sessionStorage sessionstorage.Service,
 	requestReferrer, userAgent, ipAddr []byte,
 	eventName string,
-	kvCollector keysValuesCollector,
+	kvCollector dataview.KvCollector,
 ) (err error) {
 	customEv := event.Custom{}
 
@@ -78,7 +79,7 @@ func eventsCustomHandler(
 	customEv.Name = utils.CopyString(eventName)
 
 	// Collect event properties.
-	customEv.Keys, customEv.Values = kvCollector.collectKeysValues()
+	customEv.Keys, customEv.Values = kvCollector.CollectKeysValues()
 
 	// Store event.
 	err = eventStore.StoreCustom(ctx, &customEv)

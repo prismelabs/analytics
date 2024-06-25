@@ -1,18 +1,20 @@
 package handlers
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/prismelabs/analytics/pkg/dataview"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
 	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/rs/zerolog"
-	"github.com/tidwall/gjson"
 )
 
 type PostEventsIdentify fiber.Handler
@@ -34,67 +36,77 @@ func ProvidePostEventsIdentify(
 		// Referrer of the POST request, that is the viewed page.
 		requestReferrer := peekReferrerHeader(c)
 
-		identifyEvent := event.Identify{}
-
-		// Parse page URI.
-		pageUri, err := uri.ParseBytes(requestReferrer)
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
-		}
-
-		// Compute device id.
-		deviceId := computeDeviceId(
-			saltManagerService.StaticSalt().Bytes(), c.Request().Header.UserAgent(),
-			utils.UnsafeBytes(c.IP()), utils.UnsafeBytes(pageUri.Host()),
+		return eventIdentifyHandler(
+			c.UserContext(),
+			logger,
+			eventStore,
+			saltManagerService,
+			sessionStorage,
+			requestReferrer,
+			c.Request().Header.UserAgent(),
+			utils.UnsafeBytes(c.IP()),
+			dataview.JsonKvView{Json: c.Body()},
+			dataview.JsonKvCollector{Json: c.Body(), Path: "set."},
+			dataview.JsonKvCollector{Json: c.Body(), Path: "setOnce."},
 		)
-
-		// Check if visitor id must be updated.
-		result := gjson.GetBytes(c.Body(), "visitorId")
-		if result.Exists() {
-			if result.Str == "" {
-				return fiber.NewError(fiber.StatusBadRequest, "visitorId must be a string or undefined")
-			}
-
-			var ok bool
-			identifyEvent.Session, ok = sessionStorage.IdentifySession(deviceId, result.Str)
-			// Session not found.
-			if !ok {
-				return errSessionNotFound
-			}
-		} else {
-			var ok bool
-			identifyEvent.Session, ok = sessionStorage.GetSession(deviceId)
-			if !ok {
-				return errSessionNotFound
-			}
-		}
-
-		// Retrieve set once properties.
-		result = gjson.GetBytes(c.Body(), "setOnce")
-		if result.Exists() {
-			collectJsonKeyValues(
-				utils.UnsafeBytes(result.Raw),
-				&identifyEvent.InitialKeys,
-				&identifyEvent.InitialValues,
-			)
-		}
-
-		// Retrive other properties.
-		result = gjson.GetBytes(c.Body(), "set")
-		if result.Exists() {
-			collectJsonKeyValues(
-				utils.UnsafeBytes(result.Raw),
-				&identifyEvent.Keys,
-				&identifyEvent.Values,
-			)
-		}
-
-		identifyEvent.Timestamp = time.Now().UTC()
-		err = eventStore.StoreIdentifyEvent(c.UserContext(), &identifyEvent)
-		if err != nil {
-			return fmt.Errorf("failed to store identify event: %w", err)
-		}
-
-		return nil
 	}
+}
+
+func eventIdentifyHandler(
+	ctx context.Context,
+	logger zerolog.Logger,
+	eventStore eventstore.Service,
+	saltManagerService saltmanager.Service,
+	sessionStorage sessionstorage.Service,
+	requestReferrer, userAgent, ipAddr []byte,
+	kvView dataview.KvView, setPropCollector, setOncePropCollector dataview.KvCollector,
+) error {
+
+	identifyEvent := event.Identify{}
+
+	// Parse page URI.
+	pageUri, err := uri.ParseBytes(requestReferrer)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
+	}
+
+	// Compute device id.
+	deviceId := computeDeviceId(
+		saltManagerService.StaticSalt().Bytes(), userAgent,
+		ipAddr, utils.UnsafeBytes(pageUri.Host()),
+	)
+
+	// Retrieve visitor ID.
+	visitorId, err := kvView.GetString("visitorId")
+	if err != nil && !errors.Is(err, dataview.ErrKvViewEntryNotFound) {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	// No visitor ID provided.
+	if err != nil && errors.Is(err, dataview.ErrKvViewEntryNotFound) {
+		var ok bool
+		identifyEvent.Session, ok = sessionStorage.GetSession(deviceId)
+		if !ok {
+			return errSessionNotFound
+		}
+	} else { // Visitor id provided.
+		var ok bool
+		identifyEvent.Session, ok = sessionStorage.IdentifySession(deviceId, visitorId)
+		// Session not found.
+		if !ok {
+			return errSessionNotFound
+		}
+	}
+
+	// Collect properties.
+	identifyEvent.InitialKeys, identifyEvent.InitialValues = setOncePropCollector.CollectKeysValues()
+	identifyEvent.Keys, identifyEvent.Values = setPropCollector.CollectKeysValues()
+
+	identifyEvent.Timestamp = time.Now().UTC()
+	err = eventStore.StoreIdentifyEvent(ctx, &identifyEvent)
+	if err != nil {
+		return fmt.Errorf("failed to store identify event: %w", err)
+	}
+
+	return nil
 }

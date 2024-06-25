@@ -2,13 +2,11 @@ package handlers
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/event"
-	"github.com/tidwall/gjson"
 	"github.com/valyala/fasthttp"
 )
 
@@ -82,55 +80,4 @@ func extractUtmParams(args *fasthttp.Args) event.UtmParams {
 	utmParams.Content = string(args.Peek("utm_content"))
 
 	return utmParams
-}
-
-// keysValuesCollector define a generic interface to collect keys and values of
-// an event.
-type keysValuesCollector interface {
-	collectKeysValues() (keys, values []string)
-}
-
-type jsonKeysValuesCollector struct {
-	c *fiber.Ctx
-}
-
-func (jkvc jsonKeysValuesCollector) collectKeysValues() (keys, values []string) {
-	collectJsonKeyValues(jkvc.c.Body(), &keys, &values)
-	return
-}
-
-// collectKeysValues implements keysValuesCollector.
-func collectJsonKeyValues(json []byte, keys, values *[]string) {
-	// Get keys.
-	result := gjson.GetBytes(json, "@keys")
-	result.ForEach(func(_, key gjson.Result) bool {
-		*keys = append(*keys, utils.CopyString(key.String()))
-		return true
-	})
-
-	// Get values.
-	result = gjson.GetBytes(json, "@values")
-	result.ForEach(func(_, value gjson.Result) bool {
-		*values = append(*values, utils.CopyString(value.Raw))
-		return true
-	})
-}
-
-type queryKeysValuesCollector struct {
-	c      *fiber.Ctx
-	prefix string
-}
-
-// collectKeysValues implements keysValuesCollector.
-func (qkvc queryKeysValuesCollector) collectKeysValues() (keys, values []string) {
-	qkvc.c.Context().QueryArgs().VisitAll(func(keyBytes, valueBytes []byte) {
-		if len(keyBytes) > len(qkvc.prefix) &&
-			strings.HasPrefix(utils.UnsafeString(keyBytes), qkvc.prefix) {
-			// Copy key and value.
-			keys = append(keys, string(keyBytes[len(qkvc.prefix):]))
-			values = append(values, string(valueBytes))
-		}
-	})
-
-	return
 }
