@@ -31,5 +31,9 @@ func (ru *ReferrerUri) HostOrDirect() string {
 
 // String implements fmt.Stringer.
 func (ru ReferrerUri) String() string {
-	return ru.Scheme() + "://" + ru.Host() + ru.Path()
+	if ru.IsValid() {
+		return ru.Scheme() + "://" + ru.Host() + ru.Path()
+	}
+
+	return ""
 }

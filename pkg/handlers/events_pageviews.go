@@ -83,7 +83,7 @@ func eventsPageviewsHandler(
 		ipAddr, utils.UnsafeBytes(pageView.PageUri.Host()),
 	)
 
-	isExternalReferrer := referrerUri.Host() != pageView.PageUri.Host()
+	isExternalReferrer := !referrerUri.IsValid() || referrerUri.Host() != pageView.PageUri.Host()
 	newSession := isExternalReferrer
 
 	// Retrieve session.
