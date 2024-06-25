@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
+	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/rs/zerolog"
 )
 
@@ -14,8 +15,8 @@ type Session struct {
 	// This data struct must not contains data changing over pageviews and custom events
 	// except for PageviewCount field.
 
-	PageUri       *Uri
-	ReferrerUri   *ReferrerUri
+	PageUri       uri.Uri
+	ReferrerUri   ReferrerUri
 	Client        uaparser.Client
 	CountryCode   ipgeolocator.CountryCode
 	VisitorId     string
@@ -32,7 +33,7 @@ func (s *Session) SessionTime() time.Time {
 // MarshalZerologObject implements zerolog.LogObjectMarshaler.
 func (s *Session) MarshalZerologObject(e *zerolog.Event) {
 	e.
-		Stringer("page_uri", s.ReferrerUri).
+		Stringer("page_uri", s.PageUri).
 		Stringer("referrer_uri", s.ReferrerUri).
 		Object("client", s.Client).
 		Stringer("country_code", s.CountryCode).
