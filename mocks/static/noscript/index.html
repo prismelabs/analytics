@@ -9,7 +9,10 @@
 
 <body>
 	<h1>Index</h1>
-	<img src="http://prisme.localhost:8000/api/v1/noscript/events/pageviews?visitor-id=noscript-visitor" />
+	<img src="http://prisme.localhost:8000/api/v1/noscript/events/pageviews?visitor-id=noscript-visitor" crossorigin=""
+		fetchpriority="high" />
+	<img src="http://prisme.localhost:8000/api/v1/noscript/events/custom/noscript-event?prop-extra=foo" crossorigin=""
+		fetchpriority="low" />
 	<a href="/">Home</a>
 	<a href="/login.html">Login</a>
 	<a href="/manual.html">Manual tracking</a>
