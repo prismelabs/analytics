@@ -4,6 +4,7 @@ import "github.com/prometheus/client_golang/prometheus"
 
 type metrics struct {
 	activeSessions    prometheus.Gauge
+	sessionsWait      prometheus.Gauge
 	sessionsCounter   *prometheus.CounterVec
 	sessionsPageviews prometheus.Histogram
 	getSessionsMiss   prometheus.Counter
@@ -14,6 +15,10 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 		activeSessions: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "sessionstorage_active_sessions",
 			Help: "Active sessions stored in memory",
+		}),
+		sessionsWait: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "sessionstorage_sessions_wait",
+			Help: "Number of events waiting for a session",
 		}),
 		sessionsCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "sessionstorage_sessions_total",
@@ -32,6 +37,7 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 
 	promRegistry.MustRegister(
 		m.activeSessions,
+		m.sessionsWait,
 		m.sessionsCounter,
 		m.sessionsPageviews,
 		m.getSessionsMiss,

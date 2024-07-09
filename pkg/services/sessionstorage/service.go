@@ -12,7 +12,7 @@ import (
 // Service define an in memory session storage.
 type Service interface {
 	// GetSession retrieves stored session and returns it.
-	// Returned boolean flag is false is no session was found.
+	// Returned boolean flag is false if no session was found.
 	GetSession(deviceId string) (event.Session, bool)
 	// InsertSession inserts session in session storage and associate it to the
 	// given deviceId.
@@ -22,6 +22,11 @@ type Service interface {
 	// IdentifySession updates stored session visitor id. Updated session and
 	// boolean found flag are returned.
 	IdentifySession(deviceId string, visitorId string) (event.Session, bool)
+	// WaitForSession retrieves stored session and returns it. If session is not
+	// found, it waits until it is created or timeout.
+	// Returned boolean flag is false if wait timed out and returned an empty
+	// session.
+	WaitSession(deviceId string, timeout time.Duration) (event.Session, bool)
 }
 
 type service struct {
@@ -35,6 +40,7 @@ type service struct {
 type entry struct {
 	session event.Session
 	expiry  uint32
+	wait    chan struct{}
 }
 
 // ProvideService is a wire provider for in memory session storage.
@@ -71,11 +77,9 @@ func (s *service) GetSession(deviceId string) (event.Session, bool) {
 	s.mu.RUnlock()
 
 	// Expired session.
-	if ok && uint32(time.Now().Unix()) >= entry.expiry {
+	if !ok || uint32(time.Now().Unix()) >= entry.expiry {
 		s.metrics.getSessionsMiss.Inc()
 		return event.Session{}, false
-	} else if !ok {
-		s.metrics.getSessionsMiss.Inc()
 	}
 
 	return entry.session, ok
@@ -84,7 +88,7 @@ func (s *service) GetSession(deviceId string) (event.Session, bool) {
 // InsertSession implements Service.
 func (s *service) InsertSession(deviceId string, session event.Session) {
 	s.mu.Lock()
-	currentSession, sessionExists := s.data[deviceId]
+	currentSession := s.data[deviceId]
 
 	// Store session.
 	s.data[deviceId] = entry{
@@ -95,7 +99,11 @@ func (s *service) InsertSession(deviceId string, session event.Session) {
 
 	// Compute metrics.
 	s.metrics.sessionsCounter.With(prometheus.Labels{"type": "inserted"}).Inc()
-	if !sessionExists {
+	if currentSession.expiry == 0 {
+		// Notify waiter.
+		if currentSession.wait != nil {
+			close(currentSession.wait)
+		}
 		s.metrics.activeSessions.Inc()
 	} else {
 		s.metrics.sessionsCounter.With(prometheus.Labels{"type": "overwritten"}).Inc()
@@ -149,6 +157,42 @@ func (s *service) IdentifySession(deviceId string, visitorId string) (event.Sess
 	s.mu.Unlock()
 
 	return sessionEntry.session, true
+}
+
+// WaitSession implements Service.
+func (s *service) WaitSession(deviceId string, timeout time.Duration) (event.Session, bool) {
+	s.mu.RLock()
+	sessionEntry, entryExists := s.data[deviceId]
+	s.mu.RUnlock()
+
+	// Create entry with a wait channel.
+	if !entryExists {
+		sessionEntry.wait = make(chan struct{})
+
+		s.mu.Lock()
+		s.data[deviceId] = sessionEntry
+		s.mu.Unlock()
+	}
+
+	// Session is active and already exists.
+	if entryExists && sessionEntry.expiry >= uint32(time.Now().Unix()) {
+		return sessionEntry.session, true
+	}
+
+	// Wait if needed.
+	if sessionEntry.wait != nil {
+		s.metrics.sessionsWait.Inc()
+		defer s.metrics.sessionsWait.Dec()
+
+		deadlineCh := time.After(timeout)
+		select {
+		case <-deadlineCh:
+			return event.Session{}, false
+		case <-sessionEntry.wait:
+		}
+	}
+
+	return s.GetSession(deviceId)
 }
 
 // session garbage collector.
