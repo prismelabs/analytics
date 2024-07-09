@@ -39,10 +39,6 @@ func peekReferrerQueryOrHeader(c *fiber.Ctx) []byte {
 	return referrer
 }
 
-func equalBytes(a, b []byte) bool {
-	return utils.UnsafeString(a) == utils.UnsafeString(b)
-}
-
 func computeDeviceId(bytesSlice ...[]byte) string {
 	return fmt.Sprintf("%X", xxh3(bytesSlice...))
 }

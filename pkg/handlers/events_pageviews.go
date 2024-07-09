@@ -62,7 +62,7 @@ func eventsPageviewsHandler(
 	userAgent, documentReferrer, requestReferrer, ipAddr []byte,
 	visitorId string,
 ) (err error) {
-	referrerUri := event.ReferrerUri{}
+	var referrerUri event.ReferrerUri
 	pageView := event.PageView{}
 
 	// Parse referrer URI.
