@@ -15,6 +15,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/testutils"
+	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 )
@@ -41,10 +42,10 @@ func TestIntegService(t *testing.T) {
 		eventTime := time.Now().UTC().Round(time.Second)
 		err := service.StorePageView(context.Background(), &event.PageView{
 			Timestamp: eventTime,
-			PageUri:   event.Uri{},
+			PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
 			Session: event.Session{
-				PageUri:       &event.Uri{},
-				ReferrerUri:   &event.ReferrerUri{},
+				PageUri:       testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
+				ReferrerUri:   event.ReferrerUri{},
 				Client:        uaparser.Client{},
 				CountryCode:   ipgeolocator.CountryCode{},
 				VisitorId:     "singlePageViewTestCase",
@@ -108,10 +109,10 @@ func TestIntegService(t *testing.T) {
 			eventTime := time.Now().UTC().Round(time.Second)
 			err := service.StorePageView(context.Background(), &event.PageView{
 				Timestamp: eventTime,
-				PageUri:   event.Uri{},
+				PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
 				Session: event.Session{
-					PageUri:       &event.Uri{},
-					ReferrerUri:   &event.ReferrerUri{},
+					PageUri:       testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
+					ReferrerUri:   event.ReferrerUri{},
 					Client:        uaparser.Client{},
 					CountryCode:   ipgeolocator.CountryCode{},
 					VisitorId:     "multipleEventsTestCase",
@@ -126,10 +127,10 @@ func TestIntegService(t *testing.T) {
 			eventTime = time.Now().UTC().Round(time.Second)
 			err = service.StoreCustom(context.Background(), &event.Custom{
 				Timestamp: eventTime,
-				PageUri:   event.Uri{},
+				PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
 				Session: event.Session{
-					PageUri:       &event.Uri{},
-					ReferrerUri:   &event.ReferrerUri{},
+					PageUri:       testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
+					ReferrerUri:   event.ReferrerUri{},
 					Client:        uaparser.Client{},
 					CountryCode:   ipgeolocator.CountryCode{},
 					VisitorId:     "multipleEventsTestCase",
@@ -229,10 +230,10 @@ func TestIntegService(t *testing.T) {
 			eventTime := time.Now().UTC().Round(time.Second)
 			err := service.StorePageView(context.Background(), &event.PageView{
 				Timestamp: eventTime,
-				PageUri:   event.Uri{},
+				PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
 				Session: event.Session{
-					PageUri:       &event.Uri{},
-					ReferrerUri:   &event.ReferrerUri{},
+					PageUri:       testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
+					ReferrerUri:   event.ReferrerUri{},
 					Client:        uaparser.Client{},
 					CountryCode:   ipgeolocator.CountryCode{},
 					VisitorId:     "singlePageViewTestCase",
