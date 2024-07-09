@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 // Server specific options.
 type Server struct {
 	// Access log file path.
@@ -14,16 +16,19 @@ type Server struct {
 	ProxyHeader string
 	// host:port address of admin http server.
 	AdminHostPort string
+	// Timeout for /api/v1/events/* handlers.
+	ApiEventsTimeout time.Duration
 }
 
 // ServerFromEnv loads server related options from environment variables.
 func ServerFromEnv() Server {
 	return Server{
-		AccessLog:     GetEnvOrDefault("PRISME_ACCESS_LOG", "/dev/stdout"),
-		Debug:         GetEnvOrDefault("PRISME_DEBUG", "false") != "false",
-		Port:          uint16(ParseUintEnvOrDefault("PRISME_PORT", 80, 16)),
-		TrustProxy:    GetEnvOrDefault("PRISME_TRUST_PROXY", "false") != "false",
-		ProxyHeader:   GetEnvOrDefault("PRISME_PROXY_HEADER", "X-Forwarded-For"),
-		AdminHostPort: GetEnvOrDefault("PRISME_ADMIN_HOSTPORT", "127.0.0.1:9090"),
+		AccessLog:        GetEnvOrDefault("PRISME_ACCESS_LOG", "/dev/stdout"),
+		Debug:            GetEnvOrDefault("PRISME_DEBUG", "false") != "false",
+		Port:             uint16(ParseUintEnvOrDefault("PRISME_PORT", 80, 16)),
+		TrustProxy:       GetEnvOrDefault("PRISME_TRUST_PROXY", "false") != "false",
+		ProxyHeader:      GetEnvOrDefault("PRISME_PROXY_HEADER", "X-Forwarded-For"),
+		AdminHostPort:    GetEnvOrDefault("PRISME_ADMIN_HOSTPORT", "127.0.0.1:9090"),
+		ApiEventsTimeout: ParseDurationEnvOrDefault("PRISME_API_EVENTS_TIMEOUT", 3*time.Second),
 	}
 }

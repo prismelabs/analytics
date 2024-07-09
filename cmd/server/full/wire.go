@@ -46,6 +46,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		middlewares.ProvideNoscriptHandlersCache,
 		middlewares.ProvideRequestId,
 		middlewares.ProvideStatic,
+		middlewares.ProvideApiEventsTimeout,
 		originregistry.ProvideEnvVarService,
 		saltmanager.ProvideService,
 		sessionstorage.ProvideConfig,

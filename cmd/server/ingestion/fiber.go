@@ -9,13 +9,14 @@ import (
 
 // ProvideFiber is a wire provider for fiber.App.
 func ProvideFiber(
+	apiEventsTimeoutMiddleware middlewares.ApiEventsTimeout,
 	eventsCorsMiddleware middlewares.EventsCors,
 	eventsRateLimiterMiddleware middlewares.EventsRateLimiter,
+	getNoscriptCustomEventHandler handlers.GetNoscriptEventsCustom,
+	getNoscriptPageViewEventHandler handlers.GetNoscriptEventsPageviews,
 	minimalFiber wired.MinimalFiber,
 	nonRegisteredOriginFilterMiddleware middlewares.NonRegisteredOriginFilter,
 	noscriptHandlersCacheMiddleware middlewares.NoscriptHandlersCache,
-	getNoscriptCustomEventHandler handlers.GetNoscriptEventsCustom,
-	getNoscriptPageViewEventHandler handlers.GetNoscriptEventsPageviews,
 	postCustomEventHandler handlers.PostEventsCustom,
 	postIdentifyEventHandler handlers.PostEventsIdentify,
 	postPageViewEventHandler handlers.PostEventsPageview,
@@ -27,6 +28,7 @@ func ProvideFiber(
 		fiber.Handler(eventsCorsMiddleware),
 		fiber.Handler(eventsRateLimiterMiddleware),
 		fiber.Handler(nonRegisteredOriginFilterMiddleware),
+		fiber.Handler(apiEventsTimeoutMiddleware),
 	)
 
 	app.Use("/api/v1/noscript/events/*",
