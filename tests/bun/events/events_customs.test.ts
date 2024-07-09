@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { COUNTRY_CODE_REGEX, PRISME_CUSTOM_EVENTS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
+import { COUNTRY_CODE_REGEX, PRISME_CUSTOM_EVENTS_URL, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
 import { randomIpWithSession } from '../utils'
 
 const seed = new Date().getTime()
@@ -87,6 +87,66 @@ test('valid test cases pause', async () => {
   // cases.
   // This is not needed later as each getLatestXXX contains a 1s sleep.
   Bun.sleepSync(1000)
+})
+
+test('concurrent pageview and custom events', async () => {
+  const ipAddr = faker.internet.ip()
+
+  await Promise.all([
+    // Identify events first.
+    fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
+      method: 'POST',
+      headers: {
+        Origin: 'https://mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        Referer: 'https://mywebsite.localhost/path',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    }),
+    // Pageview concurrently.
+    // This pageview will create session that will be used for both events.
+    fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'https://mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': 'https://mywebsite.localhost/path'
+      }
+    })
+  ]).then((results) => results.forEach((resp) => expect(resp.status).toBe(200)))
+
+  const data = await getLatestCustomEvent()
+
+  expect(data).toMatchObject({
+    session: {
+      domain: 'mywebsite.localhost',
+      entry_path: '/path',
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: '/path',
+      operating_system: 'Other',
+      browser_family: 'Other',
+      device: 'Other',
+      referrer_domain: 'direct',
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      utm_content: '',
+      version: 1
+    },
+    event: {
+      domain: 'mywebsite.localhost',
+      path: '/path',
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      name: 'foo',
+      properties: {}
+    }
+  })
 })
 
 test('valid custom event request without body and Content-Type header', async () => {

@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/gofiber/fiber/v2"
@@ -80,4 +82,13 @@ func extractUtmParams(args *fasthttp.Args) event.UtmParams {
 	utmParams.Content = string(args.Peek("utm_content"))
 
 	return utmParams
+}
+
+func contextTimeout(ctx context.Context) time.Duration {
+	deadline, hasDeadline := ctx.Deadline()
+	if !hasDeadline {
+		panic("context has no deadline")
+	}
+
+	return time.Until(deadline)
 }

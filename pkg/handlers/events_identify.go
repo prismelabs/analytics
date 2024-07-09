@@ -54,7 +54,7 @@ func ProvidePostEventsIdentify(
 
 func eventIdentifyHandler(
 	ctx context.Context,
-	logger zerolog.Logger,
+	_ zerolog.Logger,
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstorage.Service,
@@ -85,7 +85,7 @@ func eventIdentifyHandler(
 	// No visitor ID provided.
 	if err != nil && errors.Is(err, dataview.ErrKvViewEntryNotFound) {
 		var ok bool
-		identifyEvent.Session, ok = sessionStorage.GetSession(deviceId)
+		identifyEvent.Session, ok = sessionStorage.WaitSession(deviceId, contextTimeout(ctx))
 		if !ok {
 			return errSessionNotFound
 		}
@@ -94,7 +94,15 @@ func eventIdentifyHandler(
 		identifyEvent.Session, ok = sessionStorage.IdentifySession(deviceId, visitorId)
 		// Session not found.
 		if !ok {
-			return errSessionNotFound
+			// Wait for it.
+			_, ok = sessionStorage.WaitSession(deviceId, contextTimeout(ctx))
+			if !ok {
+				return errSessionNotFound
+			}
+			identifyEvent.Session, ok = sessionStorage.IdentifySession(deviceId, visitorId)
+			if !ok {
+				return errSessionNotFound
+			}
 		}
 	}
 

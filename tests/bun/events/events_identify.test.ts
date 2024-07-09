@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { PRISME_IDENTIFY_EVENTS_URL, PRISME_PAGEVIEWS_URL, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
+import { PRISME_IDENTIFY_EVENTS_URL, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
 import { randomIpWithSession } from '../utils'
 
 const seed = new Date().getTime()
@@ -75,10 +75,55 @@ test('valid test cases pause', async () => {
   Bun.sleepSync(1000)
 })
 
-// SetOnce properties
-// SetOnce properties are never overwritten
-// SetOnce and Set properties overlap.
-// user_prop function returns SetOnce property in priority.
+test('concurrent pageview and identify events', async () => {
+  const ipAddr = faker.internet.ip()
+  const visitorId = `visitor-id-${Math.random()}`
+
+  await Promise.all([
+    // Identify events first.
+    fetch(PRISME_IDENTIFY_EVENTS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'https://mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        Referer: 'https://mywebsite.localhost/foo',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ visitorId })
+    }),
+    // Pageview concurrently.
+    // This pageview will create session that will be used for both events.
+    fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'https://mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': 'https://mywebsite.localhost/foo'
+      }
+    })
+  ]).then((results) => results.forEach((resp) => expect(resp.status).toBe(200)))
+
+  // Session contains visitor ID A.
+  const session = await getLatestSession()
+  const sessionUuid = session.session_uuid
+  expect(session).toMatchObject({
+    visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+    session_uuid: expect.stringMatching(UUID_V7_REGEX),
+    version: 1
+  })
+
+  // Check that user exists.
+  const user = await getLatestUser()
+  expect(user).toMatchObject({
+    // Visitor ID B is used to store user props.
+    visitor_id: visitorId,
+    updated_at: expect.stringMatching(TIMESTAMP_REGEX),
+    initial_session_uuid: sessionUuid,
+    latest_session_uuid: sessionUuid,
+    initialProperties: {},
+    properties: {}
+  })
+})
 
 test('valid identify with visitor_id only', async () => {
   const visitorIdA = `visitor-id-${Math.random()}`

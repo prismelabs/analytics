@@ -1,9 +1,6 @@
 package handlers
 
 import (
-	"errors"
-	"time"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/dataview"
@@ -28,31 +25,16 @@ func ProvideGetNoscriptEventsIdentify(
 			return err
 		}
 
-		for i := 1; i <= 3; i++ {
-			err = eventsCustomHandler(
-				c.UserContext(),
-				eventStore,
-				saltManagerService,
-				sessionStorage,
-				peekReferrerHeader(c),
-				c.Request().Header.UserAgent(),
-				utils.UnsafeBytes(c.IP()),
-				c.Params("name"),
-				dataview.FasthttpArgsKeysValuesCollector{Args: c.Context().QueryArgs(), Prefix: "prop-"},
-			)
-			if err == nil {
-				break
-			}
-
-			// Retry as session may not exist.
-			if errors.Is(err, errSessionNotFound) {
-				time.Sleep(time.Duration(i) * 100 * time.Millisecond)
-				continue
-			}
-
-			return err
-		}
-
-		return err
+		return eventsCustomHandler(
+			c.UserContext(),
+			eventStore,
+			saltManagerService,
+			sessionStorage,
+			peekReferrerHeader(c),
+			c.Request().Header.UserAgent(),
+			utils.UnsafeBytes(c.IP()),
+			c.Params("name"),
+			dataview.FasthttpArgsKeysValuesCollector{Args: c.Context().QueryArgs(), Prefix: "prop-"},
+		)
 	}
 }

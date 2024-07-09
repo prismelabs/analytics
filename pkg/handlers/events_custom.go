@@ -68,7 +68,7 @@ func eventsCustomHandler(
 	)
 
 	var ok bool
-	customEv.Session, ok = sessionStorage.GetSession(deviceId)
+	customEv.Session, ok = sessionStorage.WaitSession(deviceId, contextTimeout(ctx))
 	// Session not found.
 	if !ok {
 		return errSessionNotFound
