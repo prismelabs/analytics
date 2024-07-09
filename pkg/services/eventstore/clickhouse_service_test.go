@@ -145,7 +145,7 @@ func TestIntegService(t *testing.T) {
 			require.NoError(t, err)
 
 			// Ensure events are stored.
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(50 * time.Millisecond)
 		}
 
 		// Ensure pageviews events are stored.
