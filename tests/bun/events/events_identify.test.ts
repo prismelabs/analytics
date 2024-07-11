@@ -117,7 +117,7 @@ test('concurrent pageview and identify events', async () => {
   expect(user).toMatchObject({
     // Visitor ID B is used to store user props.
     visitor_id: visitorId,
-    updated_at: expect.stringMatching(TIMESTAMP_REGEX),
+    latest_session_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     initial_session_uuid: sessionUuid,
     latest_session_uuid: sessionUuid,
     initialProperties: {},
@@ -147,7 +147,7 @@ test('valid identify with visitor_id only', async () => {
   expect(user).toMatchObject({
     // Visitor ID B is used to store user props.
     visitor_id: visitorIdB,
-    updated_at: expect.stringMatching(TIMESTAMP_REGEX),
+    latest_session_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     initial_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     latest_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     initialProperties: {},
@@ -217,7 +217,7 @@ test('multiple identify events for same visitor id with different "set" props ov
   let user = await getLatestUser()
   expect(user).toMatchObject({
     visitor_id: visitorId,
-    updated_at: expect.stringMatching(TIMESTAMP_REGEX),
+    latest_session_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     initial_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     latest_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     initialProperties: {},
@@ -261,7 +261,7 @@ test('multiple identify events for same visitor id with different "set" props ov
   user = await getLatestUser()
   expect(user).toMatchObject({
     visitor_id: visitorId,
-    updated_at: expect.stringMatching(TIMESTAMP_REGEX),
+    latest_session_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     initial_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     latest_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     initialProperties: {},
@@ -307,7 +307,7 @@ test('multiple identify events for same visitor id with different "setOnce" prop
   let user = await getLatestUser()
   expect(user).toMatchObject({
     visitor_id: visitorId,
-    updated_at: expect.stringMatching(TIMESTAMP_REGEX),
+    latest_session_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     initial_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     latest_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     initialProperties: {
@@ -350,7 +350,7 @@ test('multiple identify events for same visitor id with different "setOnce" prop
   user = await getLatestUser()
   expect(user).toMatchObject({
     visitor_id: visitorId,
-    updated_at: expect.stringMatching(TIMESTAMP_REGEX),
+    latest_session_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
     initial_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     latest_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     initialProperties: {
@@ -378,7 +378,7 @@ async function getLatestUser (): Promise<any> {
   })
 
   const user = await client.query({
-    query: 'SELECT * FROM users_props ORDER BY updated_at DESC LIMIT 1'
+    query: 'SELECT * FROM users_props ORDER BY latest_session_timestamp DESC LIMIT 1'
   }).then(props => props.json())
     .then((r: any) => r.data[0])
 

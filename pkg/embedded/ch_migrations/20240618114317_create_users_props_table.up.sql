@@ -17,7 +17,6 @@ ENGINE = Null;
 
 CREATE TABLE users_props_agg(
   visitor_id String,
-  updated_at SimpleAggregateFunction(max, DateTime('UTC')),
 
   initial_session_uuid AggregateFunction(argMin, UUID, DateTime('UTC')),
   latest_session_uuid AggregateFunction(argMax, UUID, DateTime('UTC')),
@@ -37,7 +36,6 @@ ORDER BY visitor_id;
 CREATE MATERIALIZED VIEW events_identify_mv TO users_props_agg AS
 SELECT
   visitor_id,
-  max(timestamp) AS updated_at,
   argMinState(session_uuid, timestamp) AS initial_session_uuid,
   argMaxState(session_uuid, timestamp) AS latest_session_uuid,
   argMinState(initial_keys, timestamp) AS initial_keys,
@@ -50,9 +48,10 @@ GROUP BY visitor_id;
 CREATE VIEW users_props AS
 SELECT
   visitor_id,
-  max(updated_at) AS updated_at,
   argMinMerge(initial_session_uuid) AS initial_session_uuid,
+  UUIDv7ToDateTime(initial_session_uuid) AS initial_session_timestamp,
   argMaxMerge(latest_session_uuid) AS latest_session_uuid,
+  UUIDv7ToDateTime(latest_session_uuid) AS latest_session_timestamp,
   argMinMerge(initial_keys) AS initial_keys,
   argMinMerge(initial_values) AS initial_values,
   argMaxMerge(keys) AS keys,
