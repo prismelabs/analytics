@@ -223,10 +223,16 @@ func TestIntegService(t *testing.T) {
 
 	t.Run("RingBufferDroppedEvents", func(t *testing.T) {
 		promRegistry := prometheus.NewRegistry()
+		cfg := Config{
+			MaxBatchSize:      1_000,
+			MaxBatchTimeout:   10 * time.Millisecond,
+			RingBuffersFactor: 1,
+		}
+
 		service := ProvideService(cfg, ch, logger, promRegistry, teardownService)
 
 		// Send hundreds of event without pause.
-		for i := 0; i < 100; i++ {
+		for i := 0; i < 10_000; i++ {
 			eventTime := time.Now().UTC().Round(time.Second)
 			err := service.StorePageView(context.Background(), &event.PageView{
 				Timestamp: eventTime,
