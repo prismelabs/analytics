@@ -10,7 +10,7 @@ import (
 func TestJsonKvView(t *testing.T) {
 	t.Run("GetString", func(t *testing.T) {
 		t.Run("EntryNotFound", func(t *testing.T) {
-			kvView := JsonKvView{Json: []byte(`{"foo":"bar"}`)}
+			kvView := JsonKvView{Json: NewJsonData([]byte(`{"foo":"bar"}`))}
 
 			entry, err := kvView.GetString("baz")
 			require.Error(t, err)
@@ -19,7 +19,7 @@ func TestJsonKvView(t *testing.T) {
 		})
 
 		t.Run("EntryNotAString", func(t *testing.T) {
-			kvView := JsonKvView{Json: []byte(`{"foo":1}`)}
+			kvView := JsonKvView{Json: NewJsonData([]byte(`{"foo":1}`))}
 
 			entry, err := kvView.GetString("foo")
 			require.Error(t, err)
@@ -28,7 +28,7 @@ func TestJsonKvView(t *testing.T) {
 		})
 
 		t.Run("Valid", func(t *testing.T) {
-			kvView := JsonKvView{Json: []byte(`{"foo":"bar","baz":"qux"}`)}
+			kvView := JsonKvView{Json: NewJsonData([]byte(`{"foo":"bar","baz":"qux"}`))}
 
 			entry, err := kvView.GetString("baz")
 			require.NoError(t, err)

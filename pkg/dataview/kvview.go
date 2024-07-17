@@ -20,12 +20,17 @@ type KvView interface {
 
 // JsonKvView is a KvView implementation over a JSON object.
 type JsonKvView struct {
-	Json []byte
+	Json *JsonData
 }
 
 // GetString implements KvView.
 func (jkv JsonKvView) GetString(key string) (string, error) {
-	result := gjson.GetBytes(jkv.Json, key)
+	data, err := jkv.Json.Data()
+	if err != nil {
+		return "", err
+	}
+
+	result := gjson.GetBytes(data, key)
 	if !result.Exists() {
 		return "", ErrKvViewEntryNotFound
 	}
