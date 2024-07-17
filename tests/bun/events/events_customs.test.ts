@@ -44,9 +44,9 @@ test('non registered domain in Origin header is rejected', async () => {
       Origin: 'https://example.com',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
       'X-Prisme-Referrer': 'https://example.com/foo?bar=baz#qux',
-      'Content-Type': 'application/json',
-      body: JSON.stringify({})
-    }
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
   })
   expect(response.status).toBe(400)
 })
@@ -80,7 +80,21 @@ test('invalid sessionless custom event', async () => {
   expect(response.status).toBe(400)
 })
 
-test('valid test cases pause', async () => {
+test('malformed json body', async () => {
+  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
+    method: 'POST',
+    headers: {
+      Origin: 'https://mywebsite.localhost',
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
+      'X-Prisme-Referrer': 'https://mywebsite.localhost/foo?bar=baz#qux',
+      'Content-Type': 'application/json'
+    },
+    body: '{"foo": "bar and foo, "num": 100' // No closing brace.
+  })
+  expect(response.status).toBe(400)
+})
+
+test('valid test cases break', async () => {
   // Sleep so pageviews and identify timestamps are different for valid test
   // cases.
   // Without this sleep, getLatestXXX function may return rows from invalid test
@@ -93,7 +107,7 @@ test('concurrent pageview and custom events', async () => {
   const ipAddr = faker.internet.ip()
 
   await Promise.all([
-    // Identify events first.
+    // Custom events first.
     fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
       method: 'POST',
       headers: {

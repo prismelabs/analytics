@@ -3,8 +3,11 @@ export const PRISME_ADMIN_URL = 'http://prisme.localhost:9090'
 
 export const PRISME_API_URL = PRISME_URL + '/api/v1'
 export const PRISME_PAGEVIEWS_URL = PRISME_API_URL + '/events/pageviews'
+export const PRISME_NOSCRIPT_PAGEVIEWS_URL = PRISME_API_URL + '/noscript/events/pageviews'
 export const PRISME_CUSTOM_EVENTS_URL = PRISME_API_URL + '/events/custom'
+export const PRISME_NOSCRIPT_CUSTOM_EVENTS_URL = PRISME_API_URL + '/noscript/events/custom'
 export const PRISME_IDENTIFY_EVENTS_URL = PRISME_API_URL + '/events/identify'
+export const PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL = PRISME_API_URL + '/noscript/events/identify'
 
 export const PRISME_METRICS_URL = PRISME_ADMIN_URL + '/metrics'
 

@@ -2,52 +2,27 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { COUNTRY_CODE_REGEX, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
+import { COUNTRY_CODE_REGEX, PRISME_NOSCRIPT_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
 
 const seed = new Date().getTime()
 console.log('faker seed', seed)
 faker.seed(seed)
 
-test('GET request instead of POST request', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'GET',
+test('POST request instead of GET request', async () => {
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/foo'
+      Referer: 'http://mywebsite.localhost/foo'
     }
   })
   expect(response.status).toBe(405)
 })
 
-test('invalid URL in X-Prisme-Referrer header', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
-    headers: {
-      Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
-      'X-Prisme-Referrer': 'not an url'
-    }
-  })
-  expect(response.status).toBe(400)
-})
-
-test('invalid URL in X-Prisme-Document-Referrer header', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
-    headers: {
-      Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost',
-      'X-Prisme-Document-Referrer': 'not an url'
-    }
-  })
-  expect(response.status).toBe(400)
-})
-
 test('invalid URL in Referer header', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
@@ -57,21 +32,33 @@ test('invalid URL in Referer header', async () => {
   expect(response.status).toBe(400)
 })
 
+test('invalid URL in X-Prisme-Document-Referrer header', async () => {
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL + '?document-referrer=not an url', {
+    method: 'GET',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      Referer: 'http://mywebsite.localhost'
+    }
+  })
+  expect(response.status).toBe(400)
+})
+
 test('non registered domain in Origin header is rejected', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'https://example.com',
       'X-Forwarded-For': faker.internet.ip(),
-      'X-Prisme-Referrer': 'https://example.com/foo?bar=baz#qux'
+      Referer: 'https://example.com/foo?bar=baz#qux'
     }
   })
   expect(response.status).toBe(400)
 })
 
 test('robot user agent is rejected', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'https://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
@@ -91,15 +78,14 @@ test('valid test cases break', async () => {
   Bun.sleepSync(1000)
 })
 
-test('valid internal pageview traffic with no session associated', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+test('valid internal pageview with no session associated', async () => {
+  // internal traffic, but no session exist, pageview should be rejected.
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL + '?document-referrer=https://mywebsite.localhost/foo?bar=baz#qux', {
+    method: 'GET',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
-      Referer: 'https://mywebsite.localhost/foo?bar=baz#qux',
-      // internal traffic, but no session exist, pageview should be rejected.
-      'X-Prisme-Document-Referrer': 'https://mywebsite.localhost/foo?bar=baz#qux'
+      Referer: 'https://mywebsite.localhost/bar?bar=baz#qux'
     }
   })
   expect(response.status).toBe(200)
@@ -109,9 +95,9 @@ test('valid internal pageview traffic with no session associated', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/foo',
+      entry_path: '/bar',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/foo',
+      exit_path: '/bar',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -129,7 +115,94 @@ test('valid internal pageview traffic with no session associated', async () => {
     pageview: {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'mywebsite.localhost',
-      path: '/foo',
+      path: '/bar',
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX)
+    }
+  })
+})
+
+test('valid pageview with different referrer query param and Referer header', async () => {
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL + '?referrer=https://bar.mywebsite.localhost/bar?bar=baz#qux', {
+    method: 'GET',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      Referer: 'https://foo.mywebsite.localhost/foo?bar=baz#qux'
+    }
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestPageview()
+
+  expect(data).toMatchObject({
+    session: {
+      domain: 'bar.mywebsite.localhost',
+      entry_path: '/bar',
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: '/bar',
+      operating_system: 'Other',
+      browser_family: 'Other',
+      device: 'Other',
+      referrer_domain: 'direct',
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      utm_content: '',
+      version: 1
+    },
+    pageview: {
+      timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      domain: 'bar.mywebsite.localhost',
+      path: '/bar',
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX)
+    }
+  })
+})
+
+test('valid pageview with different document-referrer query param and X-Prisme-Document-Referrer header', async () => {
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL + '?document-referrer=https://bar.mywebsite.localhost/bar?bar=baz#qux', {
+    method: 'GET',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      Referer: 'https://mywebsite.localhost/',
+      'X-Prisme-Document-Referrer': 'https://foo.mywebsite.localhost/foo?bar=baz#qux'
+    }
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestPageview()
+
+  expect(data).toMatchObject({
+    session: {
+      domain: 'mywebsite.localhost',
+      entry_path: '/',
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: '/',
+      operating_system: 'Other',
+      browser_family: 'Other',
+      device: 'Other',
+      referrer_domain: 'bar.mywebsite.localhost',
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      utm_content: '',
+      version: 1
+    },
+    pageview: {
+      timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      domain: 'mywebsite.localhost',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -137,8 +210,8 @@ test('valid internal pageview traffic with no session associated', async () => {
 })
 
 test('registered domain in Origin header and valid referrer is accepted', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'https://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
@@ -179,14 +252,13 @@ test('registered domain in Origin header and valid referrer is accepted', async 
   })
 })
 
-test('registered domain in Origin header and valid X-Prisme-Referrer is accepted', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+test('registered domain in Origin header and valid Referer is accepted', async () => {
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL + '?document-referrer=https://www.example.com/foo', {
+    method: 'GET',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/foo?bar=baz#qux',
-      'X-Prisme-Document-Referrer': 'https://www.example.com/foo'
+      Referer: 'http://mywebsite.localhost/foo?bar=baz#qux'
     }
   })
   expect(response.status).toBe(200)
@@ -224,13 +296,12 @@ test('registered domain in Origin header and valid X-Prisme-Referrer is accepted
 })
 
 test('valid URL with registered domain in Origin header is accepted', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL + '?document-referrer=https://www.example.com/foo', {
+    method: 'GET',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
-      Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux',
-      'X-Prisme-Document-Referrer': 'https://www.example.com/foo'
+      Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux'
     }
   })
   expect(response.status).toBe(200)
@@ -268,13 +339,12 @@ test('valid URL with registered domain in Origin header is accepted', async () =
 })
 
 test('valid pageview with Windows + Chrome user agent', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL + '?document-referrer=https://www.example.com/foo', {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
       Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux',
-      'X-Prisme-Document-Referrer': 'https://www.example.com/foo',
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3'
     }
   })
@@ -313,8 +383,8 @@ test('valid pageview with Windows + Chrome user agent', async () => {
 })
 
 test('valid pageview without X-Prisme-Document-Referrer', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
@@ -355,54 +425,9 @@ test('valid pageview without X-Prisme-Document-Referrer', async () => {
   })
 })
 
-test('valid pageview with different Referer and X-Prisme-Referrer headers defined', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
-    headers: {
-      Origin: 'http://foo.mywebsite.localhost',
-      'X-Forwarded-For': faker.internet.ip(),
-      Referer: 'http://foo.mywebsite.localhost/',
-      // bar.mywebsite.... will be used be selected.
-      'X-Prisme-Referrer': 'http://bar.mywebsite.localhost/'
-    }
-  })
-  expect(response.status).toBe(200)
-
-  const data = await getLatestPageview()
-
-  expect(data).toMatchObject({
-    session: {
-      domain: 'bar.mywebsite.localhost',
-      entry_path: '/', // path contains /
-      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/', // path contains /
-      operating_system: 'Other',
-      browser_family: 'Other',
-      device: 'Other',
-      referrer_domain: 'direct',
-      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      utm_source: '',
-      utm_medium: '',
-      utm_campaign: '',
-      utm_term: '',
-      utm_content: '',
-      version: 1
-    },
-    pageview: {
-      timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      domain: 'bar.mywebsite.localhost',
-      path: '/',
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX)
-    }
-  })
-})
-
 test('valid pageview without trailing slash in referrer', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
@@ -444,8 +469,8 @@ test('valid pageview without trailing slash in referrer', async () => {
 })
 
 test('valid pageview with US IP address', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': '8.8.8.8', // Google public DNS
@@ -487,8 +512,8 @@ test('valid pageview with US IP address', async () => {
 })
 
 test('valid pageview with dirty path', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': '8.8.8.8', // Google public DNS
@@ -530,8 +555,8 @@ test('valid pageview with dirty path', async () => {
 })
 
 test('valid pageview with UTM parameters', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
@@ -574,8 +599,8 @@ test('valid pageview with UTM parameters', async () => {
 })
 
 test('valid pageview with ref query parameter', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
@@ -618,8 +643,8 @@ test('valid pageview with ref query parameter', async () => {
 
 test('valid consecutive pageviews', async () => {
   const ipAddr = faker.internet.ip()
-  let response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  let response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': ipAddr,
@@ -659,13 +684,12 @@ test('valid consecutive pageviews', async () => {
     }
   })
 
-  response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL + '?document-referrer=http://foo.mywebsite.localhost/', {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': ipAddr,
-      Referer: 'http://foo.mywebsite.localhost/foo',
-      'X-Prisme-Document-Referrer': 'http://foo.mywebsite.localhost/'
+      Referer: 'http://foo.mywebsite.localhost/foo'
     }
   })
   expect(response.status).toBe(200)
@@ -704,8 +728,8 @@ test('valid consecutive pageviews', async () => {
 
 test('valid pageview with custom visitor id', async () => {
   const visitorId = `visitor-id-${Math.random()}`
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL + `?visitor-id=${visitorId}`, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
@@ -748,8 +772,8 @@ test('valid pageview with custom visitor id', async () => {
 })
 
 test('valid pageview with empty visitor id fallback to auto generated visitor id', async () => {
-  const response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': faker.internet.ip(),
@@ -793,8 +817,8 @@ test('valid pageview with empty visitor id fallback to auto generated visitor id
 
 test('valid consecutive pageviews with visitor id defined on second event', async () => {
   const ipAddr = faker.internet.ip()
-  let response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  let response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': ipAddr,
@@ -835,14 +859,12 @@ test('valid consecutive pageviews with visitor id defined on second event', asyn
   })
 
   const visitorId = `visitor-id-${Math.random()}`
-  response = await fetch(PRISME_PAGEVIEWS_URL, {
-    method: 'POST',
+  response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL + `?visitor-id=${visitorId}&document-referrer=http://foo.mywebsite.localhost/`, {
+    method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': ipAddr,
-      Referer: 'http://foo.mywebsite.localhost/foo',
-      'X-Prisme-Visitor-Id': visitorId,
-      'X-Prisme-Document-Referrer': 'http://foo.mywebsite.localhost/'
+      Referer: 'http://foo.mywebsite.localhost/foo'
     }
   })
   expect(response.status).toBe(200)

@@ -2,66 +2,47 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { PRISME_IDENTIFY_EVENTS_URL, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
+import { PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
 import { randomIpWithSession } from '../utils'
 
 const seed = new Date().getTime()
 console.log('faker seed', seed)
 faker.seed(seed)
 
-test('GET request instead of POST request', async () => {
-  const response = await fetch(PRISME_IDENTIFY_EVENTS_URL, {
-    method: 'GET',
+test('POST request instead of GET request', async () => {
+  const response = await fetch(PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL, {
+    method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/foo',
-      'Content-Type': 'application/json'
+      Referer: 'http://mywebsite.localhost/foo'
     }
-    // body: JSON.stringify({}) // GET request can't have body.
   })
 
   expect(response.status).toBe(405)
 })
 
-test('invalid URL in X-Prisme-Referrer header', async () => {
-  const response = await fetch(PRISME_IDENTIFY_EVENTS_URL, {
-    method: 'POST',
+test('invalid URL in Referer header', async () => {
+  const response = await fetch(PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL, {
+    method: 'GET',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'not an url',
+      Referer: 'not an url',
       'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({})
-  })
-  expect(response.status).toBe(400)
-})
-
-test('non registered domain in Origin header is rejected', async () => {
-  const response = await fetch(PRISME_IDENTIFY_EVENTS_URL, {
-    method: 'POST',
-    headers: {
-      Origin: 'https://example.com',
-      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'https://example.com/foo?bar=baz#qux',
-      'Content-Type': 'application/json',
-      body: JSON.stringify({})
     }
   })
   expect(response.status).toBe(400)
 })
 
-test('content type different than application/json is rejected', async () => {
-  const response = await fetch(PRISME_IDENTIFY_EVENTS_URL, {
-    method: 'POST',
+test('non registered domain in Origin header is rejected', async () => {
+  const response = await fetch(PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL, {
+    method: 'GET',
     headers: {
-      Origin: 'https://mywebsite.localhost',
+      Origin: 'https://example.com',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'https://mywebsite.localhost/foo?bar=baz#qux',
-      'Content-Type': 'text/plain'
-    },
-    body: 'abc'
+      Referer: 'https://example.com/foo?bar=baz#qux'
+    }
   })
   expect(response.status).toBe(400)
 })
@@ -81,15 +62,13 @@ test('concurrent pageview and identify events', async () => {
 
   await Promise.all([
     // Identify events first.
-    fetch(PRISME_IDENTIFY_EVENTS_URL, {
-      method: 'POST',
+    fetch(PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL + `?visitorId=${visitorId}`, {
+      method: 'GET',
       headers: {
         Origin: 'https://mywebsite.localhost',
         'X-Forwarded-For': ipAddr,
-        Referer: 'https://mywebsite.localhost/foo',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ visitorId })
+        Referer: 'https://mywebsite.localhost/foo'
+      }
     }),
     // Pageview concurrently.
     // This pageview will create session that will be used for both events.
@@ -98,7 +77,7 @@ test('concurrent pageview and identify events', async () => {
       headers: {
         Origin: 'https://mywebsite.localhost',
         'X-Forwarded-For': ipAddr,
-        'X-Prisme-Referrer': 'https://mywebsite.localhost/foo'
+        Referer: 'https://mywebsite.localhost/foo'
       }
     })
   ]).then((results) => results.forEach((resp) => expect(resp.status).toBe(200)))
@@ -130,17 +109,13 @@ test('valid identify with visitor_id only', async () => {
   const visitorIdA = `visitor-id-${Math.random()}`
   const visitorIdB = `visitor-id-${Math.random()}`
   const ipAddr = await randomIpWithSession('mywebsite.localhost', { visitorId: visitorIdA })
-  const response = await fetch(PRISME_IDENTIFY_EVENTS_URL, {
-    method: 'POST',
+  const response = await fetch(PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL + `?visitorId=${visitorIdB}`, {
+    method: 'GET',
     headers: {
       Origin: 'https://mywebsite.localhost',
       'X-Forwarded-For': ipAddr,
-      'X-Prisme-Referrer': 'https://mywebsite.localhost/foo',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      visitorId: visitorIdB
-    })
+      Referer: 'https://mywebsite.localhost/foo'
+    }
   })
   expect(response.status).toBe(200)
 
@@ -173,7 +148,7 @@ test('valid identify with visitor_id only', async () => {
       headers: {
         Origin: 'https://mywebsite.localhost',
         'X-Forwarded-For': ipAddr,
-        'X-Prisme-Referrer': 'https://mywebsite.localhost/bar',
+        Referer: 'https://mywebsite.localhost/bar',
         'X-Prisme-Document-Referrer': 'https://mywebsite.localhost/foo'
       }
     })
@@ -192,17 +167,7 @@ test('valid identify with visitor_id only', async () => {
 test('multiple identify events for same visitor id with different "set" props overwrite previous identify props', async () => {
   const visitorId = `visitor-id-${Math.random()}`
   let date = new Date().toUTCString()
-  let response = await fetch(PRISME_IDENTIFY_EVENTS_URL, {
-    method: 'POST',
-    headers: {
-      Origin: 'https://mywebsite.localhost',
-      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { visitorId }),
-      'X-Prisme-Referrer': 'https://mywebsite.localhost/foo',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      visitorId,
-      set: {
+  let response = await fetch(PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL + `?visitorId=${visitorId}&${propsToQuery({
         date,
         foo: 'bar',
         bar: undefined,
@@ -211,8 +176,13 @@ test('multiple identify events for same visitor id with different "set" props ov
           foo: 'bar2'
         },
         bool: true
-      }
-    })
+      }, 'set-')}`, {
+    method: 'GET',
+    headers: {
+      Origin: 'https://mywebsite.localhost',
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { visitorId }),
+      Referer: 'https://mywebsite.localhost/foo'
+    }
   })
   expect(response.status).toBe(200)
 
@@ -237,17 +207,7 @@ test('multiple identify events for same visitor id with different "set" props ov
 
   // Second identify event.
   date = new Date().toUTCString() // Update date.
-  response = await fetch(PRISME_IDENTIFY_EVENTS_URL, {
-    method: 'POST',
-    headers: {
-      Origin: 'https://mywebsite.localhost',
-      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { visitorId }),
-      'X-Prisme-Referrer': 'https://mywebsite.localhost/foo',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      visitorId,
-      set: {
+  response = await fetch(PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL + `?visitorId=${visitorId}&${propsToQuery({
         date,
         foo: 'bar',
         bar: undefined,
@@ -256,8 +216,13 @@ test('multiple identify events for same visitor id with different "set" props ov
           foo: 'bar2'
         },
         bool: true
-      }
-    })
+      }, 'set-')}`, {
+    method: 'GET',
+    headers: {
+      Origin: 'https://mywebsite.localhost',
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { visitorId }),
+      Referer: 'https://mywebsite.localhost/foo'
+    }
   })
   expect(response.status).toBe(200)
 
@@ -284,17 +249,7 @@ test('multiple identify events for same visitor id with different "set" props ov
 test('multiple identify events for same visitor id with different "setOnce" props do not overwrite props', async () => {
   const visitorId = `visitor-id-${Math.random()}`
   const date = new Date().toUTCString()
-  let response = await fetch(PRISME_IDENTIFY_EVENTS_URL, {
-    method: 'POST',
-    headers: {
-      Origin: 'https://mywebsite.localhost',
-      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { visitorId }),
-      'X-Prisme-Referrer': 'https://mywebsite.localhost/foo',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      visitorId,
-      setOnce: {
+  let response = await fetch(PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL + `?visitorId=${visitorId}&${propsToQuery({
         date,
         foo: 'bar',
         bar: undefined,
@@ -303,18 +258,22 @@ test('multiple identify events for same visitor id with different "setOnce" prop
           foo: 'bar2'
         },
         bool: true
-      }
-    })
+      }, 'set-once-')}`, {
+    method: 'GET',
+    headers: {
+      Origin: 'https://mywebsite.localhost',
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { visitorId }),
+      Referer: 'https://mywebsite.localhost/foo'
+    }
   })
   expect(response.status).toBe(200)
 
   let user = await getLatestUser()
   expect(user).toMatchObject({
     visitor_id: visitorId,
-    initial_session_uuid: expect.stringMatching(UUID_V7_REGEX),
-    initial_session_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-    latest_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     latest_session_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+    initial_session_uuid: expect.stringMatching(UUID_V7_REGEX),
+    latest_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     initialProperties: {
       date,
       foo: 'bar',
@@ -328,17 +287,7 @@ test('multiple identify events for same visitor id with different "setOnce" prop
   })
 
   // Second identify event.
-  response = await fetch(PRISME_IDENTIFY_EVENTS_URL, {
-    method: 'POST',
-    headers: {
-      Origin: 'https://mywebsite.localhost',
-      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { visitorId }),
-      'X-Prisme-Referrer': 'https://mywebsite.localhost/foo',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      visitorId,
-      setOnce: {
+  response = await fetch(PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL + `?visitorId=${visitorId}&${propsToQuery({
         date: new Date().toUTCString(),
         foo: 'bar',
         bar: undefined,
@@ -347,18 +296,22 @@ test('multiple identify events for same visitor id with different "setOnce" prop
           foo: 'bar2'
         },
         bool: true
-      }
-    })
+      }, 'set-once-')}`, {
+    method: 'GET',
+    headers: {
+      Origin: 'https://mywebsite.localhost',
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { visitorId }),
+      Referer: 'https://mywebsite.localhost/foo'
+    }
   })
   expect(response.status).toBe(200)
 
   user = await getLatestUser()
   expect(user).toMatchObject({
     visitor_id: visitorId,
-    initial_session_uuid: expect.stringMatching(UUID_V7_REGEX),
-    initial_session_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-    latest_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     latest_session_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+    initial_session_uuid: expect.stringMatching(UUID_V7_REGEX),
+    latest_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     initialProperties: {
       date, // Unchanged.
       foo: 'bar',
@@ -389,14 +342,14 @@ async function getLatestUser (): Promise<any> {
     .then((r: any) => r.data[0])
 
   user.initialProperties = Object.fromEntries(
-    user.initial_keys.map((key: string, index: number) =>
+    user.initial_keys?.map((key: string, index: number) =>
       [key, JSON.parse(user.initial_values[index])])
   )
   delete user.initial_keys
   delete user.initial_values
 
   user.properties = Object.fromEntries(
-    user.keys.map((key: string, index: number) =>
+    user.keys?.map((key: string, index: number) =>
       [key, JSON.parse(user.values[index])])
   )
   delete user.keys
@@ -423,4 +376,9 @@ async function getLatestSession (): Promise<any> {
   delete session.sign
 
   return session
+}
+
+function propsToQuery (props: Record<string, any>, prefix?: string): string {
+  return Object.entries(props).filter(([k, v]) => k !== undefined && v !== undefined)
+    .map(([k, v]) => (prefix ?? '') + k + '=' + JSON.stringify(v)).join('&')
 }
