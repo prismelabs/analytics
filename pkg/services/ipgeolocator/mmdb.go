@@ -75,9 +75,10 @@ func (ms mmdbService) FindCountryCodeForIP(xForwardedFor string) CountryCode {
 			panic(fmt.Errorf("failed to lookup ip address in mmdb: %w", err))
 		}
 
-		// Database embedded within repository returns None sometime.
+		// Database embedded within repository returns None, Unknown sometime.
 		// Official maxmind GeoLite2 database doesn't returns anything.
-		if record.Country.ISOCode == "None" || record.Country.ISOCode == "" {
+		// If ISO code is not valid 2 letter code, default to XX.
+		if len(record.Country.ISOCode) != 2 {
 			record.Country.ISOCode = "XX"
 		}
 
