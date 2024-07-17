@@ -12,6 +12,19 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+var (
+	emptyJsonObj = []byte{'{', '}'}
+)
+
+func bodyOrEmptyJsonObj(c *fiber.Ctx) []byte {
+	body := c.Body()
+	if len(body) == 0 {
+		body = emptyJsonObj
+	}
+
+	return body
+}
+
 func peekReferrerHeader(c *fiber.Ctx) []byte {
 	referrer := c.Request().Header.Peek("X-Prisme-Referrer")
 

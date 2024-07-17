@@ -34,7 +34,11 @@ func ProvideGetNoscriptEventsCustom(
 			c.Request().Header.UserAgent(),
 			utils.UnsafeBytes(c.IP()),
 			c.Params("name"),
-			dataview.FasthttpArgsKeysValuesCollector{Args: c.Context().QueryArgs(), Prefix: "prop-"},
+			dataview.FasthttpArgsKeysValuesCollector{
+				Args:           c.Context().QueryArgs(),
+				Prefix:         "prop-",
+				ValueValidator: dataview.JsonValidator,
+			},
 		)
 	}
 }

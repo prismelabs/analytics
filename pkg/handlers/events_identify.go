@@ -36,6 +36,7 @@ func ProvidePostEventsIdentify(
 		// Referrer of the POST request, that is the viewed page.
 		requestReferrer := peekReferrerHeader(c)
 
+		data := dataview.NewJsonData(bodyOrEmptyJsonObj(c))
 		return eventIdentifyHandler(
 			c.UserContext(),
 			logger,
@@ -45,9 +46,9 @@ func ProvidePostEventsIdentify(
 			requestReferrer,
 			c.Request().Header.UserAgent(),
 			utils.UnsafeBytes(c.IP()),
-			dataview.JsonKvView{Json: c.Body()},
-			dataview.JsonKvCollector{Json: c.Body(), Path: "set."},
-			dataview.JsonKvCollector{Json: c.Body(), Path: "setOnce."},
+			dataview.JsonKvView{Json: data},
+			dataview.JsonKvCollector{Json: data, Path: "set."},
+			dataview.JsonKvCollector{Json: data, Path: "setOnce."},
 		)
 	}
 }
@@ -107,8 +108,14 @@ func eventIdentifyHandler(
 	}
 
 	// Collect properties.
-	identifyEvent.InitialKeys, identifyEvent.InitialValues = setOncePropCollector.CollectKeysValues()
-	identifyEvent.Keys, identifyEvent.Values = setPropCollector.CollectKeysValues()
+	identifyEvent.InitialKeys, identifyEvent.InitialValues, err = setOncePropCollector.CollectKeysValues()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	identifyEvent.Keys, identifyEvent.Values, err = setPropCollector.CollectKeysValues()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
 
 	identifyEvent.Timestamp = time.Now().UTC()
 	err = eventStore.StoreIdentifyEvent(ctx, &identifyEvent)

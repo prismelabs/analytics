@@ -25,10 +25,15 @@ func ProvideGetNoscriptEventsPageviews(
 	sessionStorage sessionstorage.Service,
 ) GetNoscriptEventsPageviews {
 	return func(c *fiber.Ctx) error {
+		err := c.Send(embedded.NoscriptGif)
+		if err != nil {
+			return err
+		}
+
 		// Referrer of the POST request, that is the viewed page.
 		requestReferrer := peekReferrerQueryOrHeader(c)
 
-		err := eventsPageviewsHandler(
+		return eventsPageviewsHandler(
 			c.UserContext(),
 			logger,
 			eventStore,
@@ -42,10 +47,5 @@ func ProvideGetNoscriptEventsPageviews(
 			utils.UnsafeBytes(c.IP()),
 			c.Query("visitor-id"),
 		)
-		if err != nil {
-			return err
-		}
-
-		return c.Send(embedded.NoscriptGif)
 	}
 }

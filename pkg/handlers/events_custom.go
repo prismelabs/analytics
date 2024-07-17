@@ -24,12 +24,14 @@ func ProvidePostEventsCustom(
 	sessionStorage sessionstorage.Service,
 ) PostEventsCustom {
 	return func(c *fiber.Ctx) error {
+
 		// ContentType must be json if request has a body.
 		if c.Request().Header.ContentLength() != 0 &&
 			utils.UnsafeString(c.Request().Header.ContentType()) != fiber.MIMEApplicationJSON {
 			return fiber.NewError(fiber.StatusBadRequest, "content type is not application/json")
 		}
 
+		data := dataview.NewJsonData(bodyOrEmptyJsonObj(c))
 		return eventsCustomHandler(
 			c.UserContext(),
 			eventStore,
@@ -39,7 +41,7 @@ func ProvidePostEventsCustom(
 			c.Request().Header.UserAgent(),
 			utils.UnsafeBytes(c.IP()),
 			c.Params("name"),
-			dataview.JsonKvCollector{Json: c.Body()},
+			dataview.JsonKvCollector{Json: data},
 		)
 	}
 }
@@ -79,7 +81,10 @@ func eventsCustomHandler(
 	customEv.Name = utils.CopyString(eventName)
 
 	// Collect event properties.
-	customEv.Keys, customEv.Values = kvCollector.CollectKeysValues()
+	customEv.Keys, customEv.Values, err = kvCollector.CollectKeysValues()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
 
 	// Store event.
 	err = eventStore.StoreCustom(ctx, &customEv)
