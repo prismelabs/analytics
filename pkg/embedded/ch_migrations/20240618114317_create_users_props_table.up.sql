@@ -1,7 +1,8 @@
+DROP TABLE IF EXISTS events_identify;
 CREATE TABLE events_identify(
   timestamp DateTime('UTC'),
+  domain String,
   visitor_id String,
-
   session_uuid UUID,
 
   -- Properties that are set only once.
@@ -15,7 +16,9 @@ CREATE TABLE events_identify(
 )
 ENGINE = Null;
 
+DROP TABLE IF EXISTS users_props_agg;
 CREATE TABLE users_props_agg(
+  domain String,
   visitor_id String,
 
   initial_session_uuid AggregateFunction(argMin, UUID, DateTime('UTC')),
@@ -31,10 +34,12 @@ CREATE TABLE users_props_agg(
   values AggregateFunction(argMax, Array(String), DateTime('UTC'))
 )
 ENGINE = AggregatingMergeTree
-ORDER BY visitor_id;
+ORDER BY (domain, visitor_id);
 
+DROP TABLE IF EXISTS events_identify_mv;
 CREATE MATERIALIZED VIEW events_identify_mv TO users_props_agg AS
 SELECT
+  domain,
   visitor_id,
   argMinState(session_uuid, timestamp) AS initial_session_uuid,
   argMaxState(session_uuid, timestamp) AS latest_session_uuid,
@@ -43,10 +48,12 @@ SELECT
   argMaxState(keys, timestamp) AS keys,
   argMaxState(values, timestamp) AS values
 FROM events_identify
-GROUP BY visitor_id;
+GROUP BY (domain, visitor_id);
 
+DROP VIEW IF EXISTS users_props;
 CREATE VIEW users_props AS
 SELECT
+  domain,
   visitor_id,
   argMinMerge(initial_session_uuid) AS initial_session_uuid,
   UUIDv7ToDateTime(initial_session_uuid) AS initial_session_timestamp,
@@ -57,7 +64,7 @@ SELECT
   argMaxMerge(keys) AS keys,
   argMaxMerge(values) AS values
 FROM users_props_agg
-GROUP BY visitor_id;
+GROUP BY (domain, visitor_id);
 
 -- index 0 means not found (ClickHouse use 1 as first index).
 CREATE FUNCTION IF NOT EXISTS user_prop AS (key) ->

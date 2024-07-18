@@ -327,6 +327,7 @@ func (cs *clickhouseService) batchIdentifyEventLoop(batchDone chan<- struct{}) {
 		// Append to batch.
 		err = batch.Append(
 			ev.Timestamp,
+			ev.Session.PageUri.Host(),
 			ev.Session.VisitorId,
 			ev.Session.SessionUuid,
 			ev.InitialKeys,
