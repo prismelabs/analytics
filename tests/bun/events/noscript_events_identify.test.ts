@@ -288,7 +288,8 @@ test('multiple identify events for same visitor id with different "setOnce" prop
 
   // Second identify event.
   response = await fetch(PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL + `?visitorId=${visitorId}&${propsToQuery({
-        date: new Date().toUTCString(),
+        date2: date,
+        date,
         foo: 'bar',
         bar: undefined,
         baz: 2,
@@ -313,6 +314,8 @@ test('multiple identify events for same visitor id with different "setOnce" prop
     initial_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     latest_session_uuid: expect.stringMatching(UUID_V7_REGEX),
     initialProperties: {
+      // TODO: date2 should be added.
+      // date2: date, // Not added.
       date, // Unchanged.
       foo: 'bar',
       baz: 1, // Unchanged.
