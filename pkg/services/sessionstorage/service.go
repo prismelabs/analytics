@@ -11,9 +11,6 @@ import (
 
 // Service define an in memory session storage.
 type Service interface {
-	// GetSession retrieves stored session and returns it.
-	// Returned boolean flag is false if no session was found.
-	GetSession(deviceId string) (event.Session, bool)
 	// InsertSession inserts session in session storage and associate it to the
 	// given deviceId.
 	InsertSession(deviceId string, session event.Session)
@@ -60,7 +57,7 @@ func ProvideService(
 		cfg:     cfg,
 		metrics: newMetrics(promRegistry),
 		mu:      sync.RWMutex{},
-		data:    map[string]entry{},
+		data:    make(map[string]entry),
 	}
 
 	go service.gc(cfg.gcInterval)
@@ -70,37 +67,42 @@ func ProvideService(
 	return service
 }
 
-// GetSession implements Service.
-func (s *service) GetSession(deviceId string) (event.Session, bool) {
-	s.mu.RLock()
+// getSessionEntry retrieves an entry from the map and returns whether or not
+// session exists. An entry may exists but have no session associated (e.g.
+// someone is waiting for its creation). This function doesn't check if session
+// has expired.
+// You must hold mutex while calling this function.
+func (s *service) getSessionEntry(deviceId string) (entry, bool) {
 	entry, ok := s.data[deviceId]
-	s.mu.RUnlock()
+	return entry, ok &&
+		entry.wait == nil // Someone is waiting on this session but none exists.
+}
 
-	// Expired session.
-	if !ok || uint32(time.Now().Unix()) >= entry.expiry {
-		s.metrics.getSessionsMiss.Inc()
-		return event.Session{}, false
-	}
-
-	return entry.session, ok
+// getSession is the same as getSessionEntry but returns only the session and
+// checks that it hasn't expired.
+// You must hold mutex while calling this function.
+func (s *service) getSession(deviceId string) (event.Session, bool) {
+	entry, ok := s.getSessionEntry(deviceId)
+	return entry.session, ok && uint32(time.Now().Unix()) < entry.expiry // Not expired session.
 }
 
 // InsertSession implements Service.
 func (s *service) InsertSession(deviceId string, session event.Session) {
 	s.mu.Lock()
-	currentSession := s.data[deviceId]
+	currentSession, sessionExists := s.getSessionEntry(deviceId)
 
 	// Store session.
 	s.data[deviceId] = entry{
 		session: session,
 		expiry:  s.newExpiry(),
+		wait:    nil,
 	}
 	s.mu.Unlock()
 
 	// Compute metrics.
 	s.metrics.sessionsCounter.With(prometheus.Labels{"type": "inserted"}).Inc()
-	if currentSession.expiry == 0 {
-		// Notify waiter.
+	if !sessionExists {
+		// Notify waiters.
 		if currentSession.wait != nil {
 			close(currentSession.wait)
 		}
@@ -114,69 +116,79 @@ func (s *service) InsertSession(deviceId string, session event.Session) {
 // IncSessionPageviewCount implements Service.
 func (s *service) IncSessionPageviewCount(deviceId string) (event.Session, bool) {
 	s.mu.Lock()
-	sessionEntry, ok := s.data[deviceId]
+	session, ok := s.getSession(deviceId)
 	// Session not found.
 	if !ok {
 		s.mu.Unlock()
 		return event.Session{}, false
 	}
 
-	sessionEntry.session.PageviewCount++
+	session.PageviewCount++
 
 	s.data[deviceId] = entry{
-		session: sessionEntry.session,
+		session: session,
 		expiry:  s.newExpiry(),
 	}
 
 	s.mu.Unlock()
 
-	return sessionEntry.session, true
+	return session, true
 }
 
 // IdentifySession implements Service.
 func (s *service) IdentifySession(deviceId string, visitorId string) (event.Session, bool) {
 	s.mu.Lock()
-	sessionEntry, ok := s.data[deviceId]
+	session, ok := s.getSession(deviceId)
 	if !ok {
 		s.mu.Unlock()
 		return event.Session{}, false
 	}
 
 	// No need for update.
-	if sessionEntry.session.VisitorId == visitorId {
+	if session.VisitorId == visitorId {
 		s.mu.Unlock()
-		return sessionEntry.session, true
+		return session, true
 	}
 
 	// Update visitor id.
-	sessionEntry.session.VisitorId = visitorId
+	session.VisitorId = visitorId
 	s.data[deviceId] = entry{
-		session: sessionEntry.session,
+		session: session,
 		expiry:  s.newExpiry(),
 	}
 	s.mu.Unlock()
 
-	return sessionEntry.session, true
+	return session, true
 }
 
 // WaitSession implements Service.
 func (s *service) WaitSession(deviceId string, timeout time.Duration) (event.Session, bool) {
 	s.mu.RLock()
-	sessionEntry, entryExists := s.data[deviceId]
+	// We don't use getSessionEntry here as we want to check if entry exists
+	// (and not if session exists).
+	sessionEntry, ok := s.data[deviceId]
 	s.mu.RUnlock()
 
+	// Entry contains a session and hasn't expired.
+	if ok && sessionEntry.wait == nil && uint32(time.Now().Unix()) < sessionEntry.expiry {
+		return sessionEntry.session, true
+	}
+
 	// Create entry with a wait channel.
-	if !entryExists {
+	if !ok {
 		sessionEntry.wait = make(chan struct{})
+		sessionEntry.expiry = uint32(time.Now().Add(timeout).Unix())
 
 		s.mu.Lock()
 		s.data[deviceId] = sessionEntry
 		s.mu.Unlock()
-	}
+	} else if ok && sessionEntry.wait != nil { // Entry exists with wait channel.
+		// Update expiry.
+		sessionEntry.expiry = uint32(time.Now().Add(timeout).Unix())
 
-	// Session is active and already exists.
-	if entryExists && sessionEntry.expiry >= uint32(time.Now().Unix()) {
-		return sessionEntry.session, true
+		s.mu.Lock()
+		s.data[deviceId] = sessionEntry
+		s.mu.Unlock()
 	}
 
 	// Wait if needed.
@@ -186,13 +198,18 @@ func (s *service) WaitSession(deviceId string, timeout time.Duration) (event.Ses
 
 		deadlineCh := time.After(timeout)
 		select {
+		case <-sessionEntry.wait:
+			break
 		case <-deadlineCh:
 			return event.Session{}, false
-		case <-sessionEntry.wait:
 		}
 	}
 
-	return s.GetSession(deviceId)
+	s.mu.RLock()
+	session, ok := s.getSession(deviceId)
+	s.mu.RUnlock()
+
+	return session, ok
 }
 
 // session garbage collector.
@@ -213,7 +230,7 @@ func (s *service) gc(gcInterval time.Duration) {
 		// Collect expired sessions.
 		s.mu.RLock()
 		for id, v := range s.data {
-			if v.expiry != 0 && ts >= v.expiry {
+			if ts >= v.expiry {
 				expired = append(expired, id)
 			}
 		}
@@ -226,9 +243,11 @@ func (s *service) gc(gcInterval time.Duration) {
 		expiredCounter := 0
 		for i := range expired {
 			v := s.data[expired[i]]
-			if v.expiry != 0 && ts >= v.expiry {
-				expiredCounter++
-				expiredSessionPageviews = append(expiredSessionPageviews, v.session.PageviewCount)
+			if ts >= v.expiry {
+				if v.wait != nil {
+					expiredCounter++
+					expiredSessionPageviews = append(expiredSessionPageviews, v.session.PageviewCount)
+				}
 
 				delete(s.data, expired[i])
 			}

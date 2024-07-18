@@ -25,116 +25,10 @@ func TestService(t *testing.T) {
 		sessionInactiveTtl: 24 * time.Hour,
 	}
 
-	t.Run("GetSession", func(t *testing.T) {
-		t.Run("NonExistent", func(t *testing.T) {
-			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
-
-			storedSession, ok := service.GetSession("...")
-			require.False(t, ok)
-			require.Equal(t, storedSession, event.Session{})
-
-			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
-			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "inserted"}))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "overwritten"}))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "expired"}))
-			require.Equal(t, float64(0),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
-			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
-		})
-
-		t.Run("Expired", func(t *testing.T) {
-			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, Config{
-				gcInterval:         30 * time.Millisecond,
-				sessionInactiveTtl: 30 * time.Millisecond,
-			}, promRegistry)
-
-			deviceId := randomDeviceId()
-			session := event.Session{
-				VisitorId:     "prisme_XXX",
-				PageviewCount: 1,
-			}
-
-			service.InsertSession(deviceId, session)
-
-			time.Sleep(35 * time.Millisecond)
-
-			storedSession, ok := service.GetSession(deviceId)
-			require.False(t, ok)
-			require.Equal(t, storedSession, event.Session{})
-
-			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
-			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
-			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "inserted"}))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "overwritten"}))
-			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "expired"}))
-			require.Equal(t, float64(1),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
-			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
-		})
-
-		t.Run("Waited", func(t *testing.T) {
-			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
-
-			deviceId := randomDeviceId()
-
-			waitDone := make(chan struct{})
-			go func() {
-				service.WaitSession(deviceId, 10*time.Millisecond)
-				close(waitDone)
-			}()
-
-			storedSession, ok := service.GetSession(deviceId)
-			require.False(t, ok)
-			require.Equal(t, storedSession, event.Session{})
-
-			<-waitDone
-
-			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
-			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "inserted"}))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "overwritten"}))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "expired"}))
-			require.Equal(t, float64(0),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
-			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
-		})
-	})
-
 	t.Run("InsertSession", func(t *testing.T) {
 		t.Run("NonExistent", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
+			service := ProvideService(logger, cfg, promRegistry).(*service)
 
 			deviceId := randomDeviceId()
 			session := event.Session{
@@ -144,7 +38,7 @@ func TestService(t *testing.T) {
 
 			service.InsertSession(deviceId, session)
 
-			storedSession, ok := service.GetSession(deviceId)
+			storedSession, ok := service.getSession(deviceId)
 			require.True(t, ok)
 			require.Equal(t, storedSession, session)
 
@@ -169,7 +63,7 @@ func TestService(t *testing.T) {
 
 		t.Run("Existent", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
+			service := ProvideService(logger, cfg, promRegistry).(*service)
 
 			deviceId := randomDeviceId()
 			sessionA := event.Session{
@@ -185,7 +79,7 @@ func TestService(t *testing.T) {
 			// Overwrite session A.
 			service.InsertSession(deviceId, sessionB)
 
-			storedSession, ok := service.GetSession(deviceId)
+			storedSession, ok := service.getSession(deviceId)
 			require.True(t, ok)
 			require.Equal(t, storedSession, sessionB)
 
@@ -308,6 +202,24 @@ func TestService(t *testing.T) {
 
 			// Insert session in parallel.
 			go func() {
+				require.Equal(t, float64(0),
+					testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
+				require.Equal(t, float64(1),
+					testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+				require.Equal(t, float64(0),
+					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						prometheus.Labels{"type": "inserted"}))
+				require.Equal(t, float64(0),
+					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						prometheus.Labels{"type": "overwritten"}))
+				require.Equal(t, float64(0),
+					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						prometheus.Labels{"type": "expired"}))
+				require.Equal(t, float64(0),
+					testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+				require.Equal(t, float64(0),
+					testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
+
 				time.Sleep(5 * time.Millisecond)
 
 				// A single session wait.
