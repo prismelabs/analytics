@@ -48,6 +48,7 @@ func accessLog(logger zerolog.Logger) fiber.Handler {
 			Err(err).
 			Msg("request handled")
 
-		return err
+		// We handled error by logging it, no need to continue returning it.
+		return nil
 	}
 }
