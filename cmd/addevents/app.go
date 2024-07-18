@@ -90,8 +90,6 @@ func (a App) executeScenario(worker func(time.Time, Config, chan<- any) uint64) 
 					switch r := record.(type) {
 					case Session:
 						err = sessionsBatch.Append(r.Row()...)
-					case IdentifyEvent:
-						err = identifyBatch.Append(r.Row()...)
 					case CustomEvent:
 						err = customEventsBatch.Append(r.Row()...)
 					default:

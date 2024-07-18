@@ -13,7 +13,6 @@ type Config struct {
 	Domains           []string
 	FromDate          time.Time
 	CustomEventsRate  float64
-	AuthRate          float64
 	BounceRate        float64
 	ExitRate          float64
 	MobileRate        float64
@@ -35,7 +34,6 @@ func ProvideConfig() Config {
 	flag.IntVar(&extraDomains, "extra-domains", 10, "number of random domains generated added to the domains list")
 	flag.IntVar(&extraPaths, "extra-paths", 10, "number of random paths generated added to the paths list")
 	flag.Float64Var(&cfg.CustomEventsRate, "custom-events-rate", 0.3, "custom events rate per viewed page")
-	flag.Float64Var(&cfg.AuthRate, "auth-rate", 0.3, "rate of authenticated sessions")
 	flag.Float64Var(&cfg.BounceRate, "bounce-rate", 0.56, "bounce rate")
 	flag.Float64Var(&cfg.ExitRate, "exit-rate", 0.3, "exit rate when no bounce")
 	flag.Float64Var(&cfg.MobileRate, "mobile-rate", 0.3, "mobile client rate")

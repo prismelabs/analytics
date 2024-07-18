@@ -68,21 +68,11 @@ func ProvideService(
 			),
 			ringo.WithWaiterContext[*event.Custom](ctx),
 		),
-		identifyEventRingBuf: ringo.NewWaiter(
-			ringo.NewManyToOne(
-				int(cfg.MaxBatchSize*cfg.RingBuffersFactor),
-				ringo.WithManyToOneCollisionHandler[*event.Identify](ringo.CollisionHandlerFunc(func(_ any) {
-					logger.Warn().Msg("custom events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_RING_BUFFERS_FACTOR or PRISME_EVENTSTORE_MAX_BATCH_SIZE")
-				})),
-			),
-			ringo.WithWaiterContext[*event.Identify](ctx),
-		),
 		metrics: newMetrics(promRegistry),
 	}
 
 	go service.batchPageViewLoop(batchDone)
 	go service.batchCustomEventLoop(batchDone)
-	go service.batchIdentifyEventLoop(batchDone)
 
 	logger.Info().Msg("clickhouse based event store configured")
 
@@ -90,14 +80,13 @@ func ProvideService(
 }
 
 type clickhouseService struct {
-	logger               zerolog.Logger
-	conn                 driver.Conn
-	maxBatchSize         uint64
-	maxBatchTimeout      time.Duration
-	pageViewRingBuf      ringo.Waiter[*event.PageView]
-	customEventRingBuf   ringo.Waiter[*event.Custom]
-	identifyEventRingBuf ringo.Waiter[*event.Identify]
-	metrics              metrics
+	logger             zerolog.Logger
+	conn               driver.Conn
+	maxBatchSize       uint64
+	maxBatchTimeout    time.Duration
+	pageViewRingBuf    ringo.Waiter[*event.PageView]
+	customEventRingBuf ringo.Waiter[*event.Custom]
+	metrics            metrics
 }
 
 // StorePageView implements Service.
@@ -109,12 +98,6 @@ func (cs *clickhouseService) StorePageView(_ context.Context, ev *event.PageView
 // StoreCustom implements Service.
 func (cs *clickhouseService) StoreCustom(_ context.Context, ev *event.Custom) error {
 	cs.customEventRingBuf.Push(ev)
-	return nil
-}
-
-// StoreIdentifyEvent implements Service.
-func (cs *clickhouseService) StoreIdentifyEvent(_ context.Context, ev *event.Identify) error {
-	cs.identifyEventRingBuf.Push(ev)
 	return nil
 }
 
@@ -275,68 +258,6 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append custom event to batch")
-		}
-
-		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {
-			go cs.sendBatch(batch, promLabels)
-			batch = nil
-		}
-	}
-}
-
-func (cs *clickhouseService) batchIdentifyEventLoop(batchDone chan<- struct{}) {
-	var batch driver.Batch
-	var err error
-	batchCreationDate := time.Now()
-
-	promLabels := prometheus.Labels{
-		"type": "identify",
-	}
-
-	for {
-		if batch == nil {
-			batch, err = cs.conn.PrepareBatch(
-				context.Background(),
-				"INSERT INTO events_identify",
-			)
-			if err != nil {
-				cs.logger.Err(err).Msg("failed to prepare next identify events batch")
-				continue
-			}
-
-			batchCreationDate = time.Now()
-		}
-
-		// Wait for next event.
-		ev, done, dropped := cs.identifyEventRingBuf.Next()
-		// Ring buffer context was cancelled.
-		if done {
-			cs.logger.Info().Msg("identify event ring buffer done, sending last batch...")
-			cs.sendBatch(batch, promLabels)
-			cs.logger.Info().Msg("last batch of identify events sent.")
-			batchDone <- struct{}{}
-			return
-		}
-		if dropped > 0 {
-			cs.logger.Info().Int("dropped", dropped).Msg("identify events dropped")
-			cs.metrics.droppedEvents.With(promLabels).Add(float64(dropped))
-		}
-
-		cs.logger.Debug().Object("identify_event", ev).Msg("appending identify event to batch...")
-
-		// Append to batch.
-		err = batch.Append(
-			ev.Timestamp,
-			ev.Session.PageUri.Host(),
-			ev.Session.VisitorId,
-			ev.Session.SessionUuid,
-			ev.InitialKeys,
-			ev.InitialValues,
-			ev.Keys,
-			ev.Values,
-		)
-		if err != nil {
-			cs.logger.Err(err).Msg("failed to append identify event to batch")
 		}
 
 		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {
