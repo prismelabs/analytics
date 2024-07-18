@@ -18,4 +18,13 @@ prisme: FORCE
 prisme/%: FORCE
 	$(MAKE) -C prisme $*
 
+.PHONY: lint
+lint:
+	bunx standard
+
+.PHONY: lint/fix
+lint/fix:
+	bunx standard --fix
+
+
 FORCE:

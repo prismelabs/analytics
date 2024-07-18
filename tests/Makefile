@@ -16,9 +16,9 @@ perf/%: FORCE
 	$(MAKE) -C perf $*
 
 .PHONY: lint
-lint: bun/lint
+lint: bun/lint perf/lint
 
 .PHONY: lint/fix
-lint/fix: bun/lint/fix
+lint/fix: bun/lint/fix perf/lint/fix
 
 FORCE:
