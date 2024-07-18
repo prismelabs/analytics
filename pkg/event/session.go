@@ -13,7 +13,7 @@ import (
 // Session holds data about visitor's/user's session/visit.
 type Session struct {
 	// This data struct must not contains data changing over pageviews and custom events
-	// except for PageviewCount field.
+	// except for PageviewCount (version) field.
 
 	PageUri       uri.Uri
 	ReferrerUri   ReferrerUri
