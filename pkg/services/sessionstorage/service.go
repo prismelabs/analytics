@@ -13,17 +13,17 @@ import (
 type Service interface {
 	// InsertSession inserts session in session storage and associate it to the
 	// given deviceId.
-	InsertSession(deviceId string, session event.Session)
+	InsertSession(deviceId uint64, session event.Session)
 	// IncSessionPageviewCount increments pageview and returns it.
-	IncSessionPageviewCount(deviceId string) (event.Session, bool)
+	IncSessionPageviewCount(deviceId uint64) (event.Session, bool)
 	// IdentifySession updates stored session visitor id. Updated session and
 	// boolean found flag are returned.
-	IdentifySession(deviceId string, visitorId string) (event.Session, bool)
+	IdentifySession(deviceId uint64, visitorId string) (event.Session, bool)
 	// WaitForSession retrieves stored session and returns it. If session is not
 	// found, it waits until it is created or timeout.
 	// Returned boolean flag is false if wait timed out and returned an empty
 	// session.
-	WaitSession(deviceId string, timeout time.Duration) (event.Session, bool)
+	WaitSession(deviceId uint64, timeout time.Duration) (event.Session, bool)
 }
 
 type service struct {
@@ -31,7 +31,7 @@ type service struct {
 	cfg     Config
 	metrics metrics
 	mu      sync.RWMutex
-	data    map[string]entry
+	data    map[uint64]entry
 }
 
 type entry struct {
@@ -57,7 +57,7 @@ func ProvideService(
 		cfg:     cfg,
 		metrics: newMetrics(promRegistry),
 		mu:      sync.RWMutex{},
-		data:    make(map[string]entry),
+		data:    make(map[uint64]entry),
 	}
 
 	go service.gc(cfg.gcInterval)
@@ -72,7 +72,7 @@ func ProvideService(
 // someone is waiting for its creation). This function doesn't check if session
 // has expired.
 // You must hold mutex while calling this function.
-func (s *service) getSessionEntry(deviceId string) (entry, bool) {
+func (s *service) getSessionEntry(deviceId uint64) (entry, bool) {
 	entry, ok := s.data[deviceId]
 	return entry, ok &&
 		entry.wait == nil // Someone is waiting on this session but none exists.
@@ -81,13 +81,13 @@ func (s *service) getSessionEntry(deviceId string) (entry, bool) {
 // getSession is the same as getSessionEntry but returns only the session and
 // checks that it hasn't expired.
 // You must hold mutex while calling this function.
-func (s *service) getSession(deviceId string) (event.Session, bool) {
+func (s *service) getSession(deviceId uint64) (event.Session, bool) {
 	entry, ok := s.getSessionEntry(deviceId)
 	return entry.session, ok && uint32(time.Now().Unix()) < entry.expiry // Not expired session.
 }
 
 // InsertSession implements Service.
-func (s *service) InsertSession(deviceId string, session event.Session) {
+func (s *service) InsertSession(deviceId uint64, session event.Session) {
 	s.mu.Lock()
 	currentSession, sessionExists := s.getSessionEntry(deviceId)
 
@@ -114,7 +114,7 @@ func (s *service) InsertSession(deviceId string, session event.Session) {
 }
 
 // IncSessionPageviewCount implements Service.
-func (s *service) IncSessionPageviewCount(deviceId string) (event.Session, bool) {
+func (s *service) IncSessionPageviewCount(deviceId uint64) (event.Session, bool) {
 	s.mu.Lock()
 	session, ok := s.getSession(deviceId)
 	// Session not found.
@@ -136,7 +136,7 @@ func (s *service) IncSessionPageviewCount(deviceId string) (event.Session, bool)
 }
 
 // IdentifySession implements Service.
-func (s *service) IdentifySession(deviceId string, visitorId string) (event.Session, bool) {
+func (s *service) IdentifySession(deviceId uint64, visitorId string) (event.Session, bool) {
 	s.mu.Lock()
 	session, ok := s.getSession(deviceId)
 	if !ok {
@@ -162,7 +162,7 @@ func (s *service) IdentifySession(deviceId string, visitorId string) (event.Sess
 }
 
 // WaitSession implements Service.
-func (s *service) WaitSession(deviceId string, timeout time.Duration) (event.Session, bool) {
+func (s *service) WaitSession(deviceId uint64, timeout time.Duration) (event.Session, bool) {
 	s.mu.RLock()
 	// We don't use getSessionEntry here as we want to check if entry exists
 	// (and not if session exists).
@@ -216,7 +216,7 @@ func (s *service) WaitSession(deviceId string, timeout time.Duration) (event.Ses
 func (s *service) gc(gcInterval time.Duration) {
 	ticker := time.NewTicker(gcInterval)
 	defer ticker.Stop()
-	var expired []string
+	var expired []uint64
 	var expiredSessionPageviews []uint16
 
 	for {

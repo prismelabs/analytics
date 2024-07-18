@@ -52,12 +52,12 @@ func peekReferrerQueryOrHeader(c *fiber.Ctx) []byte {
 	return referrer
 }
 
-func computeDeviceId(bytesSlice ...[]byte) string {
-	return fmt.Sprintf("%X", xxh3(bytesSlice...))
+func computeDeviceId(bytesSlice ...[]byte) uint64 {
+	return xxh3(bytesSlice...)
 }
 
-func computeVisitorId(prefix string, bytesSlice ...[]byte) string {
-	return fmt.Sprintf("%v%X", prefix, xxh3(bytesSlice...))
+func computeVisitorId(bytesSlice ...[]byte) string {
+	return fmt.Sprintf("prisme_%X", xxh3(bytesSlice...))
 }
 
 func xxh3(bytesSlice ...[]byte) uint64 {

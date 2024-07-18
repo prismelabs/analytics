@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -129,9 +130,9 @@ func eventsPageviewsHandler(
 
 		// Compute visitor id if none was provided along request.
 		if visitorId == "" {
-			visitorId = computeVisitorId("prisme_",
+			visitorId = computeVisitorId(
 				saltManagerService.DailySalt().Bytes(), userAgent,
-				ipAddr, utils.UnsafeBytes(pageView.PageUri.Host()), []byte(deviceId),
+				ipAddr, utils.UnsafeBytes(pageView.PageUri.Host()), binary.LittleEndian.AppendUint64(nil, deviceId),
 			)
 		}
 

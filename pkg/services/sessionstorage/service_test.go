@@ -1,7 +1,6 @@
 package sessionstorage
 
 import (
-	"fmt"
 	"io"
 	"math/rand"
 	"testing"
@@ -13,10 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 )
-
-func randomDeviceId() string {
-	return fmt.Sprintf("%X", rand.Int63())
-}
 
 func TestService(t *testing.T) {
 	logger := log.NewLogger("sessionstorage_test", io.Discard, true)
@@ -30,7 +25,7 @@ func TestService(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
 			service := ProvideService(logger, cfg, promRegistry).(*service)
 
-			deviceId := randomDeviceId()
+			deviceId := rand.Uint64()
 			session := event.Session{
 				VisitorId:     "prisme_XXX",
 				PageviewCount: 1,
@@ -65,7 +60,7 @@ func TestService(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
 			service := ProvideService(logger, cfg, promRegistry).(*service)
 
-			deviceId := randomDeviceId()
+			deviceId := rand.Uint64()
 			sessionA := event.Session{
 				VisitorId:     "prisme_XXX",
 				PageviewCount: 1,
@@ -107,7 +102,7 @@ func TestService(t *testing.T) {
 		promRegistry := prometheus.NewRegistry()
 		service := ProvideService(logger, cfg, promRegistry)
 
-		deviceId := randomDeviceId()
+		deviceId := rand.Uint64()
 		sessionV1 := event.Session{
 			VisitorId:     "prisme_XXX",
 			PageviewCount: 1,
@@ -145,7 +140,7 @@ func TestService(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
 			service := ProvideService(logger, cfg, promRegistry)
 
-			deviceId := randomDeviceId()
+			deviceId := rand.Uint64()
 
 			// No session wait.
 			require.Equal(t, float64(0),
@@ -190,7 +185,7 @@ func TestService(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
 			service := ProvideService(logger, cfg, promRegistry)
 
-			deviceId := randomDeviceId()
+			deviceId := rand.Uint64()
 			session := event.Session{
 				VisitorId:     "prisme_XXX",
 				PageviewCount: 1,
@@ -259,7 +254,7 @@ func TestService(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
 			service := ProvideService(logger, cfg, promRegistry)
 
-			deviceId := randomDeviceId()
+			deviceId := rand.Uint64()
 			session := event.Session{
 				VisitorId:     "prisme_XXX",
 				PageviewCount: 1,
