@@ -100,6 +100,7 @@ func eventIdentifyHandler(
 			if !ok {
 				return errSessionNotFound
 			}
+			// Try to identify session a second time.
 			identifyEvent.Session, ok = sessionStorage.IdentifySession(deviceId, visitorId)
 			if !ok {
 				return errSessionNotFound

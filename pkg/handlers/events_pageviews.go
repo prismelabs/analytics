@@ -89,23 +89,25 @@ func eventsPageviewsHandler(
 	// Retrieve session.
 	if !newSession {
 		sessionExists := false
-		if visitorId != "" {
+		if visitorId != "" { // Identify session.
 			visitorId = utils.CopyString(visitorId)
 			_, sessionExists = sessionStorage.IdentifySession(deviceId, visitorId)
-		} else {
-			_, sessionExists = sessionStorage.GetSession(deviceId)
+			if sessionExists {
+
+				// Increment pageview count.
+				pageView.Session, sessionExists = sessionStorage.IncSessionPageviewCount(deviceId)
+				if !sessionExists { // Should never happend.
+					logger.Panic().Msg("failed to increment session pageview count after IdentifySession returned a session")
+				}
+			}
+		} else { // Anon session.
+			// Increment pageview count.
+			pageView.Session, sessionExists = sessionStorage.IncSessionPageviewCount(deviceId)
 		}
 
-		// Session not found.
-		// This can happen if tracking script is not installed on all pages,
-		// or prisme instance was restarted.
 		if !sessionExists {
 			newSession = true
 		} else {
-			pageView.Session, sessionExists = sessionStorage.IncSessionPageviewCount(deviceId)
-			if !sessionExists {
-				logger.Panic().Msg("failed to increment session pageview count after GetSession returned a session: session not found")
-			}
 			pageView.Timestamp = time.Now().UTC()
 		}
 	}
