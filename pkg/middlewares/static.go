@@ -26,5 +26,10 @@ func ProvideStatic(cfg config.Server) Static {
 		}
 	}
 
-	return filesystem.New(fsCfg)
+	handler := filesystem.New(fsCfg)
+
+	return func(c *fiber.Ctx) error {
+		c.Response().Header.Add(fiber.HeaderAcceptCH, "Sec-CH-UA, Sec-CH-UA-Mobile, Sec-CH-UA-Platform")
+		return handler(c)
+	}
 }
