@@ -42,7 +42,8 @@ so you can collect, visualize analyze metrics that matters to you the way you wa
 Personally Identifiable Information (PII) is collected. Tracking script doesn't
 use cookies, you can ditch your cookie pop-up.
 * **Lightweight**: Prisme tracking script is around 1kB (~45x smaller than
-Google Analytics).
+Google Analytics). Noscript tracking handlers (for visitors with javascript
+disabled) returns a 35 bytes transparent GIF image.
 * **Resource efficient**: Prisme is designed to be fast and resource efficient,
 checkout our [benchmarks](#performance).
 * **SPA support**: Prisme is built with modern web frameworks in mind and it works
