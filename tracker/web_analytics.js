@@ -18,6 +18,8 @@
   var path = currentScriptDataset.path || loc.pathname;
   // Enable/disable manual tracking.
   var manual = !!currentScriptDataset.manual || false
+  // Visitor ID.
+  var visitorId = currentScriptDataset.visitorId;
 
   // State variables.
   var referrer = document.referrer.replace(loc.host, domain);
@@ -38,6 +40,8 @@
       if (manual || pageviewCount > 1) options.path = loc.pathname
       else options.path = path
     }
+
+    if (!options.visitorId) options.visitorId = visitorId
 
     options.url = scheme.concat("//", options.domain, options.path, loc.search)
 
