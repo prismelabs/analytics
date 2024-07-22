@@ -23,7 +23,7 @@
 
 # :gem: Prisme Analytics
 
-An Open Source, privacy-focused and progressive analytics service.
+[An Open Source, privacy-focused and progressive analytics service.](https://www.prismeanalytics.com/docs/next/)
 
 [Documentation](https://www.prismeanalytics.com/docs)
 |
@@ -36,18 +36,18 @@ An Open Source, privacy-focused and progressive analytics service.
 Here's what makes Prisme a great alternative to other analytics:
 * **Tailored analytics**: Prisme Analytics supports **custom dashboards and events**
 so you can collect, visualize analyze metrics that matters to you the way you want.
-* **Ready to use**: Prisme also comes with built-ins metrics and dashboards 
+* **Ready to use**: Prisme also comes with built-ins metrics and dashboards
 (see [demo](https://app.prismeanalytics.com/grafana)).
 * **Privacy-focused**: Prisme is **GDPRC, CCPA, PECR compliant by design**, no
 Personally Identifiable Information (PII) is collected. Tracking script doesn't
 use cookies, you can ditch your cookie pop-up.
-* **Lightweight**: Prisme tracking script is less than 1kB (~45x smaller than
+* **Lightweight**: Prisme tracking script is around 1kB (~45x smaller than
 Google Analytics).
 * **Resource efficient**: Prisme is designed to be fast and resource efficient,
 checkout our [benchmarks](#performance).
 * **SPA support**: Prisme is built with modern web frameworks in mind and it works
 automatically with any pushState based router on the frontend.
-* **[Grafana](https://github.com/grafana/grafana) based**: Prisme integrates with 
+* **[Grafana](https://github.com/grafana/grafana) based**: Prisme integrates with
 [Grafana](https://github.com/grafana/grafana) that provides:
   * User managements
   * Team managements
@@ -58,11 +58,11 @@ automatically with any pushState based router on the frontend.
 ## Configuration
 
 You can find configuration documentation on
-[our website](https://www.prismeanalytics.com/docs/set-up/configuration/configure-server/server-modes).
+[our website](https://www.prismeanalytics.com/docs/next/reference/server/server-modes/).
 
 ## Performance
 
-Prisme Analytics ingestion server is **easily** capable of ingesting more than 
+Prisme Analytics ingestion server is **easily** capable of ingesting more than
 50,000 req/s on my AMD Ryzen 7 7840U w/ Radeon 780M Graphics.
 
 ```
@@ -120,5 +120,5 @@ Please give a :star: if this project helped you!
 
 ## :scroll: License
 
-[Prisme Analytics](https://www.prismeanalytics.com/) is distributed under 
+[Prisme Analytics](https://www.prismeanalytics.com/) is distributed under
 [AGPL-3.0-only](LICENSE). For MIT exceptions, see [LICENSING.md](LICENSING.md)
