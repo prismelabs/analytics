@@ -17,7 +17,7 @@
   // Path of current page.
   var path = currentScriptDataset.path || loc.pathname;
   // Enable/disable manual tracking.
-  var manual = !!currentScriptDataset.manual || false
+  var manual = currentScriptDataset.manual !== "false" || false
   // Visitor ID.
   var visitorId = currentScriptDataset.visitorId;
 
@@ -54,9 +54,6 @@
 
     if (options.visitorId) {
       headers["X-Prisme-Visitor-Id"] = options.visitorId.toString()
-      if (options.anonymous == true) {
-        headers["X-Prisme-Visitor-Anon"] = "1"
-      }
     }
 
     return headers
