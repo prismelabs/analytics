@@ -26,7 +26,7 @@
 				"type": "grafana-clickhouse-datasource",
 				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
-			"description": "",
+			"description": "<ul>\n\t<li>\n\t\t<span style=\"font-weight: bold\">Unique visitors</span>: Number of people who visited your site.\n\t</li>\n\t<li>\n\t\t<span style=\"font-weight: bold\">Unique sessions</span>: Number of visit on your site.\n\t</li>\n\t<li>\n\t\t<span style=\"font-weight: bold\">Total page views</span>: Number of page viewed on your site.\n\t</li>\n\t<li>\n\t\t<span style=\"font-weight: bold\">Views per sessions</span>: Number of page viewed per session on your site.\n\t</li>\n</ul>\n<span style=\"font-weight: bold\">Change</span> panels shows evolution of metrics compared to previous period.\n",
 			"fieldConfig": {
 				"defaults": {
 					"color": {
@@ -558,7 +558,7 @@
 				"type": "grafana-clickhouse-datasource",
 				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
-			"description": "Percentage of visits that access only a single page.",
+			"description": "Percentage of sessions with a single page view.",
 			"fieldConfig": {
 				"defaults": {
 					"color": {
@@ -566,6 +566,7 @@
 						"mode": "fixed"
 					},
 					"mappings": [],
+					"noValue": "0",
 					"thresholds": {
 						"mode": "absolute",
 						"steps": [
@@ -626,7 +627,7 @@
 							"table": ""
 						}
 					},
-					"pluginVersion": "4.0.8",
+					"pluginVersion": "4.3.1",
 					"queryType": "table",
 					"rawSql": "WITH bounces AS (\n  SELECT argMax(pageviews, pageviews) AS pageviews\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n  HAVING pageviews = 1\n)\nSELECT COUNT(*) AS bounces FROM bounces",
 					"refId": "Total number of sessions with a single pageview"
@@ -674,7 +675,7 @@
 				"type": "grafana-clickhouse-datasource",
 				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
-			"description": "Average visit duration (bounces and live visitor excluded).",
+			"description": "Average session duration (bounces and live visitors excluded).",
 			"fieldConfig": {
 				"defaults": {
 					"color": {
@@ -750,7 +751,7 @@
 				"type": "grafana-clickhouse-datasource",
 				"uid": "{{ .DatasourceClickhouseUid }}"
 			},
-			"description": "Number of page views over time.",
+			"description": "Number of page views, sessions and visitors over time.",
 			"fieldConfig": {
 				"defaults": {
 					"color": {
@@ -989,7 +990,8 @@
 								"mode": "percentage",
 								"steps": [
 									{
-										"color": "super-light-blue"
+										"color": "super-light-blue",
+										"value": null
 									}
 								]
 							},
@@ -1001,7 +1003,7 @@
 						"h": 12,
 						"w": 11,
 						"x": 1,
-						"y": 28
+						"y": 20
 					},
 					"id": 13,
 					"options": {
@@ -1073,6 +1075,7 @@
 						"type": "grafana-clickhouse-datasource",
 						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
+					"description": "<ul>\n\t<li>\n\t\t<span style=\"font-weight: bold\">Direct</span>: Traffic from visitors who directly enter your website's URL or domain name into their browser or search engine, without clicking on a link from another site.\n\t</li>\n\t<li>\n\t\t<span style=\"font-weight: bold\">Internal</span>: Traffic from visitors who navigate within your website by clicking on internal links, moving from one page to another, or engaging with specific content or features.\n\t</li>\n\t<li>\n\t\t<span style=\"font-weight: bold\">External</span>: Traffic from visitors who arrive at your website via external sources, such as search engines, social media platforms, other websites, or email marketing campaigns.\n\t</li>\n</ul>\n",
 					"fieldConfig": {
 						"defaults": {
 							"color": {
@@ -1130,7 +1133,7 @@
 						"h": 12,
 						"w": 11,
 						"x": 12,
-						"y": 28
+						"y": 20
 					},
 					"id": 19,
 					"options": {
@@ -1176,9 +1179,9 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.8",
+							"pluginVersion": "4.3.1",
 							"queryType": "table",
-							"rawSql": "SELECT COUNT(*) - 1 AS \"Internal\"\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\n",
+							"rawSql": "SELECT COUNT(*) AS \"Internal\"\nFROM pageviews\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\n",
 							"refId": "internal"
 						},
 						{
@@ -1262,7 +1265,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green"
+										"color": "green",
+										"value": null
 									}
 								]
 							},
@@ -1274,7 +1278,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 1,
-						"y": 29
+						"y": 33
 					},
 					"id": 25,
 					"options": {
@@ -1341,7 +1345,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green"
+										"color": "green",
+										"value": null
 									},
 									{
 										"color": "red",
@@ -1357,7 +1362,7 @@
 						"h": 13,
 						"w": 8,
 						"x": 8,
-						"y": 29
+						"y": 33
 					},
 					"id": 14,
 					"options": {
@@ -1441,7 +1446,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green"
+										"color": "green",
+										"value": null
 									}
 								]
 							},
@@ -1453,7 +1459,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 16,
-						"y": 29
+						"y": 33
 					},
 					"id": 26,
 					"options": {
@@ -1541,7 +1547,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "blue"
+										"color": "blue",
+										"value": null
 									}
 								]
 							},
@@ -1553,7 +1560,7 @@
 						"h": 13,
 						"w": 15,
 						"x": 1,
-						"y": 43
+						"y": 47
 					},
 					"id": 15,
 					"options": {
@@ -1684,7 +1691,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "red"
+										"color": "red",
+										"value": null
 									}
 								]
 							},
@@ -1696,7 +1704,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 16,
-						"y": 43
+						"y": 47
 					},
 					"id": 18,
 					"options": {
@@ -1783,6 +1791,7 @@
 						"type": "grafana-clickhouse-datasource",
 						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
+					"description": "Distribution of browser family among your site visitors.",
 					"fieldConfig": {
 						"defaults": {
 							"color": {
@@ -1807,7 +1816,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 1,
-						"y": 57
+						"y": 61
 					},
 					"id": 4,
 					"options": {
@@ -1894,6 +1903,7 @@
 						"type": "grafana-clickhouse-datasource",
 						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
+					"description": "Distribution of Operating System (OS) among your site visitors.",
 					"fieldConfig": {
 						"defaults": {
 							"color": {
@@ -1917,7 +1927,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 12,
-						"y": 57
+						"y": 61
 					},
 					"id": 5,
 					"options": {
@@ -2009,7 +2019,7 @@
 						"type": "grafana-clickhouse-datasource",
 						"uid": "{{ .DatasourceClickhouseUid }}"
 					},
-					"description": "Top 10 of most sent custom events.",
+					"description": "Top 10 of most triggered custom events.",
 					"fieldConfig": {
 						"defaults": {
 							"color": {
@@ -2021,7 +2031,8 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green"
+										"color": "green",
+										"value": null
 									},
 									{
 										"color": "red",
@@ -2037,7 +2048,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 1,
-						"y": 32
+						"y": 75
 					},
 					"id": 21,
 					"options": {
