@@ -34,22 +34,27 @@
 ## Why Prisme ?
 
 Here's what makes Prisme a great alternative to other analytics:
-* **Tailored analytics**: Prisme Analytics supports **custom dashboards and events**
-so you can collect, visualize analyze metrics that matters to you the way you want.
-* **Ready to use**: Prisme also comes with built-ins metrics and dashboards
-(see [demo](https://app.prismeanalytics.com/grafana)).
-* **Privacy-focused**: Prisme is **GDPRC, CCPA, PECR compliant by design**, no
-Personally Identifiable Information (PII) is collected. Tracking script doesn't
-use cookies, you can ditch your cookie pop-up.
+* **Easy setup**: Gain valuable insights into your website or web application
+after a 3-minutes setup.
+* **Simple analytics**: Easy to use dashboards with filters and definition for
+each metrics.
+* **Analytics that matter**: Custom events and dashboards gives you the
+flexibility to measure what matters most, providing personalized insights to
+inform your business decisions.
+* **Privacy-focused**: Worry-free GDPR, PPCA, PECR and Shrems II compliance with
+cookie-less analytics that collect only anonymized data.
 * **Lightweight**: Prisme tracking script is around 1kB (~45x smaller than
-Google Analytics). Noscript tracking handlers (for visitors with javascript
-disabled) returns a 35 bytes transparent GIF image.
-* **Resource efficient**: Prisme is designed to be fast and resource efficient,
-checkout our [benchmarks](#performance).
-* **SPA support**: Prisme is built with modern web frameworks in mind and it works
-automatically with any pushState based router on the frontend.
-* **[Grafana](https://github.com/grafana/grafana) based**: Prisme integrates with
-[Grafana](https://github.com/grafana/grafana) that provides:
+Google Analytics) and single pixel image returned for javascript less tracking
+is 35 bytes.
+* **Humans only**: Bots, scrapers and spam traffic are automatically filtered.
+* **Campaigns & newsletters**: Use UTM to collect data on how much traffic your
+campaigns generate.
+* **No vendor lock-in**: all features are available in Open Source versions, and
+Prisme is designed to be easy to self-host.
+* **SPA support**: Prisme is built with modern web frameworks in mind and it
+works automatically with any pushState based router on the frontend.
+* **[Grafana](https://github.com/grafana/grafana) based**: Prisme integrates
+with [Grafana](https://github.com/grafana/grafana) that provides:
   * User managements
   * Team managements
   * Permissions managements
