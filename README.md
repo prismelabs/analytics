@@ -29,7 +29,7 @@
 |
 [Live demo](https://app.prismeanalytics.com/grafana)
 
-![grafana dashboard](.github/images/builtin-dashboard.jpg)
+![grafana dashboard](.github/images/web-analytics-dashboard.jpg)
 
 ## Why Prisme ?
 
