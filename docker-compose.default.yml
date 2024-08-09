@@ -31,7 +31,7 @@ services:
       - "grafana_data:/data"
     environment:
       # https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/
-      GF_INSTALL_PLUGINS: "grafana-clickhouse-datasource"
+      GF_INSTALL_PLUGINS: "grafana-clickhouse-datasource, mckn-funnel-panel"
       GF_LOG_LEVEL: "debug"
       # [database]
       GF_DATABASE_TYPE: "sqlite3"
