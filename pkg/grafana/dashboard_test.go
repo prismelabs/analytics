@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 
@@ -318,7 +319,7 @@ func TestIntegSearchDashboards(t *testing.T) {
 		orgId, err := cli.CreateOrg(context.Background(), orgName)
 		require.NoError(t, err)
 
-		results, err := cli.SearchDashboards(context.Background(), orgId, 100, 1)
+		results, err := cli.SearchDashboards(context.Background(), orgId, 100, 1, "")
 		require.NoError(t, err)
 		require.Len(t, results, 0)
 	})
@@ -331,7 +332,7 @@ func TestIntegSearchDashboards(t *testing.T) {
 		dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, Uid{}, map[string]any{"title": "Dashboard 1"}, true)
 		require.NoError(t, err)
 
-		results, err := cli.SearchDashboards(context.Background(), orgId, 100, 1)
+		results, err := cli.SearchDashboards(context.Background(), orgId, 100, 1, "")
 		require.NoError(t, err)
 		require.Len(t, results, 1)
 		require.Equal(t, dashboardId, results[0].Uid)
@@ -349,13 +350,24 @@ func TestIntegSearchDashboards(t *testing.T) {
 			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, Uid{}, map[string]any{"title": dashboardTitle}, true)
 			require.NoError(t, err)
 
-			expectedSearchResults = append(expectedSearchResults, SearchDashboardResult{dashboardId, dashboardTitle})
+			expectedSearchResults = append(expectedSearchResults, SearchDashboardResult{
+				Uid:   dashboardId,
+				Title: dashboardTitle,
+				Url:   "", // Checked separately.
+			})
 		}
 
-		results, err := cli.SearchDashboards(context.Background(), orgId, 100, 1)
+		searchResults, err := cli.SearchDashboards(context.Background(), orgId, 100, 1, "")
 		require.NoError(t, err)
-		require.Len(t, results, len(expectedSearchResults))
-		require.Equal(t, expectedSearchResults, results)
+		require.Len(t, searchResults, len(expectedSearchResults))
+
+		// result.Url is random so we check it here.
+		for i, result := range searchResults {
+			require.Contains(t, result.Url, "/d/")
+			require.Contains(t, result.Url, strings.ReplaceAll(strings.ToLower(result.Title), " ", "-"))
+			searchResults[i].Url = ""
+		}
+		require.Equal(t, expectedSearchResults, searchResults)
 	})
 
 	t.Run("MultiplePage", func(t *testing.T) {
@@ -369,16 +381,20 @@ func TestIntegSearchDashboards(t *testing.T) {
 			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, Uid{}, map[string]any{"title": dashboardTitle}, true)
 			require.NoError(t, err)
 
-			expectedSearchResults = append(expectedSearchResults, SearchDashboardResult{dashboardId, dashboardTitle})
+			expectedSearchResults = append(expectedSearchResults, SearchDashboardResult{
+				Uid:   dashboardId,
+				Title: dashboardTitle,
+				Url:   "",
+			})
 		}
 
 		// Fetch first page.
-		page1, err := cli.SearchDashboards(context.Background(), orgId, 5, 1)
+		page1, err := cli.SearchDashboards(context.Background(), orgId, 5, 1, "")
 		require.NoError(t, err)
 		require.Len(t, page1, 5)
 
 		// Fetch second page.
-		page2, err := cli.SearchDashboards(context.Background(), orgId, 5, 2)
+		page2, err := cli.SearchDashboards(context.Background(), orgId, 5, 2, "")
 		require.NoError(t, err)
 		require.Len(t, page2, 5)
 
@@ -386,7 +402,26 @@ func TestIntegSearchDashboards(t *testing.T) {
 		searchResults = append(searchResults, page1...)
 		searchResults = append(searchResults, page2...)
 
+		// result.Url is random so we check it here.
+		for i, result := range searchResults {
+			require.Contains(t, result.Url, "/d/")
+			require.Contains(t, result.Url, strings.ReplaceAll(strings.ToLower(result.Title), " ", "-"))
+			searchResults[i].Url = ""
+		}
 		require.Equal(t, expectedSearchResults, searchResults)
+	})
+
+	t.Run("NoResult", func(t *testing.T) {
+		orgName := fmt.Sprintf("foo-%v", rand.Int())
+		orgId, err := cli.CreateOrg(context.Background(), orgName)
+		require.NoError(t, err)
+
+		_, err = cli.CreateUpdateDashboard(context.Background(), orgId, Uid{}, map[string]any{"title": "Dashboard 1"}, true)
+		require.NoError(t, err)
+
+		results, err := cli.SearchDashboards(context.Background(), orgId, 100, 9, "Non existent dashboard")
+		require.NoError(t, err)
+		require.Len(t, results, 0)
 	})
 
 	t.Run("NonExistentPage", func(t *testing.T) {
@@ -397,7 +432,7 @@ func TestIntegSearchDashboards(t *testing.T) {
 		_, err = cli.CreateUpdateDashboard(context.Background(), orgId, Uid{}, map[string]any{"title": "Dashboard 1"}, true)
 		require.NoError(t, err)
 
-		results, err := cli.SearchDashboards(context.Background(), orgId, 100, 9)
+		results, err := cli.SearchDashboards(context.Background(), orgId, 100, 9, "")
 		require.NoError(t, err)
 		require.Len(t, results, 0)
 	})

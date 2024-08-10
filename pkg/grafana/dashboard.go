@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -65,6 +66,8 @@ type Dashboard struct {
 type SearchDashboardResult struct {
 	Uid   Uid    `json:"uid"`
 	Title string `json:"title"`
+	// This is just dashboard path but we match schema of API response.
+	Url string `json:"url"`
 }
 
 // CreateUpdateDashboard creates/updates a dashboard in the given organization and folder.
@@ -184,12 +187,12 @@ func (c Client) DeleteDashboardByUid(ctx context.Context, orgId OrgId, dashboard
 }
 
 // SearchDashboards searches dashboard within the given organization.
-func (c Client) SearchDashboards(ctx context.Context, orgId OrgId, limit, page int) ([]SearchDashboardResult, error) {
+func (c Client) SearchDashboards(ctx context.Context, orgId OrgId, limit, page int, query string) ([]SearchDashboardResult, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 
 	req.Header.SetMethod("GET")
-	req.SetRequestURI(fmt.Sprintf("%v/api/search?type=dash-db&limit=%v&page=%v", c.cfg.Url, limit, page))
+	req.SetRequestURI(fmt.Sprintf("%v/api/search?type=dash-db&limit=%v&page=%v&query=%v", c.cfg.Url, limit, page, url.QueryEscape(query)))
 	c.addAuthorizationHeader(req)
 	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
 

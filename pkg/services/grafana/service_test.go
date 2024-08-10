@@ -35,7 +35,7 @@ func TestIntegService(t *testing.T) {
 		require.Equal(t, folders[0].Title, "Prisme Analytics")
 
 		// Check dashboards were created.
-		dashboards, err := cli.SearchDashboards(ctx, orgId, 100, 0)
+		dashboards, err := cli.SearchDashboards(ctx, orgId, 100, 0, "Web Analytics")
 		require.NoError(t, err)
 		require.Len(t, dashboards, 1)
 		require.Equal(t, dashboards[0].Title, "Web Analytics")
