@@ -124,6 +124,8 @@ or make a [pull request](https://github.com/prismelabs/analytics/pulls).
 
 Please give a :star: if this project helped you!
 
+[![buy me a coffee button](./.github/images/blue-button.png)](https://www.buymeacoffee.com/prismelabs)
+
 ## :scroll: License
 
 [Prisme Analytics](https://www.prismeanalytics.com/) is distributed under
