@@ -84,11 +84,11 @@ func eventsPageviewsHandler(
 		ipAddr, utils.UnsafeBytes(pageView.PageUri.Host()),
 	)
 
-	isExternalReferrer := !referrerUri.IsValid() || referrerUri.Host() != pageView.PageUri.Host()
-	newSession := isExternalReferrer
+	isInternalTraffic := referrerUri.IsValid() && referrerUri.Host() == pageView.PageUri.Host()
+	newSession := !isInternalTraffic
 
-	// Retrieve session.
-	if !newSession {
+	// Internal traffic, session may already exists.
+	if isInternalTraffic {
 		sessionExists := false
 		if visitorId != "" { // Identify session.
 			visitorId = utils.CopyString(visitorId)
@@ -134,6 +134,8 @@ func eventsPageviewsHandler(
 				saltManagerService.DailySalt().Bytes(), userAgent,
 				ipAddr, utils.UnsafeBytes(pageView.PageUri.Host()), binary.LittleEndian.AppendUint64(nil, deviceId),
 			)
+		} else {
+			visitorId = utils.CopyString(visitorId)
 		}
 
 		// Parse page uri args.
