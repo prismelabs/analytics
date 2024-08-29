@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	_ "github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/rs/zerolog"
@@ -57,11 +56,13 @@ func Connect(logger zerolog.Logger, cfg config.Clickhouse, maxRetry int) (conn d
 
 		conn, err = clickhouse.Open(&options)
 		if err != nil {
+			logger.Error().Err(err).Msg("connection failed")
 			continue
 		}
 
 		err = conn.Ping(context.Background())
 		if err != nil {
+			logger.Error().Err(err).Msg("ping failed")
 			continue
 		}
 
@@ -103,13 +104,13 @@ func connectSql(logger zerolog.Logger, cfg config.Clickhouse, maxRetry int) *sql
 
 		db, err = sql.Open("clickhouse", connectionString)
 		if err != nil {
-			logger.Error().Err(err).Send()
+			logger.Error().Err(err).Msg("connection failed")
 			continue
 		}
 
 		err = db.Ping()
 		if err != nil {
-			logger.Error().Err(err).Send()
+			logger.Error().Err(err).Msg("ping failed")
 			continue
 		}
 

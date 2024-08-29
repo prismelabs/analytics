@@ -13,9 +13,19 @@ type Ch struct {
 
 // ProvideCh define a wire provider for Ch.
 func ProvideCh(logger zerolog.Logger, cfg config.Clickhouse, source source.Driver) Ch {
+
 	// Execute migrations.
-	db := connectSql(logger, cfg, 5)
-	migrate(logger, db, cfg.Database, source)
+	sqlLogger := logger.With().
+		Str("service", "clickhouse_provider").
+		Str("protocol", "http").
+		Logger()
+	db := connectSql(sqlLogger, cfg, 5)
+	migrate(sqlLogger, db, cfg.Database, source)
+
+	logger = logger.With().
+		Str("service", "clickhouse_provider").
+		Str("protocol", "native").
+		Logger()
 
 	// Connect using native interface.
 	conn := Connect(logger, cfg, 5)
