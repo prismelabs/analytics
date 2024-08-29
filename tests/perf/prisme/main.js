@@ -2,7 +2,6 @@ import http from 'k6/http'
 
 const directTrafficRate = 0.1
 const customEventRate = 0.3
-const identifyEventRate = 0.1
 const errorRate = 0.0
 const bounceRate = 0.5
 const exitRate = 0.1
@@ -12,8 +11,7 @@ export const options = {
   thresholds: {
     // Thresholds so tags appear in CLI report.
     'http_reqs{event_type:pageview}': ['count >= 0'],
-    'http_reqs{event_type:custom}': ['count >= 0'],
-    'http_reqs{event_type:identify}': ['count >= 0']
+    'http_reqs{event_type:custom}': ['count >= 0']
   },
   discardResponseBodies: true,
   scenarios: {
@@ -38,13 +36,6 @@ export default function () {
   ].join('')
 
   const ipAddr = randomIP()
-
-  // Identify session.
-  if (Math.random() < identifyEventRate) {
-    // Async request, we ignore result and we don't await so request is
-    // concurrent to pageview.
-    identifyEvent({ visitorId: `visitor-id-${Math.random()}`, origin, ipAddr })
-  }
 
   // Entry pageview.
   const response = pageView({ entryPageView: true, origin, ipAddr })
@@ -179,24 +170,6 @@ function customEvent ({ origin, ipAddr }) {
   )
 
   return response
-}
-
-function identifyEvent ({ visitorId, origin, ipAddr }) {
-  const headers = {
-    Origin: origin,
-    'X-Prisme-Referrer': [
-      origin,
-      randomItem(['', 'foo', 'bar', 'qux', 'foo'])
-    ].join('/'),
-    'X-Forwarded-For': ipAddr,
-    'Content-Type': 'application/json'
-  }
-
-  return http.asyncRequest('POST',
-    'http://prisme.localhost/api/v1/events/identify',
-    JSON.stringify({ visitorId }),
-    { headers, tags: { event_type: 'identify' } }
-  )
 }
 
 function randomItem (items) {
