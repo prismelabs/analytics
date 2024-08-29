@@ -8,6 +8,7 @@ export const PRISME_CUSTOM_EVENTS_URL = PRISME_API_URL + '/events/custom'
 export const PRISME_NOSCRIPT_CUSTOM_EVENTS_URL = PRISME_API_URL + '/noscript/events/custom'
 export const PRISME_IDENTIFY_EVENTS_URL = PRISME_API_URL + '/events/identify'
 export const PRISME_NOSCRIPT_IDENTIFY_EVENTS_URL = PRISME_API_URL + '/noscript/events/identify'
+export const PRISME_SESSIONS_THIS_URL = PRISME_API_URL + '/sessions/@this'
 
 export const PRISME_METRICS_URL = PRISME_ADMIN_URL + '/metrics'
 
