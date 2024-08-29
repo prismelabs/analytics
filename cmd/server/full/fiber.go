@@ -14,6 +14,7 @@ func ProvideFiber(
 	eventsRateLimiterMiddleware middlewares.EventsRateLimiter,
 	getNoscriptCustomEventHandler handlers.GetNoscriptEventsCustom,
 	getNoscriptPageViewEventHandler handlers.GetNoscriptEventsPageviews,
+	getSessionsThis handlers.GetSessionsThis,
 	minimalFiber wired.MinimalFiber,
 	nonRegisteredOriginFilterMiddleware middlewares.NonRegisteredOriginFilter,
 	noscriptHandlersCacheMiddleware middlewares.NoscriptHandlersCache,
@@ -44,6 +45,12 @@ func ProvideFiber(
 
 	app.Post("/api/v1/events/custom/:name", fiber.Handler(postCustomEventHandler))
 	app.Get("/api/v1/noscript/events/custom/:name", fiber.Handler(getNoscriptCustomEventHandler))
+
+	app.Use("/api/v1/sessions/@this",
+		fiber.Handler(nonRegisteredOriginFilterMiddleware),
+		fiber.Handler(apiEventsTimeoutMiddleware),
+		fiber.Handler(getSessionsThis),
+	)
 
 	return app
 }

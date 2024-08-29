@@ -32,6 +32,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		grafanaCli.ProvideClient,
 		handlers.ProvideGetNoscriptEventsCustom,
 		handlers.ProvideGetNoscriptEventsPageviews,
+		handlers.ProvideGetSessionsThis,
 		handlers.ProvideHealthCheck,
 		handlers.ProvidePostEventsCustom,
 		handlers.ProvidePostEventsPageViews,

@@ -1,6 +1,7 @@
 package uri
 
 import (
+	"encoding/json"
 	"errors"
 
 	"github.com/gofiber/fiber/v2/utils"
@@ -115,4 +116,9 @@ func (u Uri) String() string {
 	}
 
 	return uri
+}
+
+// MarshalJSON implements json.Marshaler.
+func (u Uri) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.String())
 }
