@@ -1044,30 +1044,13 @@
 									"table": ""
 								}
 							},
-							"pluginVersion": "4.0.8",
+							"pluginVersion": "4.3.2",
 							"queryType": "table",
-							"rawSql": "WITH referrals AS (\n  SELECT argMax(referrer_domain, pageviews) AS referrer_domain\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT referrer_domain, COUNT(*) AS session_count\nFROM referrals\nWHERE $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\nGROUP BY referrer_domain\nORDER BY session_count DESC",
+							"rawSql": "WITH referrals AS (\n  SELECT \n    argMax(referrer_domain, pageviews) AS source\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n), utm_sources AS (\n  SELECT \n    concat(argMax(utm_source, pageviews), ' (UTM source)') AS source\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND utm_source != ''\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nSELECT source, COUNT(*) AS session_count\nFROM (\n  SELECT source FROM referrals\n  UNION ALL\n  SELECT source FROM utm_sources\n)\nGROUP BY source\nORDER BY session_count DESC\nLIMIT 50\n",
 							"refId": "A"
 						}
 					],
 					"title": "Top Sources",
-					"transformations": [
-						{
-							"id": "rowsToFields",
-							"options": {
-								"mappings": [
-									{
-										"fieldName": "referrer_domain",
-										"handlerKey": "field.name"
-									},
-									{
-										"fieldName": "count",
-										"handlerKey": "field.value"
-									}
-								]
-							}
-						}
-					],
 					"type": "bargauge"
 				},
 				{
@@ -1265,8 +1248,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									}
 								]
 							},
@@ -1345,8 +1327,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									},
 									{
 										"color": "red",
@@ -1446,8 +1427,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									}
 								]
 							},
@@ -1547,8 +1527,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "blue",
-										"value": null
+										"color": "blue"
 									}
 								]
 							},
@@ -1691,8 +1670,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "red",
-										"value": null
+										"color": "red"
 									}
 								]
 							},
@@ -2031,8 +2009,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									},
 									{
 										"color": "red",
