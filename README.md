@@ -61,6 +61,19 @@ with [Grafana](https://github.com/grafana/grafana) that provides:
   * Multi organizations support
   * Custom dashboards
 
+## Getting started
+
+Simply add tracking script to your website:
+
+```html
+<script src="https://<your-prisme-instance-hostname>/static/wa.js" defer></script>
+<noscript>
+    <img src="https://my-prisme-instance.example.com/api/v1/noscript/events/pageviews" style="position:absolute;top:-100px">
+</noscript>
+```
+
+That's it! You should now see data in you `Web Analytics` dashboard.
+
 ## Configuration
 
 You can find configuration documentation on
