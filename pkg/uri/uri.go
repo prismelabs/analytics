@@ -1,8 +1,10 @@
 package uri
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/valyala/fasthttp"
@@ -133,4 +135,20 @@ func (u *Uri) UnmarshalJSON(b []byte) error {
 
 	*u, err = Parse(str)
 	return err
+}
+
+// Value implements driver.Valuer.
+func (u *Uri) Value() (driver.Value, error) {
+	return u.String(), nil
+}
+
+// Scan implements sql.Scanner.
+func (u *Uri) Scan(src any) error {
+	if str, ok := src.(string); ok {
+		var err error
+		*u, err = Parse(str)
+		return err
+	}
+
+	return fmt.Errorf("cannot scan %T into %T", src, u)
 }
