@@ -1,6 +1,8 @@
 package uri
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -85,6 +87,32 @@ func TestUri(t *testing.T) {
 			require.NoError(t, err)
 
 			require.Equal(t, "https://www.example.com/?q=foo#bar", uri.String())
+		})
+	})
+
+	t.Run("Json", func(t *testing.T) {
+		t.Run("Marshal", func(t *testing.T) {
+			uri, err := Parse("https://www.example.com?q=foo#bar")
+			require.NoError(t, err)
+
+			jsonUri, err := json.Marshal(uri)
+			require.NoError(t, err)
+
+			require.Equal(t, fmt.Sprintf("%q", uri.String()), string(jsonUri))
+		})
+
+		t.Run("Unmarshal", func(t *testing.T) {
+			uri, err := Parse("https://www.example.com?q=foo#bar")
+			require.NoError(t, err)
+
+			jsonUri, err := json.Marshal(uri)
+			require.NoError(t, err)
+
+			uri2 := Uri{}
+			err = json.Unmarshal(jsonUri, &uri2)
+			require.NoError(t, err)
+
+			require.Equal(t, uri, uri2)
 		})
 	})
 }

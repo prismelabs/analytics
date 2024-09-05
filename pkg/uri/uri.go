@@ -122,3 +122,15 @@ func (u Uri) String() string {
 func (u Uri) MarshalJSON() ([]byte, error) {
 	return json.Marshal(u.String())
 }
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (u *Uri) UnmarshalJSON(b []byte) error {
+	str := ""
+	err := json.Unmarshal(b, &str)
+	if err != nil {
+		return err
+	}
+
+	*u, err = Parse(str)
+	return err
+}
