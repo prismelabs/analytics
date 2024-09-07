@@ -16,6 +16,7 @@ func ProvideStatic(cfg config.Server) Static {
 		Root:       http.FS(embedded.Static),
 		PathPrefix: "static",
 		Browse:     false,
+		MaxAge:     3600,
 	}
 
 	if cfg.Debug {
