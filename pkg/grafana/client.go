@@ -3,6 +3,7 @@ package grafana
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/prismelabs/analytics/pkg/config"
@@ -11,6 +12,10 @@ import (
 
 const (
 	GrafanaOrgIdHeader = "X-Grafana-Org-Id"
+)
+
+var (
+	ErrGrafanaServerError = errors.New("grafana internal server error")
 )
 
 // Client define an API client for grafana.
@@ -55,6 +60,10 @@ func (c Client) do(ctx context.Context, req *fasthttp.Request, resp *fasthttp.Re
 		if err != nil {
 			return err
 		}
+	}
+
+	if resp.StatusCode() >= 500 {
+		return errors.Join(ErrGrafanaServerError, errors.New(string(resp.Body())))
 	}
 
 	return err
