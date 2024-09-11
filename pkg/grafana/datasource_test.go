@@ -249,6 +249,25 @@ func TestIntegUpdateDatasource(t *testing.T) {
 			require.Equal(t, "non-existent-datasource", datasources[0].Type)
 			require.Equal(t, ds.Uid.String(), datasources[0].Uid.String())
 		})
+
+		t.Run("OlderVersion", func(t *testing.T) {
+			orgName := fmt.Sprintf("foo-%v", rand.Int())
+			dsName := fmt.Sprintf("datasource-%v", rand.Int())
+
+			orgId, err := cli.CreateOrg(context.Background(), orgName)
+			require.NoError(t, err)
+
+			ds, err := cli.CreateDatasource(context.Background(), orgId, dsName, "grafana-clickhouse-datasource", false)
+			require.NoError(t, err)
+
+			ds.Name = "custom-name"
+			err = cli.UpdateDatasource(context.Background(), orgId, ds)
+			require.NoError(t, err)
+
+			err = cli.UpdateDatasource(context.Background(), orgId, ds)
+			require.Error(t, err)
+			require.ErrorIs(t, err, ErrGrafanaDatasourceAlreadyUpdated)
+		})
 	})
 }
 

@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	ErrGrafanaDatasourceAlreadyExists = errors.New("grafana datasource already exists")
-	ErrGrafanaDatasourceNotFound      = errors.New("grafana datasource not found")
+	ErrGrafanaDatasourceAlreadyExists  = errors.New("grafana datasource already exists")
+	ErrGrafanaDatasourceNotFound       = errors.New("grafana datasource not found")
+	ErrGrafanaDatasourceAlreadyUpdated = errors.New("grafana datasource already updated")
 )
 
 // Datasource define data sources for grafana dashboards.
@@ -119,7 +120,14 @@ func (c Client) UpdateDatasource(ctx context.Context, orgId OrgId, datasource Da
 	}
 
 	// Handle errors.
-	if resp.StatusCode() != 200 {
+	switch resp.StatusCode() {
+	case 200:
+	case 409:
+		if strings.Contains(string(resp.Body()), "Datasource has already been updated by someone else. Please reload and try again") {
+			return ErrGrafanaDatasourceAlreadyUpdated
+		}
+		fallthrough
+	default:
 		return fmt.Errorf("failed to update grafana datasource: %v %v", resp.StatusCode(), string(resp.Body()))
 	}
 
