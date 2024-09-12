@@ -1,8 +1,6 @@
 package event
 
 import (
-	"encoding/json"
-
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
@@ -38,9 +36,4 @@ func (ru ReferrerUri) String() string {
 	}
 
 	return ""
-}
-
-// MarshalJSON implements json.Marshaler.
-func (ru ReferrerUri) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ru.String())
 }
