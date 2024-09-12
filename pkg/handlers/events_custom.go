@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/dataview"
 	"github.com/prismelabs/analytics/pkg/event"
+	hutils "github.com/prismelabs/analytics/pkg/handlers/utils"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
@@ -31,13 +32,13 @@ func ProvidePostEventsCustom(
 			return fiber.NewError(fiber.StatusBadRequest, "content type is not application/json")
 		}
 
-		data := dataview.NewJsonData(bodyOrEmptyJsonObj(c))
+		data := dataview.NewJsonData(hutils.BodyOrEmptyJsonObj(c))
 		return eventsCustomHandler(
 			c.UserContext(),
 			eventStore,
 			saltManagerService,
 			sessionStorage,
-			peekReferrerHeader(c),
+			hutils.PeekReferrerHeader(c),
 			c.Request().Header.UserAgent(),
 			utils.UnsafeBytes(c.IP()),
 			c.Params("name"),
@@ -64,13 +65,13 @@ func eventsCustomHandler(
 	}
 
 	// Compute device id.
-	deviceId := computeDeviceId(
+	deviceId := hutils.ComputeDeviceId(
 		saltManagerService.StaticSalt().Bytes(), userAgent,
 		ipAddr, utils.UnsafeBytes(customEv.PageUri.Host()),
 	)
 
 	var ok bool
-	customEv.Session, ok = sessionStorage.WaitSession(deviceId, contextTimeout(ctx))
+	customEv.Session, ok = sessionStorage.WaitSession(deviceId, hutils.ContextTimeout(ctx))
 	// Session not found.
 	if !ok {
 		return errSessionNotFound

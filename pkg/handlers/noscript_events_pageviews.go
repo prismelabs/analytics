@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/embedded"
+	hutils "github.com/prismelabs/analytics/pkg/handlers/utils"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
@@ -31,7 +32,7 @@ func ProvideGetNoscriptEventsPageviews(
 		}
 
 		// Referrer of the POST request, that is the viewed page.
-		requestReferrer := peekReferrerQueryOrHeader(c)
+		requestReferrer := hutils.PeekReferrerQueryOrHeader(c)
 
 		return eventsPageviewsHandler(
 			c.UserContext(),

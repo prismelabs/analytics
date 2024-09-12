@@ -1,4 +1,4 @@
-package handlers
+package utils
 
 import (
 	"context"
@@ -16,7 +16,9 @@ var (
 	emptyJsonObj = []byte{'{', '}'}
 )
 
-func bodyOrEmptyJsonObj(c *fiber.Ctx) []byte {
+// BodyOrEmptyJsonObj returns request body or an empty JSON object buffer
+// otherwise.
+func BodyOrEmptyJsonObj(c *fiber.Ctx) []byte {
 	body := c.Body()
 	if len(body) == 0 {
 		body = emptyJsonObj
@@ -25,7 +27,9 @@ func bodyOrEmptyJsonObj(c *fiber.Ctx) []byte {
 	return body
 }
 
-func peekReferrerHeader(c *fiber.Ctx) []byte {
+// PeekReferrerHeader peek X-Prisme-Referrer header and fallback to
+// standard Referer header otherwise.
+func PeekReferrerHeader(c *fiber.Ctx) []byte {
 	referrer := c.Request().Header.Peek("X-Prisme-Referrer")
 
 	// No X-Prisme-Referrer header, javascript is probably disabled.
@@ -37,7 +41,9 @@ func peekReferrerHeader(c *fiber.Ctx) []byte {
 	return referrer
 }
 
-func peekReferrerQueryOrHeader(c *fiber.Ctx) []byte {
+// PeekReferrerQueryOrHeader peek referrer from "referrer" query parameter
+// and fallback to standard Referer header otherwise.
+func PeekReferrerQueryOrHeader(c *fiber.Ctx) []byte {
 	referrer := utils.UnsafeBytes(c.Query("referrer"))
 	if len(referrer) == 0 {
 		referrer = c.Request().Header.Peek("X-Prisme-Referrer")
@@ -52,15 +58,20 @@ func peekReferrerQueryOrHeader(c *fiber.Ctx) []byte {
 	return referrer
 }
 
-func computeDeviceId(bytesSlice ...[]byte) uint64 {
-	return xxh3(bytesSlice...)
+// ComputeDeviceId computes xxh3 hash of the given byte slices.
+// This is the same as Xxh3 function.
+func ComputeDeviceId(bytesSlice ...[]byte) uint64 {
+	return Xxh3(bytesSlice...)
 }
 
-func computeVisitorId(bytesSlice ...[]byte) string {
-	return fmt.Sprintf("prisme_%X", xxh3(bytesSlice...))
+// ComputeVisitorId computes xxh3 hash of the given byte slices and
+// adds result as hexadecimal suffix to "prisme_".
+func ComputeVisitorId(bytesSlice ...[]byte) string {
+	return fmt.Sprintf("prisme_%X", Xxh3(bytesSlice...))
 }
 
-func xxh3(bytesSlice ...[]byte) uint64 {
+// Xxh3 computes xxh3 hash of the given byte slices.
+func Xxh3(bytesSlice ...[]byte) uint64 {
 	hash := xxhash.New()
 
 	for _, slice := range bytesSlice {
@@ -74,7 +85,9 @@ func xxh3(bytesSlice ...[]byte) uint64 {
 	return hash.Sum64()
 }
 
-func extractUtmParams(args *fasthttp.Args) event.UtmParams {
+// ExtractUtmParams extracts UTM parameters from the given query args.
+// If no utm_source arg is found, it fallbacks to ref arg.
+func ExtractUtmParams(args *fasthttp.Args) event.UtmParams {
 	utmParams := event.UtmParams{}
 	if args.Len() == 0 {
 		return utmParams
@@ -93,7 +106,9 @@ func extractUtmParams(args *fasthttp.Args) event.UtmParams {
 	return utmParams
 }
 
-func contextTimeout(ctx context.Context) time.Duration {
+// ContextTimeout extract duration until context timeout and panics
+// if no deadline is found.
+func ContextTimeout(ctx context.Context) time.Duration {
 	deadline, hasDeadline := ctx.Deadline()
 	if !hasDeadline {
 		panic("context has no deadline")

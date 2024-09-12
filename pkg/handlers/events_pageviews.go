@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/google/uuid"
 	"github.com/prismelabs/analytics/pkg/event"
+	hutils "github.com/prismelabs/analytics/pkg/handlers/utils"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
@@ -33,7 +34,7 @@ func ProvidePostEventsPageViews(
 ) PostEventsPageview {
 	return func(c *fiber.Ctx) error {
 		// Referrer of the POST request, that is the viewed page.
-		requestReferrer := peekReferrerHeader(c)
+		requestReferrer := hutils.PeekReferrerHeader(c)
 
 		return eventsPageviewsHandler(
 			c.UserContext(),
@@ -79,7 +80,7 @@ func eventsPageviewsHandler(
 	}
 
 	// Compute device id.
-	deviceId := computeDeviceId(
+	deviceId := hutils.ComputeDeviceId(
 		saltManagerService.StaticSalt().Bytes(), userAgent,
 		ipAddr, utils.UnsafeBytes(pageView.PageUri.Host()),
 	)
@@ -130,7 +131,7 @@ func eventsPageviewsHandler(
 
 		// Compute visitor id if none was provided along request.
 		if visitorId == "" {
-			visitorId = computeVisitorId(
+			visitorId = hutils.ComputeVisitorId(
 				saltManagerService.DailySalt().Bytes(), userAgent,
 				ipAddr, utils.UnsafeBytes(pageView.PageUri.Host()), binary.LittleEndian.AppendUint64(nil, deviceId),
 			)
@@ -149,7 +150,7 @@ func eventsPageviewsHandler(
 			CountryCode:   ipGeolocatorService.FindCountryCodeForIP(utils.UnsafeString(ipAddr)),
 			VisitorId:     visitorId,
 			SessionUuid:   sessionUuid,
-			Utm:           extractUtmParams(&args),
+			Utm:           hutils.ExtractUtmParams(&args),
 			PageviewCount: 1,
 		}
 		pageView.Timestamp = pageView.Session.SessionTime()
