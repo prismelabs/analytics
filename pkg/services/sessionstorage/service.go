@@ -172,6 +172,8 @@ func (s *service) WaitSession(deviceId uint64, timeout time.Duration) (event.Ses
 	// Entry contains a session and hasn't expired.
 	if ok && sessionEntry.wait == nil && uint32(time.Now().Unix()) < sessionEntry.expiry {
 		return sessionEntry.session, true
+	} else if timeout == time.Duration(0) {
+		return event.Session{}, false
 	}
 
 	// Create entry with a wait channel.
