@@ -38,7 +38,6 @@ func ProvidePostEventsPageViews(
 
 		return eventsPageviewsHandler(
 			c.UserContext(),
-			logger,
 			eventStore,
 			uaParserService,
 			ipGeolocatorService,
@@ -55,7 +54,6 @@ func ProvidePostEventsPageViews(
 
 func eventsPageviewsHandler(
 	ctx context.Context,
-	logger zerolog.Logger,
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
@@ -90,18 +88,36 @@ func eventsPageviewsHandler(
 
 	// Internal traffic, session may already exists.
 	if isInternalTraffic {
-		var result sessionstorage.AddPageviewResult
 		var sessionExists bool
-
 		// Increment pageview count.
-		result, sessionExists = sessionStorage.AddPageview(deviceId, pageView.PageUri)
-
-		if result.DuplicatePageview {
-			return nil
-		}
-		pageView.Session = result.Session
+		pageView.Session, sessionExists = sessionStorage.AddPageview(deviceId, referrerUri, pageView.PageUri)
 
 		if !sessionExists {
+			// Session with the given referrer URI doesn't exists but ones with
+			// current page URI exists. This can happen if user refresh pages or a tab
+			// is duplicated.
+			// In both cases we want to insert a new session in temporary storage (memory)
+			// but we don't want to send it to the persisten store (eventstore). This new
+			// duplicated session will be persisted on next page view. This way we're sure
+			// that duplicated session is used.
+			{
+				session, found := sessionStorage.WaitSession(deviceId, pageView.PageUri, time.Duration(0))
+				if found {
+					var err error
+					session.SessionUuid, err = uuid.NewV7()
+					if err != nil {
+						return fmt.Errorf("failed to generate session uuid: %w", err)
+					}
+
+					session.PageUri = pageView.PageUri
+					sessionStorage.InsertSession(deviceId, session)
+
+					// Early return as we don't send event to the eventstore.
+					return nil
+				}
+			}
+
+			// Otherwise, simply create a new session.
 			newSession = true
 		} else {
 			pageView.Timestamp = time.Now().UTC()
@@ -109,7 +125,10 @@ func eventsPageviewsHandler(
 			// Update session visitor ID if needed.
 			if visitorId != "" && pageView.Session.VisitorId != visitorId {
 				visitorId = utils.CopyString(visitorId)
-				sessionStorage.IdentifySession(deviceId, visitorId)
+				pageView.Session, sessionExists = sessionStorage.IdentifySession(deviceId, pageView.PageUri, visitorId)
+				if !sessionExists {
+					return fmt.Errorf("failed to identify session after adding page view, this is probably a Prisme bug")
+				}
 			}
 		}
 	}
@@ -124,19 +143,20 @@ func eventsPageviewsHandler(
 			return fiber.NewError(fiber.StatusBadRequest, "bot session filtered")
 		}
 
-		// Ignore duplicated pageview (page refresh or duplicate tab).
-		{
-			sess, found := sessionStorage.WaitSession(deviceId, time.Duration(0))
-			if found && sess.PageviewCount == 1 && sess.PageUri.Path() == pageView.PageUri.Path() &&
-				sess.ReferrerUri.IsValid() == referrerUri.IsValid() {
-				if !referrerUri.IsValid() || referrerUri.Path() == sess.ReferrerUri.Path() {
-					return nil
-				}
-			}
-		}
 		sessionUuid, err := uuid.NewV7()
 		if err != nil {
 			return fmt.Errorf("failed to generate session uuid: %w", err)
+		}
+
+		if !isInternalTraffic {
+			session, found := sessionStorage.WaitSession(deviceId, pageView.PageUri, time.Duration(0))
+			if found {
+				session.SessionUuid = sessionUuid
+				sessionStorage.InsertSession(deviceId, session)
+
+				// Early return as we don't send event to the eventstore.
+				return nil
+			}
 		}
 
 		// Compute visitor id if none was provided along request.

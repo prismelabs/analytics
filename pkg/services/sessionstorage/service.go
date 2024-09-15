@@ -1,6 +1,7 @@
 package sessionstorage
 
 import (
+	"slices"
 	"sync"
 	"time"
 
@@ -17,19 +18,39 @@ type AddPageviewResult struct {
 
 // Service define an in memory session storage.
 type Service interface {
-	// InsertSession inserts session in session storage and associate it to the
-	// given deviceId.
+	// InsertSession stores given session.
 	InsertSession(deviceId uint64, session event.Session)
-	// IncSessionPageviewCount increments pageview and returns it.
-	AddPageview(deviceId uint64, pageUri uri.Uri) (AddPageviewResult, bool)
+	// AddPageview adds a pageview to a session with the given device id
+	// latest path (referrer). Session is returned along a true flag if it was
+	// found.
+	AddPageview(deviceId uint64, referrer event.ReferrerUri, uri uri.Uri) (event.Session, bool)
 	// IdentifySession updates stored session visitor id. Updated session and
 	// boolean found flag are returned.
-	IdentifySession(deviceId uint64, visitorId string) (event.Session, bool)
+	IdentifySession(deviceId uint64, pageUri uri.Uri, visitorId string) (event.Session, bool)
 	// WaitForSession retrieves stored session and returns it. If session is not
 	// found, it waits until it is created or timeout.
 	// Returned boolean flag is false if wait timed out and returned an empty
 	// session.
-	WaitSession(deviceId uint64, timeout time.Duration) (event.Session, bool)
+	WaitSession(deviceId uint64, pageUri uri.Uri, timeout time.Duration) (event.Session, bool)
+}
+
+type entry struct {
+	Session   event.Session
+	latestUri uri.Uri
+	expiry    uint32
+	wait      chan struct{}
+}
+
+func (e *entry) hasWaiter() bool {
+	return e.wait != nil
+}
+
+func (e *entry) isExpired() bool {
+	return uint32(time.Now().Unix()) >= e.expiry
+}
+
+func (e *entry) isValid() bool {
+	return !e.hasWaiter() && !e.isExpired()
 }
 
 type service struct {
@@ -37,14 +58,7 @@ type service struct {
 	cfg     Config
 	metrics metrics
 	mu      sync.RWMutex
-	data    map[uint64]entry
-}
-
-type entry struct {
-	session   event.Session
-	latestUri uri.Uri
-	expiry    uint32
-	wait      chan struct{}
+	data    map[uint64][]entry
 }
 
 // ProvideService is a wire provider for in memory session storage.
@@ -64,7 +78,7 @@ func ProvideService(
 		cfg:     cfg,
 		metrics: newMetrics(promRegistry),
 		mu:      sync.RWMutex{},
-		data:    make(map[uint64]entry),
+		data:    make(map[uint64][]entry),
 	}
 
 	go service.gc(cfg.gcInterval)
@@ -74,184 +88,215 @@ func ProvideService(
 	return service
 }
 
-// getSessionEntry retrieves an entry from the map and returns whether or not
-// session exists. An entry may exists but have no session associated (e.g.
-// someone is waiting for its creation). This function doesn't check if session
-// has expired.
+// getEntry retrieves a pointer to an entry associated to given device id and
+// latest path.
+// Note that this function can return a pointer to an entry without
+// session, or an expired one.
+// If you want to retrieve a valid session, use getValidSessionEntry instead.
 // You must hold mutex while calling this function.
-func (s *service) getSessionEntry(deviceId uint64) (entry, bool) {
-	entry, ok := s.data[deviceId]
-	return entry, ok &&
-		entry.wait == nil // Someone is waiting on this session but none exists.
+func (s *service) getEntry(deviceId uint64, latestPath string) *entry {
+	entries, ok := s.data[deviceId]
+	if !ok {
+		return nil
+	}
+
+	for i, entry := range entries {
+		if entry.latestUri.Path() == latestPath {
+			return &entries[i]
+		}
+	}
+
+	return nil
 }
 
-// getValidSessionEntry is the same as getSessionEntry but returns true only if
-// the session is valid.
+// getValidSessionEntry retrieves a pointer to a valid entry that contains a
+// session.
 // You must hold mutex while calling this function.
-func (s *service) getValidSessionEntry(deviceId uint64) (entry, bool) {
-	entry, ok := s.getSessionEntry(deviceId)
-	return entry, ok && uint32(time.Now().Unix()) < entry.expiry // Not expired session.
+func (s *service) getValidSessionEntry(deviceId uint64, latestPath string) *entry {
+	entry := s.getEntry(deviceId, latestPath)
+	if entry == nil || !entry.isValid() {
+		return nil
+	}
+
+	entry.expiry = s.newExpiry()
+
+	return entry
 }
 
 // InsertSession implements Service.
 func (s *service) InsertSession(deviceId uint64, session event.Session) {
 	s.mu.Lock()
-	currentSession, sessionExists := s.getSessionEntry(deviceId)
-
-	// Store session.
-	s.data[deviceId] = entry{
-		session:   session,
+	newEntry := entry{
+		Session:   session,
 		latestUri: session.PageUri,
 		expiry:    s.newExpiry(),
 		wait:      nil,
+	}
+
+	sessions, ok := s.data[deviceId]
+	// New visitor, first session.
+	if !ok {
+		sessions = make([]entry, 1)
+		sessions[0] = newEntry
+		s.data[deviceId] = sessions
+	} else {
+		// New session only.
+
+		var waiterEntry *entry
+		// Check if someone is waiting on this session.
+		for i, sess := range sessions {
+			if sess.hasWaiter() && sess.latestUri.Path() == newEntry.latestUri.Path() {
+				close(sess.wait) // Notify waiter.
+				waiterEntry = &sessions[i]
+				break
+			}
+		}
+
+		// Update entry if session had waiter.
+		if waiterEntry != nil {
+			*waiterEntry = newEntry
+		} else {
+			s.data[deviceId] = append(sessions, newEntry)
+		}
 	}
 	s.mu.Unlock()
 
 	// Compute metrics.
 	s.metrics.sessionsCounter.With(prometheus.Labels{"type": "inserted"}).Inc()
-	if !sessionExists {
-		// Notify waiters.
-		if currentSession.wait != nil {
-			close(currentSession.wait)
-		}
-		s.metrics.activeSessions.Inc()
-	} else {
-		s.metrics.sessionsCounter.With(prometheus.Labels{"type": "overwritten"}).Inc()
-		s.metrics.sessionsPageviews.Observe(float64(currentSession.session.PageviewCount))
-	}
+	s.metrics.activeSessions.Inc()
 }
 
 // AddPageview implements Service.
-func (s *service) AddPageview(deviceId uint64, pageUri uri.Uri) (AddPageviewResult, bool) {
+func (s *service) AddPageview(deviceId uint64, referrer event.ReferrerUri, uri uri.Uri) (event.Session, bool) {
 	s.mu.Lock()
-	sessionEntry, ok := s.getValidSessionEntry(deviceId)
-	// Session not found.
-	if !ok {
+	entry := s.getValidSessionEntry(deviceId, referrer.Path())
+	if entry == nil {
 		s.mu.Unlock()
-		return AddPageviewResult{}, false
+		return event.Session{}, false
 	}
 
-	// Duplicate pageview.
-	if sessionEntry.latestUri.Path() == pageUri.Path() {
-		s.mu.Unlock()
-		return AddPageviewResult{
-			Session:           sessionEntry.session,
-			DuplicatePageview: true,
-		}, true
-	}
+	entry.latestUri = uri
+	entry.Session.PageviewCount++
 
-	sessionEntry.session.PageviewCount++
-
-	s.data[deviceId] = entry{
-		session:   sessionEntry.session,
-		latestUri: pageUri,
-		expiry:    s.newExpiry(),
-	}
-
+	// Copy before releasing lock.
+	sess := entry.Session
 	s.mu.Unlock()
 
-	return AddPageviewResult{
-		Session: sessionEntry.session,
-	}, true
+	return sess, true
 }
 
 // IdentifySession implements Service.
-func (s *service) IdentifySession(deviceId uint64, visitorId string) (event.Session, bool) {
+func (s *service) IdentifySession(deviceId uint64, pageUri uri.Uri, visitorId string) (event.Session, bool) {
 	s.mu.Lock()
-	sessionEntry, ok := s.getValidSessionEntry(deviceId)
-	if !ok {
+	entry := s.getValidSessionEntry(deviceId, pageUri.Path())
+	if entry == nil {
 		s.mu.Unlock()
 		return event.Session{}, false
-	}
-
-	// No need for update.
-	if sessionEntry.session.VisitorId == visitorId {
-		s.mu.Unlock()
-		return sessionEntry.session, true
 	}
 
 	// Update visitor id.
-	sessionEntry.session.VisitorId = visitorId
-	sessionEntry.expiry = s.newExpiry()
-	s.data[deviceId] = sessionEntry
+	entry.Session.VisitorId = visitorId
+
+	// Copy before releasing lock.
+	sess := entry.Session
 	s.mu.Unlock()
 
-	return sessionEntry.session, true
+	return sess, true
 }
 
 // WaitSession implements Service.
-func (s *service) WaitSession(deviceId uint64, timeout time.Duration) (event.Session, bool) {
+func (s *service) WaitSession(deviceId uint64, pageUri uri.Uri, timeout time.Duration) (event.Session, bool) {
 	s.mu.RLock()
-	// We don't use getSessionEntry here as we want to check if entry exists
-	// (and not if session exists).
-	sessionEntry, ok := s.data[deviceId]
+	currentEntry := s.getEntry(deviceId, pageUri.Path())
 	s.mu.RUnlock()
 
 	// Entry contains a session and hasn't expired.
-	if ok && sessionEntry.wait == nil && uint32(time.Now().Unix()) < sessionEntry.expiry {
-		return sessionEntry.session, true
-	} else if timeout == time.Duration(0) {
+	if currentEntry != nil && !currentEntry.hasWaiter() && !currentEntry.isExpired() {
+		return currentEntry.Session, true
+	} else if timeout == time.Duration(0) { // Entry not found and timeout is 0s.
 		return event.Session{}, false
 	}
 
+	var wait <-chan struct{}
+
 	// Create entry with a wait channel.
-	if !ok {
-		sessionEntry.wait = make(chan struct{})
-		sessionEntry.expiry = uint32(time.Now().Add(timeout).Unix())
-
+	if currentEntry == nil {
 		s.mu.Lock()
-		s.data[deviceId] = sessionEntry
-		s.mu.Unlock()
-	} else if ok && sessionEntry.wait != nil { // Entry exists with wait channel.
-		// Update expiry.
-		sessionEntry.expiry = uint32(time.Now().Add(timeout).Unix())
-
-		s.mu.Lock()
-		s.data[deviceId] = sessionEntry
-		s.mu.Unlock()
-	}
-
-	// Wait if needed.
-	if sessionEntry.wait != nil {
-		s.metrics.sessionsWait.Inc()
-		defer s.metrics.sessionsWait.Dec()
-
-		deadlineCh := time.After(timeout)
-		select {
-		case <-sessionEntry.wait:
-			break
-		case <-deadlineCh:
-			return event.Session{}, false
+		newEntry := entry{
+			Session:   event.Session{},
+			latestUri: pageUri,
+			expiry:    uint32(time.Now().Add(timeout).Unix()),
+			wait:      make(chan struct{}),
 		}
+		s.data[deviceId] = append(s.data[deviceId], newEntry)
+		wait = newEntry.wait
+		s.mu.Unlock()
+	} else if currentEntry.hasWaiter() { // Entry exists with wait channel.
+		s.mu.Lock()
+		currentEntry.expiry = uint32(time.Now().Add(timeout).Unix())
+		wait = currentEntry.wait
+		s.mu.Unlock()
 	}
 
+	s.metrics.sessionsWait.Inc()
+	defer s.metrics.sessionsWait.Dec()
+
+	deadlineCh := time.After(timeout)
+	select {
+	case <-wait:
+	case <-deadlineCh:
+		return event.Session{}, false
+	}
+
+	// Retrieve session.
 	s.mu.RLock()
-	sessionEntry, ok = s.getValidSessionEntry(deviceId)
+	entry := s.getValidSessionEntry(deviceId, pageUri.Path())
 	s.mu.RUnlock()
 
-	return sessionEntry.session, ok
+	// Session may have expired.
+	if entry != nil {
+		return entry.Session, true
+	}
+
+	return event.Session{}, false
 }
 
 // session garbage collector.
 func (s *service) gc(gcInterval time.Duration) {
+	type Range struct {
+		start, end int
+	}
+	type ExpiredEntries struct {
+		deviceId     uint64
+		entriesRange Range
+	}
+
 	ticker := time.NewTicker(gcInterval)
 	defer ticker.Stop()
-	var expired []uint64
-	var expiredSessionPageviews []uint16
+	var expiredEntries []ExpiredEntries
 
 	for {
 		<-ticker.C
 
-		expired = expired[:0]
-		expiredSessionPageviews = expiredSessionPageviews[:0]
+		expiredEntries = expiredEntries[:0]
 
 		ts := uint32(time.Now().Unix())
 
 		// Collect expired sessions.
 		s.mu.RLock()
-		for id, v := range s.data {
-			if ts >= v.expiry {
-				expired = append(expired, id)
+
+		for id, entries := range s.data {
+			var current *ExpiredEntries
+
+			for i, entry := range entries {
+				if ts >= entry.expiry {
+					if current == nil || current.entriesRange.end != i-1 {
+						expiredEntries = append(expiredEntries, ExpiredEntries{id, Range{i, i + 1}})
+						current = &expiredEntries[len(expiredEntries)-1]
+					} else {
+						current.entriesRange.end = i
+					}
+				}
 			}
 		}
 		s.mu.RUnlock()
@@ -261,15 +306,38 @@ func (s *service) gc(gcInterval time.Duration) {
 		// Double-checked locking.
 		// We might have replaced the item in the meantime.
 		expiredCounter := 0
-		for i := range expired {
-			v := s.data[expired[i]]
-			if ts >= v.expiry {
-				if v.wait != nil {
-					expiredCounter++
-					expiredSessionPageviews = append(expiredSessionPageviews, v.session.PageviewCount)
-				}
+		for _, expired := range expiredEntries {
+			entries := s.data[expired.deviceId]
 
-				delete(s.data, expired[i])
+			for i := expired.entriesRange.start; i < expired.entriesRange.end; i++ {
+				if ts >= entries[i].expiry {
+					if !entries[i].hasWaiter() {
+						expiredCounter++
+						s.metrics.sessionsPageviews.Observe(float64(entries[i].Session.PageviewCount))
+					}
+				} else {
+					// Not expired anymore.
+					// Split range in two, range start to i (exclusif) is deleted while
+					// i to end is appended to expired entries slice.
+
+					// append remaining expired entries.
+					if i != expired.entriesRange.end-1 {
+						deletedCount := i - expired.entriesRange.start
+						expiredEntries = append(expiredEntries, ExpiredEntries{
+							deviceId:     expired.deviceId,
+							entriesRange: Range{i + 1 - deletedCount, expired.entriesRange.end - deletedCount},
+						})
+					}
+
+					// Remove entries.
+					s.data[expired.deviceId] = slices.Delete(entries, expired.entriesRange.start, i)
+					break
+				}
+			}
+
+			// If entries slice is empty, remove it from map.
+			if len(s.data[expired.deviceId]) == 0 {
+				delete(s.data, expired.deviceId)
 			}
 		}
 		s.mu.Unlock()
@@ -279,9 +347,6 @@ func (s *service) gc(gcInterval time.Duration) {
 			With(prometheus.Labels{"type": "expired"}).
 			Add(float64(expiredCounter))
 		s.metrics.activeSessions.Sub(float64(expiredCounter))
-		for _, pv := range expiredSessionPageviews {
-			s.metrics.sessionsPageviews.Observe(float64(pv))
-		}
 	}
 }
 
