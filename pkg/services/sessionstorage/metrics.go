@@ -7,7 +7,6 @@ type metrics struct {
 	sessionsWait      prometheus.Gauge
 	sessionsCounter   *prometheus.CounterVec
 	sessionsPageviews prometheus.Histogram
-	getSessionsMiss   prometheus.Counter
 }
 
 func newMetrics(promRegistry *prometheus.Registry) metrics {
@@ -29,10 +28,6 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 			Help:    "Number of pageviews per sessions",
 			Buckets: []float64{1, 2, 3, 5, 10, 15, 25, 30, 50, 100},
 		}),
-		getSessionsMiss: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "sessionstorage_get_session_misses",
-			Help: "Number of get sessions call that wasn't found",
-		}),
 	}
 
 	promRegistry.MustRegister(
@@ -40,7 +35,6 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 		m.sessionsWait,
 		m.sessionsCounter,
 		m.sessionsPageviews,
-		m.getSessionsMiss,
 	)
 
 	return m
