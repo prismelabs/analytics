@@ -36,7 +36,6 @@ func ProvideGetNoscriptEventsPageviews(
 
 		return eventsPageviewsHandler(
 			c.UserContext(),
-			logger,
 			eventStore,
 			uaParserService,
 			ipGeolocatorService,

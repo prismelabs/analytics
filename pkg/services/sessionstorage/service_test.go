@@ -29,16 +29,18 @@ func TestService(t *testing.T) {
 			service := ProvideService(logger, cfg, promRegistry).(*service)
 
 			deviceId := rand.Uint64()
+			pageUri := mustParseUri("https://example.com")
 			session := event.Session{
+				PageUri:       pageUri,
 				VisitorId:     "prisme_XXX",
 				PageviewCount: 1,
 			}
 
 			service.InsertSession(deviceId, session)
 
-			sessionEntry, ok := service.getSessionEntry(deviceId)
-			require.True(t, ok)
-			require.Equal(t, sessionEntry.session, session)
+			entry := service.getValidSessionEntry(deviceId, pageUri.Path())
+			require.NotNil(t, entry)
+			require.Equal(t, entry.Session, session)
 
 			require.Equal(t, float64(1),
 				testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
@@ -49,14 +51,9 @@ func TestService(t *testing.T) {
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(0),
 				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "overwritten"}))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
 					prometheus.Labels{"type": "expired"}))
 			require.Equal(t, float64(0),
 				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
 		})
 
 		t.Run("Existent", func(t *testing.T) {
@@ -64,7 +61,9 @@ func TestService(t *testing.T) {
 			service := ProvideService(logger, cfg, promRegistry).(*service)
 
 			deviceId := rand.Uint64()
+			pageUri := mustParseUri("https://example.com")
 			sessionA := event.Session{
+				PageUri:       pageUri,
 				VisitorId:     "prisme_XXX",
 				PageviewCount: 1,
 			}
@@ -74,52 +73,51 @@ func TestService(t *testing.T) {
 			sessionB := sessionA
 			sessionB.VisitorId = "prisme_YYY"
 
-			// Overwrite session A.
+			// Add another session on same path.
 			service.InsertSession(deviceId, sessionB)
 
-			sessionEntry, ok := service.getSessionEntry(deviceId)
-			require.True(t, ok)
-			require.Equal(t, sessionEntry.session, sessionB)
+			// get session returns first matching session, here it is session A.
+			entry := service.getValidSessionEntry(deviceId, pageUri.Path())
+			require.NotNil(t, entry)
+			require.Equal(t, entry.Session, sessionA)
 
-			require.Equal(t, float64(1),
+			require.Equal(t, float64(2),
 				testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
 			require.Equal(t, float64(0),
 				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
 			require.Equal(t, float64(2),
 				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
 					prometheus.Labels{"type": "inserted"}))
-			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "overwritten"}))
 			require.Equal(t, float64(0),
 				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
 					prometheus.Labels{"type": "expired"}))
-			require.Equal(t, float64(1),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
 			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
+				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
 		})
 	})
 
 	t.Run("AddPageview", func(t *testing.T) {
-		t.Run("Duplicate", func(t *testing.T) {
+		t.Run("WrongPath", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
 			service := ProvideService(logger, cfg, promRegistry)
 
 			deviceId := rand.Uint64()
-			session := event.Session{
-				PageUri:       mustParseUri("https://example.com"),
+			pageUri := mustParseUri("https://example.com")
+			sessionV1 := event.Session{
+				PageUri:       pageUri,
 				VisitorId:     "prisme_XXX",
 				PageviewCount: 1,
 			}
 
-			service.InsertSession(deviceId, session)
+			service.InsertSession(deviceId, sessionV1)
 
-			result, ok := service.AddPageview(deviceId, session.PageUri)
-			require.True(t, ok)
-			require.True(t, result.DuplicatePageview)
-			require.Equal(t, session.VisitorId, result.Session.VisitorId)
-			require.Equal(t, session.PageviewCount, result.Session.PageviewCount)
+			// Referrer doesn't match page uri of created session.
+			referrer := event.ReferrerUri{Uri: mustParseUri("https://example.com/bar")}
+			pageUri = mustParseUri("https://example.com/foo")
+
+			sessionV2, ok := service.AddPageview(deviceId, referrer, pageUri)
+			require.False(t, ok)
+			require.NotEqual(t, sessionV1.VisitorId, sessionV2.VisitorId)
 
 			require.Equal(t, float64(1),
 				testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
@@ -136,27 +134,30 @@ func TestService(t *testing.T) {
 					prometheus.Labels{"type": "expired"}))
 			require.Equal(t, float64(0),
 				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
 		})
-		t.Run("Unique", func(t *testing.T) {
+
+		t.Run("RightPath", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
 			service := ProvideService(logger, cfg, promRegistry)
 
 			deviceId := rand.Uint64()
-			session := event.Session{
-				PageUri:       mustParseUri("https://example.com"),
+			pageUri := mustParseUri("https://example.com")
+			sessionV1 := event.Session{
+				PageUri:       pageUri,
 				VisitorId:     "prisme_XXX",
 				PageviewCount: 1,
 			}
 
-			service.InsertSession(deviceId, session)
+			service.InsertSession(deviceId, sessionV1)
 
-			result, ok := service.AddPageview(deviceId, mustParseUri("https://example.com/foo"))
+			referrer := event.ReferrerUri{Uri: pageUri}
+			pageUri = mustParseUri("https://example.com/foo")
+
+			sessionV2, ok := service.AddPageview(deviceId, referrer, pageUri)
 			require.True(t, ok)
-			require.False(t, result.DuplicatePageview)
-			require.Equal(t, session.VisitorId, result.Session.VisitorId)
-			require.Equal(t, session.PageviewCount+1, result.Session.PageviewCount)
+			require.Equal(t, sessionV1.VisitorId, sessionV2.VisitorId)
+
+			require.Equal(t, sessionV1.PageviewCount+1, sessionV2.PageviewCount)
 
 			require.Equal(t, float64(1),
 				testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
@@ -173,8 +174,48 @@ func TestService(t *testing.T) {
 					prometheus.Labels{"type": "expired"}))
 			require.Equal(t, float64(0),
 				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
+		})
+	})
+
+	t.Run("IdentifySession", func(t *testing.T) {
+		t.Run("RightPath", func(t *testing.T) {
+			promRegistry := prometheus.NewRegistry()
+			service := ProvideService(logger, cfg, promRegistry)
+
+			deviceId := rand.Uint64()
+			pageUri := mustParseUri("https://example.com")
+			session := event.Session{
+				PageUri:       pageUri,
+				VisitorId:     "prisme_XXX",
+				PageviewCount: 1,
+			}
+
+			service.InsertSession(deviceId, session)
+
+			identifiedSession, ok := service.IdentifySession(deviceId, session.PageUri, "prisme_YYY")
+			require.True(t, ok)
+			require.Equal(t, identifiedSession.VisitorId, "prisme_YYY")
+			require.Equal(t, identifiedSession.PageUri, session.PageUri)
+		})
+
+		t.Run("WrongPath", func(t *testing.T) {
+			promRegistry := prometheus.NewRegistry()
+			service := ProvideService(logger, cfg, promRegistry)
+
+			deviceId := rand.Uint64()
+			pageUri := mustParseUri("https://example.com")
+			session := event.Session{
+				PageUri:       pageUri,
+				VisitorId:     "prisme_XXX",
+				PageviewCount: 1,
+			}
+
+			service.InsertSession(deviceId, session)
+
+			identifiedSession, ok := service.IdentifySession(deviceId, mustParseUri("https://example.com/foo"), "prisme_YYY")
+			require.False(t, ok)
+			require.NotEqual(t, identifiedSession.VisitorId, "prisme_YYY")
+			require.NotEqual(t, identifiedSession.PageUri, session.PageUri)
 		})
 	})
 
@@ -184,6 +225,7 @@ func TestService(t *testing.T) {
 			service := ProvideService(logger, cfg, promRegistry)
 
 			deviceId := rand.Uint64()
+			pageUri := mustParseUri("https://example.com")
 
 			// No session wait.
 			require.Equal(t, float64(0),
@@ -200,7 +242,7 @@ func TestService(t *testing.T) {
 
 			// Wait for session.
 			now := time.Now()
-			session, found := service.WaitSession(deviceId, 10*time.Millisecond)
+			session, found := service.WaitSession(deviceId, pageUri, 10*time.Millisecond)
 			require.False(t, found)
 			require.Equal(t, event.Session{}, session)
 			require.WithinDuration(t, now.Add(10*time.Millisecond), time.Now(), 3*time.Millisecond)
@@ -220,31 +262,64 @@ func TestService(t *testing.T) {
 					prometheus.Labels{"type": "expired"}))
 			require.Equal(t, float64(0),
 				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
 		})
 
 		t.Run("Created", func(t *testing.T) {
-			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
+			t.Run("RightPath", func(t *testing.T) {
+				promRegistry := prometheus.NewRegistry()
+				service := ProvideService(logger, cfg, promRegistry)
 
-			deviceId := rand.Uint64()
-			session := event.Session{
-				VisitorId:     "prisme_XXX",
-				PageviewCount: 1,
-			}
+				deviceId := rand.Uint64()
+				pageUri := mustParseUri("https://example.com")
+				session := event.Session{
+					PageUri:       pageUri,
+					VisitorId:     "prisme_XXX",
+					PageviewCount: 1,
+				}
 
-			// No session wait.
-			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
-
-			// Insert session in parallel.
-			go func() {
+				// No session wait.
 				require.Equal(t, float64(0),
-					testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
-				require.Equal(t, float64(1),
 					testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+
+				// Insert session in parallel.
+				go func() {
+					require.Equal(t, float64(0),
+						testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
+					require.Equal(t, float64(1),
+						testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+					require.Equal(t, float64(0),
+						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							prometheus.Labels{"type": "inserted"}))
+					require.Equal(t, float64(0),
+						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							prometheus.Labels{"type": "overwritten"}))
+					require.Equal(t, float64(0),
+						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							prometheus.Labels{"type": "expired"}))
+					require.Equal(t, float64(0),
+						testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+
+					time.Sleep(5 * time.Millisecond)
+
+					// A single session wait.
+					require.Equal(t, float64(1),
+						testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+
+					service.InsertSession(deviceId, session)
+				}()
+
+				// Wait for session.
+				now := time.Now()
+				actualSession, found := service.WaitSession(deviceId, pageUri, 10*time.Millisecond)
+				require.True(t, found)
+				require.Equal(t, session, actualSession)
+				require.WithinDuration(t, now.Add(5*time.Millisecond), time.Now(), 3*time.Millisecond)
+
+				require.Equal(t, float64(1),
+					testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
 				require.Equal(t, float64(0),
+					testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+				require.Equal(t, float64(1),
 					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
 						prometheus.Labels{"type": "inserted"}))
 				require.Equal(t, float64(0),
@@ -255,42 +330,74 @@ func TestService(t *testing.T) {
 						prometheus.Labels{"type": "expired"}))
 				require.Equal(t, float64(0),
 					testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+			})
+
+			t.Run("WrongPath", func(t *testing.T) {
+				promRegistry := prometheus.NewRegistry()
+				service := ProvideService(logger, cfg, promRegistry)
+
+				deviceId := rand.Uint64()
+				session := event.Session{
+					PageUri:       mustParseUri("https://example.com"),
+					VisitorId:     "prisme_XXX",
+					PageviewCount: 1,
+				}
+
+				// No session wait.
 				require.Equal(t, float64(0),
-					testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
-
-				time.Sleep(5 * time.Millisecond)
-
-				// A single session wait.
-				require.Equal(t, float64(1),
 					testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
 
-				service.InsertSession(deviceId, session)
-			}()
+				// Insert session in parallel.
+				go func() {
+					require.Equal(t, float64(0),
+						testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
+					require.Equal(t, float64(1),
+						testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+					require.Equal(t, float64(0),
+						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							prometheus.Labels{"type": "inserted"}))
+					require.Equal(t, float64(0),
+						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							prometheus.Labels{"type": "overwritten"}))
+					require.Equal(t, float64(0),
+						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							prometheus.Labels{"type": "expired"}))
+					require.Equal(t, float64(0),
+						testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
 
-			// Wait for session.
-			now := time.Now()
-			actualSession, found := service.WaitSession(deviceId, 10*time.Millisecond)
-			require.True(t, found)
-			require.Equal(t, session, actualSession)
-			require.WithinDuration(t, now.Add(5*time.Millisecond), time.Now(), 3*time.Millisecond)
+					time.Sleep(5 * time.Millisecond)
 
-			require.Equal(t, float64(1),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
-			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
-			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "inserted"}))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "overwritten"}))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
-					prometheus.Labels{"type": "expired"}))
-			require.Equal(t, float64(0),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
+					// A single session wait.
+					require.Equal(t, float64(1),
+						testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+
+					service.InsertSession(deviceId, session)
+				}()
+
+				// Wait for session with /foo path.
+				now := time.Now()
+				actualSession, found := service.WaitSession(deviceId, mustParseUri("https://example.com/foo"), 10*time.Millisecond)
+				require.False(t, found)
+				require.NotEqual(t, session, actualSession)
+				require.WithinDuration(t, now.Add(10*time.Millisecond), time.Now(), 3*time.Millisecond)
+
+				require.Equal(t, float64(1),
+					testutils.GaugeValue(t, promRegistry, "sessionstorage_active_sessions", nil))
+				require.Equal(t, float64(0),
+					testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+				require.Equal(t, float64(1),
+					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						prometheus.Labels{"type": "inserted"}))
+				require.Equal(t, float64(0),
+					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						prometheus.Labels{"type": "overwritten"}))
+				require.Equal(t, float64(0),
+					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						prometheus.Labels{"type": "expired"}))
+				require.Equal(t, float64(0),
+					testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+
+			})
 		})
 
 		t.Run("AlreadyExists", func(t *testing.T) {
@@ -298,7 +405,9 @@ func TestService(t *testing.T) {
 			service := ProvideService(logger, cfg, promRegistry)
 
 			deviceId := rand.Uint64()
+			pageUri := mustParseUri("https://example.com")
 			session := event.Session{
+				PageUri:       pageUri,
 				VisitorId:     "prisme_XXX",
 				PageviewCount: 1,
 			}
@@ -307,7 +416,7 @@ func TestService(t *testing.T) {
 			service.InsertSession(deviceId, session)
 
 			now := time.Now()
-			actualSession, found := service.WaitSession(deviceId, 10*time.Millisecond)
+			actualSession, found := service.WaitSession(deviceId, pageUri, 10*time.Millisecond)
 			require.True(t, found)
 			require.Equal(t, session, actualSession)
 			require.WithinDuration(t, now, time.Now(), 3*time.Millisecond)
@@ -327,8 +436,6 @@ func TestService(t *testing.T) {
 					prometheus.Labels{"type": "expired"}))
 			require.Equal(t, float64(0),
 				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
-			require.Equal(t, float64(0),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_get_session_misses", nil))
 		})
 	})
 }
