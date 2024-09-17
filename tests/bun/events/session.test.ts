@@ -144,6 +144,242 @@ test('multiple page view session', async () => {
   })
 }, { timeout: 30_000 })
 
+test('two sessions takes different path on third pageviews', async () => {
+  const ipAddr = faker.internet.ip()
+
+  let firstSession = null
+  for (let i = 0; i < 2; i++) {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': 'http://foo.mywebsite.localhost/page1'
+      }
+    })
+    expect(response.status).toBe(200)
+
+    const session = await getLatestSession()
+    // A single session exists at this point.
+    if (i === 0) { firstSession = session } else { expect(session).toEqual(firstSession) }
+  }
+
+  for (let i = 0; i < 2; i++) {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': 'http://foo.mywebsite.localhost/page2',
+        'X-Prisme-Document-Referrer': 'http://foo.mywebsite.localhost/page1'
+      }
+    })
+    expect(response.status).toBe(200)
+
+    const session = await getLatestSession()
+
+    if (i === 0) firstSession = session
+    else {
+      expect(session).not.toEqual(firstSession)
+    }
+
+    expect(session.version).toEqual(2)
+  }
+
+  for (let i = 0; i < 2; i++) {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': `http://foo.mywebsite.localhost/fork${i}`,
+        'X-Prisme-Document-Referrer': 'http://foo.mywebsite.localhost/page2'
+      }
+    })
+    expect(response.status).toBe(200)
+
+    const session = await getLatestSession()
+
+    // There is two different sessions now.
+    if (i === 0) firstSession = session
+    else {
+      expect(session).not.toEqual(firstSession)
+    }
+
+    expect(session.version).toEqual(3)
+  }
+}, { timeout: 30_000 })
+
+test('session fork on third pageviews', async () => {
+  const ipAddr = faker.internet.ip()
+
+  let firstSession = null
+  {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': 'http://foo.mywebsite.localhost/page1'
+      }
+    })
+    expect(response.status).toBe(200)
+
+    const session = await getLatestSession()
+    expect(session.version).toEqual(1)
+  }
+
+  {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': 'http://foo.mywebsite.localhost/page2',
+        'X-Prisme-Document-Referrer': 'http://foo.mywebsite.localhost/page1'
+      }
+    })
+    expect(response.status).toBe(200)
+
+    const session = await getLatestSession()
+    expect(session.version).toEqual(2)
+  }
+
+  for (let i = 0; i < 2; i++) {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': `http://foo.mywebsite.localhost/fork${i}`,
+        'X-Prisme-Document-Referrer': 'http://foo.mywebsite.localhost/page2'
+      }
+    })
+    expect(response.status).toBe(200)
+
+    const session = await getLatestSession()
+
+    // There is two different sessions now.
+    if (i === 0) {
+      firstSession = session
+      expect(session.version).toEqual(3)
+    } else {
+      expect(session).not.toEqual(firstSession)
+      expect(session.version).toEqual(1)
+    }
+  }
+}, { timeout: 30_000 })
+
+test('session duplicate pageview on second pageview followed by fork on third pageviews', async () => {
+  const ipAddr = faker.internet.ip()
+
+  let firstSession = null
+  {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': 'http://foo.mywebsite.localhost/page1'
+      }
+    })
+    expect(response.status).toBe(200)
+  }
+
+  for (let i = 0; i < 2; i++) {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': 'http://foo.mywebsite.localhost/page2',
+        'X-Prisme-Document-Referrer': 'http://foo.mywebsite.localhost/page1'
+      }
+    })
+    expect(response.status).toBe(200)
+
+    const session = await getLatestSession()
+
+    if (i === 0) firstSession = session
+    else {
+      expect(session).toEqual(firstSession)
+    }
+
+    expect(session.version).toEqual(2)
+  }
+
+  for (let i = 0; i < 2; i++) {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': `http://foo.mywebsite.localhost/fork${i}`,
+        'X-Prisme-Document-Referrer': 'http://foo.mywebsite.localhost/page2'
+      }
+    })
+    expect(response.status).toBe(200)
+
+    const session = await getLatestSession()
+
+    // There is two different sessions now.
+    if (i === 0) firstSession = session
+    else {
+      expect(session).not.toEqual(firstSession)
+    }
+
+    expect(session.version).toEqual(3)
+  }
+}, { timeout: 30_000 })
+
+test('different sessions join', async () => {
+  const ipAddr = faker.internet.ip()
+
+  let firstSession = null
+  for (let i = 0; i < 2; i++) {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': `http://foo.mywebsite.localhost/session${i}`
+      }
+    })
+    expect(response.status).toBe(200)
+
+    const session = await getLatestSession()
+
+    if (i === 0) firstSession = session
+    else {
+      expect(session).not.toEqual(firstSession)
+    }
+
+    expect(session.version).toEqual(1)
+  }
+
+  for (let i = 0; i < 2; i++) {
+    const response = await fetch(PRISME_PAGEVIEWS_URL, {
+      method: 'POST',
+      headers: {
+        Origin: 'http://foo.mywebsite.localhost',
+        'X-Forwarded-For': ipAddr,
+        'X-Prisme-Referrer': 'http://foo.mywebsite.localhost/page2',
+        'X-Prisme-Document-Referrer': `http://foo.mywebsite.localhost/session${i}`
+      }
+    })
+    expect(response.status).toBe(200)
+
+    const session = await getLatestSession()
+
+    if (i === 0) firstSession = session
+    else {
+      expect(session).not.toEqual(firstSession)
+    }
+
+    expect(session.version).toEqual(2)
+  }
+}, { timeout: 30_000 })
+
 async function getLatestSession (): Promise<any> {
   // Wait for clickhouse to ingest batch.
   Bun.sleepSync(1000)
