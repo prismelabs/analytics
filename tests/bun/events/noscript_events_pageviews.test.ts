@@ -474,7 +474,7 @@ test('valid pageview with US IP address', async () => {
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
       'X-Forwarded-For': '8.8.8.8', // Google public DNS
-      Referer: 'http://foo.mywebsite.localhost/another/foo?bar=baz#qux'
+      Referer: 'http://foo.mywebsite.localhost/us/foo2?bar=baz#qux'
     }
   })
   expect(response.status).toBe(200)
@@ -484,9 +484,9 @@ test('valid pageview with US IP address', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'foo.mywebsite.localhost',
-      entry_path: '/another/foo',
+      entry_path: '/us/foo2',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/another/foo',
+      exit_path: '/us/foo2',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -504,7 +504,7 @@ test('valid pageview with US IP address', async () => {
     pageview: {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
-      path: '/another/foo',
+      path: '/us/foo2',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -512,11 +512,12 @@ test('valid pageview with US IP address', async () => {
 })
 
 test('valid pageview with dirty path', async () => {
+  const ipAddr = faker.internet.ip()
   const response = await fetch(PRISME_NOSCRIPT_PAGEVIEWS_URL, {
     method: 'GET',
     headers: {
       Origin: 'http://foo.mywebsite.localhost',
-      'X-Forwarded-For': '8.8.8.8', // Google public DNS
+      'X-Forwarded-For': ipAddr,
       Referer: 'http://foo.mywebsite.localhost///another/../another/foo?bar=baz#qux'
     }
   })
@@ -534,7 +535,7 @@ test('valid pageview with dirty path', async () => {
       browser_family: 'Other',
       device: 'Other',
       referrer_domain: 'direct',
-      country_code: 'US',
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       utm_source: '',
