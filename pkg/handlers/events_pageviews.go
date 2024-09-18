@@ -90,22 +90,28 @@ func eventsPageviewsHandler(
 
 	// Internal traffic, session may already exists.
 	if isInternalTraffic {
-		sessionExists := false
+		var result sessionstorage.AddPageviewResult
+		var sessionExists bool
+
 		if visitorId != "" { // Identify session.
 			visitorId = utils.CopyString(visitorId)
 			_, sessionExists = sessionStorage.IdentifySession(deviceId, visitorId)
 			if sessionExists {
-
 				// Increment pageview count.
-				pageView.Session, sessionExists = sessionStorage.IncSessionPageviewCount(deviceId)
+				result, sessionExists = sessionStorage.AddPageview(deviceId, pageView.PageUri)
 				if !sessionExists { // Should never happend.
 					logger.Panic().Msg("failed to increment session pageview count after IdentifySession returned a session")
 				}
 			}
 		} else { // Anon session.
 			// Increment pageview count.
-			pageView.Session, sessionExists = sessionStorage.IncSessionPageviewCount(deviceId)
+			result, sessionExists = sessionStorage.AddPageview(deviceId, pageView.PageUri)
 		}
+
+		if result.DuplicatePageview {
+			return nil
+		}
+		pageView.Session = result.Session
 
 		if !sessionExists {
 			newSession = true
@@ -124,6 +130,16 @@ func eventsPageviewsHandler(
 			return fiber.NewError(fiber.StatusBadRequest, "bot session filtered")
 		}
 
+		// Ignore duplicated pageview (page refresh or duplicate tab).
+		{
+			sess, found := sessionStorage.WaitSession(deviceId, time.Duration(0))
+			if found && sess.PageviewCount == 1 && sess.PageUri.Path() == pageView.PageUri.Path() &&
+				sess.ReferrerUri.IsValid() == referrerUri.IsValid() {
+				if !referrerUri.IsValid() || referrerUri.Path() == sess.ReferrerUri.Path() {
+					return nil
+				}
+			}
+		}
 		sessionUuid, err := uuid.NewV7()
 		if err != nil {
 			return fmt.Errorf("failed to generate session uuid: %w", err)

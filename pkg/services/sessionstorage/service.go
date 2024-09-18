@@ -5,9 +5,15 @@ import (
 	"time"
 
 	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
+
+type AddPageviewResult struct {
+	Session           event.Session
+	DuplicatePageview bool
+}
 
 // Service define an in memory session storage.
 type Service interface {
@@ -15,7 +21,7 @@ type Service interface {
 	// given deviceId.
 	InsertSession(deviceId uint64, session event.Session)
 	// IncSessionPageviewCount increments pageview and returns it.
-	IncSessionPageviewCount(deviceId uint64) (event.Session, bool)
+	AddPageview(deviceId uint64, pageUri uri.Uri) (AddPageviewResult, bool)
 	// IdentifySession updates stored session visitor id. Updated session and
 	// boolean found flag are returned.
 	IdentifySession(deviceId uint64, visitorId string) (event.Session, bool)
@@ -35,9 +41,10 @@ type service struct {
 }
 
 type entry struct {
-	session event.Session
-	expiry  uint32
-	wait    chan struct{}
+	session   event.Session
+	latestUri uri.Uri
+	expiry    uint32
+	wait      chan struct{}
 }
 
 // ProvideService is a wire provider for in memory session storage.
@@ -78,12 +85,12 @@ func (s *service) getSessionEntry(deviceId uint64) (entry, bool) {
 		entry.wait == nil // Someone is waiting on this session but none exists.
 }
 
-// getSession is the same as getSessionEntry but returns only the session and
-// checks that it hasn't expired.
+// getValidSessionEntry is the same as getSessionEntry but returns true only if
+// the session is valid.
 // You must hold mutex while calling this function.
-func (s *service) getSession(deviceId uint64) (event.Session, bool) {
+func (s *service) getValidSessionEntry(deviceId uint64) (entry, bool) {
 	entry, ok := s.getSessionEntry(deviceId)
-	return entry.session, ok && uint32(time.Now().Unix()) < entry.expiry // Not expired session.
+	return entry, ok && uint32(time.Now().Unix()) < entry.expiry // Not expired session.
 }
 
 // InsertSession implements Service.
@@ -93,9 +100,10 @@ func (s *service) InsertSession(deviceId uint64, session event.Session) {
 
 	// Store session.
 	s.data[deviceId] = entry{
-		session: session,
-		expiry:  s.newExpiry(),
-		wait:    nil,
+		session:   session,
+		latestUri: session.PageUri,
+		expiry:    s.newExpiry(),
+		wait:      nil,
 	}
 	s.mu.Unlock()
 
@@ -113,52 +121,62 @@ func (s *service) InsertSession(deviceId uint64, session event.Session) {
 	}
 }
 
-// IncSessionPageviewCount implements Service.
-func (s *service) IncSessionPageviewCount(deviceId uint64) (event.Session, bool) {
+// AddPageview implements Service.
+func (s *service) AddPageview(deviceId uint64, pageUri uri.Uri) (AddPageviewResult, bool) {
 	s.mu.Lock()
-	session, ok := s.getSession(deviceId)
+	sessionEntry, ok := s.getValidSessionEntry(deviceId)
 	// Session not found.
 	if !ok {
 		s.mu.Unlock()
-		return event.Session{}, false
+		return AddPageviewResult{}, false
 	}
 
-	session.PageviewCount++
+	// Duplicate pageview.
+	if sessionEntry.latestUri.Path() == pageUri.Path() {
+		s.mu.Unlock()
+		return AddPageviewResult{
+			Session:           sessionEntry.session,
+			DuplicatePageview: true,
+		}, true
+	}
+
+	sessionEntry.session.PageviewCount++
 
 	s.data[deviceId] = entry{
-		session: session,
-		expiry:  s.newExpiry(),
+		session:   sessionEntry.session,
+		latestUri: pageUri,
+		expiry:    s.newExpiry(),
 	}
 
 	s.mu.Unlock()
 
-	return session, true
+	return AddPageviewResult{
+		Session: sessionEntry.session,
+	}, true
 }
 
 // IdentifySession implements Service.
 func (s *service) IdentifySession(deviceId uint64, visitorId string) (event.Session, bool) {
 	s.mu.Lock()
-	session, ok := s.getSession(deviceId)
+	sessionEntry, ok := s.getValidSessionEntry(deviceId)
 	if !ok {
 		s.mu.Unlock()
 		return event.Session{}, false
 	}
 
 	// No need for update.
-	if session.VisitorId == visitorId {
+	if sessionEntry.session.VisitorId == visitorId {
 		s.mu.Unlock()
-		return session, true
+		return sessionEntry.session, true
 	}
 
 	// Update visitor id.
-	session.VisitorId = visitorId
-	s.data[deviceId] = entry{
-		session: session,
-		expiry:  s.newExpiry(),
-	}
+	sessionEntry.session.VisitorId = visitorId
+	sessionEntry.expiry = s.newExpiry()
+	s.data[deviceId] = sessionEntry
 	s.mu.Unlock()
 
-	return session, true
+	return sessionEntry.session, true
 }
 
 // WaitSession implements Service.
@@ -208,10 +226,10 @@ func (s *service) WaitSession(deviceId uint64, timeout time.Duration) (event.Ses
 	}
 
 	s.mu.RLock()
-	session, ok := s.getSession(deviceId)
+	sessionEntry, ok = s.getValidSessionEntry(deviceId)
 	s.mu.RUnlock()
 
-	return session, ok
+	return sessionEntry.session, ok
 }
 
 // session garbage collector.
