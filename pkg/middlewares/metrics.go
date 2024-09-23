@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -43,8 +44,8 @@ func ProvideMetrics(promRegistry *prometheus.Registry) Metrics {
 		err := c.Next()
 
 		labels := prometheus.Labels{
-			"path":   c.Route().Path,
-			"method": c.Method(),
+			"path":   utils.CopyString(c.Route().Path),
+			"method": utils.CopyString(c.Method()),
 			"status": strconv.Itoa(c.Response().StatusCode()),
 		}
 
