@@ -1,6 +1,6 @@
 services:
   clickhouse:
-    image: "docker.io/clickhouse/clickhouse-server:24.5.1.1763-alpine"
+    image: "docker.io/clickhouse/clickhouse-server:24.9.1.3278-alpine"
     ulimits:
       nofile: 262144
     # ports:
