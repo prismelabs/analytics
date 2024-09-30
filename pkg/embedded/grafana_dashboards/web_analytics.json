@@ -18,7 +18,20 @@
 	"editable": false,
 	"fiscalYearStartMonth": 0,
 	"graphTooltip": 0,
-	"links": [],
+	"links": [
+		{
+			"asDropdown": false,
+			"icon": "external link",
+			"includeVars": false,
+			"keepTime": false,
+			"tags": [],
+			"targetBlank": true,
+			"title": "Documentation",
+			"tooltip": "Open documentation",
+			"type": "link",
+			"url": "https://www.prismeanalytics.com/docs/references/web-analytics-dashboard/"
+		}
+	],
 	"liveNow": false,
 	"panels": [
 		{
