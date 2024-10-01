@@ -93,20 +93,8 @@ func eventsPageviewsHandler(
 		var result sessionstorage.AddPageviewResult
 		var sessionExists bool
 
-		if visitorId != "" { // Identify session.
-			visitorId = utils.CopyString(visitorId)
-			_, sessionExists = sessionStorage.IdentifySession(deviceId, visitorId)
-			if sessionExists {
-				// Increment pageview count.
-				result, sessionExists = sessionStorage.AddPageview(deviceId, pageView.PageUri)
-				if !sessionExists { // Should never happend.
-					logger.Panic().Msg("failed to increment session pageview count after IdentifySession returned a session")
-				}
-			}
-		} else { // Anon session.
-			// Increment pageview count.
-			result, sessionExists = sessionStorage.AddPageview(deviceId, pageView.PageUri)
-		}
+		// Increment pageview count.
+		result, sessionExists = sessionStorage.AddPageview(deviceId, pageView.PageUri)
 
 		if result.DuplicatePageview {
 			return nil
@@ -117,6 +105,12 @@ func eventsPageviewsHandler(
 			newSession = true
 		} else {
 			pageView.Timestamp = time.Now().UTC()
+
+			// Update session visitor ID if needed.
+			if visitorId != "" && pageView.Session.VisitorId != visitorId {
+				visitorId = utils.CopyString(visitorId)
+				sessionStorage.IdentifySession(deviceId, visitorId)
+			}
 		}
 	}
 
