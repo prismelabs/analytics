@@ -68,7 +68,7 @@ Simply add tracking script to your website:
 ```html
 <script src="https://<your-prisme-instance-hostname>/static/wa.js" defer></script>
 <noscript>
-    <img src="https://my-prisme-instance.example.com/api/v1/noscript/events/pageviews" style="position:absolute;top:-100px">
+    <img src="https://<your-prisme-instance-hostname>/api/v1/noscript/events/pageviews" style="position:absolute;top:-100px">
 </noscript>
 ```
 
