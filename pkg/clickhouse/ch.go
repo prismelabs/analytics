@@ -1,3 +1,5 @@
+// Package clickhouse contains wire provider for clickhouse connection and
+// migration.
 package clickhouse
 
 import (
@@ -7,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// Ch define a connection to a ClickHouse instance.
 type Ch struct {
 	driver.Conn
 }

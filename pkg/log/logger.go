@@ -1,3 +1,4 @@
+// Package log holds our zerolog.Logger constructors.
 package log
 
 import (

@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// App holds data used at runtime by main package.
 type App struct {
 	Config          config.Server
 	Fiber           *fiber.App

@@ -1,3 +1,5 @@
+// Package grafana holds a generic grafana API client tailored for our specific
+// needs.
 package grafana
 
 import (

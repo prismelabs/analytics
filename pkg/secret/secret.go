@@ -1,3 +1,4 @@
+// Package secret contains utils related to secrets.
 package secret
 
 import (
