@@ -10,9 +10,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type AddPageviewResult struct {
-	Session           event.Session
-	DuplicatePageview bool
+type SetPageviewResult struct {
+	Session    event.Session
+	Idempotent bool
 }
 
 // Service define an in memory session storage.
@@ -21,7 +21,10 @@ type Service interface {
 	// given deviceId.
 	InsertSession(deviceId uint64, session event.Session)
 	// IncSessionPageviewCount increments pageview and returns it.
-	AddPageview(deviceId uint64, pageUri uri.Uri) (AddPageviewResult, bool)
+	AddPageview(deviceId uint64, pageUri uri.Uri) (SetPageviewResult, bool)
+	// SetPageVisibility sets whether current page is visible or hidden.
+	// If URI of page doesn't match latest pageview, a new pageview is added.
+	SetPageVisibility(deviceId uint64, pageUri uri.Uri, hidden bool) (SetPageviewResult, bool)
 	// IdentifySession updates stored session visitor id. Updated session and
 	// boolean found flag are returned.
 	IdentifySession(deviceId uint64, visitorId string) (event.Session, bool)
@@ -41,10 +44,12 @@ type service struct {
 }
 
 type entry struct {
-	session   event.Session
-	latestUri uri.Uri
-	expiry    uint32
-	wait      chan struct{}
+	session              event.Session
+	latestUri            uri.Uri
+	pageIsHidden         bool
+	visiblePageTimestamp time.Time
+	expiry               uint32
+	wait                 chan struct{}
 }
 
 // ProvideService is a wire provider for in memory session storage.
@@ -100,10 +105,12 @@ func (s *service) InsertSession(deviceId uint64, session event.Session) {
 
 	// Store session.
 	s.data[deviceId] = entry{
-		session:   session,
-		latestUri: session.PageUri,
-		expiry:    s.newExpiry(),
-		wait:      nil,
+		session:              session,
+		latestUri:            session.PageUri,
+		pageIsHidden:         false,
+		visiblePageTimestamp: time.Time{},
+		expiry:               s.newExpiry(),
+		wait:                 nil,
 	}
 	s.mu.Unlock()
 
@@ -122,21 +129,21 @@ func (s *service) InsertSession(deviceId uint64, session event.Session) {
 }
 
 // AddPageview implements Service.
-func (s *service) AddPageview(deviceId uint64, pageUri uri.Uri) (AddPageviewResult, bool) {
+func (s *service) AddPageview(deviceId uint64, pageUri uri.Uri) (SetPageviewResult, bool) {
 	s.mu.Lock()
 	sessionEntry, ok := s.getValidSessionEntry(deviceId)
 	// Session not found.
 	if !ok {
 		s.mu.Unlock()
-		return AddPageviewResult{}, false
+		return SetPageviewResult{}, false
 	}
 
 	// Duplicate pageview.
 	if sessionEntry.latestUri.Path() == pageUri.Path() {
 		s.mu.Unlock()
-		return AddPageviewResult{
-			Session:           sessionEntry.session,
-			DuplicatePageview: true,
+		return SetPageviewResult{
+			Session:    sessionEntry.session,
+			Idempotent: true,
 		}, true
 	}
 
@@ -150,8 +157,81 @@ func (s *service) AddPageview(deviceId uint64, pageUri uri.Uri) (AddPageviewResu
 
 	s.mu.Unlock()
 
-	return AddPageviewResult{
+	return SetPageviewResult{
 		Session: sessionEntry.session,
+	}, true
+}
+
+// SetPageVisibility implements Service.
+func (s *service) SetPageVisibility(deviceId uint64, pageUri uri.Uri, hidden bool) (SetPageviewResult, bool) {
+	s.mu.Lock()
+	sessionEntry, ok := s.getValidSessionEntry(deviceId)
+	// Session not found.
+	if !ok {
+		s.mu.Unlock()
+		return SetPageviewResult{}, false
+	}
+
+	samePage := sessionEntry.latestUri.Path() == pageUri.Path()
+	alreadyHiddenOrVisible := sessionEntry.pageIsHidden == hidden
+
+	// Idempotent operation.
+	if hidden && !samePage {
+		// Changing visibility of another page to hidden doesn't makes sense, we
+		// ignore the event.
+		// This can happen if hidden page and pageview events are sent
+		// concurrently but the latter is handled first.
+		s.mu.Unlock()
+		return SetPageviewResult{
+			Session:    sessionEntry.session,
+			Idempotent: true,
+		}, true
+	}
+
+	// Idempotent operation.
+	if samePage && alreadyHiddenOrVisible {
+		s.mu.Unlock()
+		return SetPageviewResult{
+			Session:    sessionEntry.session,
+			Idempotent: true,
+		}, true
+	}
+
+	// hidden  / hidden same          -> idempotent
+	// hidden  / hidden diff          -> ignore            PROBLEM: this can happen if a second hidden diff event arrives before associated visible event -> incorrect time on page metric.
+	// hidden  / visible same         -> update ts
+	// hidden  / visible different    -> pageview
+	// visible / hidden same          -> update time on page
+	// visible / hidden diff          -> ignore
+	// visible / visible same         -> ignore
+	// visible / visible diff         -> pageview
+
+	// Operation is not idempotent, we must update the session.
+	now := time.Now()
+	if hidden { // Page is now hidden, update time on current page.
+		sessionEntry.session.TimeOnPage += now.Sub(sessionEntry.visiblePageTimestamp)
+	} else {
+		// Page is not hidden anymore, update timestamp.
+		sessionEntry.visiblePageTimestamp = now
+	}
+	if !samePage {
+		sessionEntry.session.PageviewCount++
+		sessionEntry.session.TotalTimeOnPage += sessionEntry.session.TimeOnPage
+		sessionEntry.visiblePageTimestamp = now
+	}
+	sessionEntry.session.Version++
+
+	s.data[deviceId] = entry{
+		session:      sessionEntry.session,
+		latestUri:    pageUri,
+		pageIsHidden: hidden,
+		expiry:       s.newExpiry(),
+	}
+	s.mu.Unlock()
+
+	return SetPageviewResult{
+		Session:    event.Session{},
+		Idempotent: false,
 	}, true
 }
 

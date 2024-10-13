@@ -90,13 +90,12 @@ func eventsPageviewsHandler(
 
 	// Internal traffic, session may already exists.
 	if isInternalTraffic {
-		var result sessionstorage.AddPageviewResult
+		var result sessionstorage.SetPageviewResult
 		var sessionExists bool
 
 		// Increment pageview count.
 		result, sessionExists = sessionStorage.AddPageview(deviceId, pageView.PageUri)
-
-		if result.DuplicatePageview {
+		if result.Idempotent {
 			return nil
 		}
 		pageView.Session = result.Session
@@ -162,6 +161,7 @@ func eventsPageviewsHandler(
 			SessionUuid:   sessionUuid,
 			Utm:           hutils.ExtractUtmParams(&args),
 			PageviewCount: 1,
+			Version:       1,
 		}
 		pageView.Timestamp = pageView.Session.SessionTime()
 

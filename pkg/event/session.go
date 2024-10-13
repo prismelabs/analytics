@@ -12,17 +12,19 @@ import (
 
 // Session holds data about visitor's/user's session/visit.
 type Session struct {
-	// This data struct must not contains data changing over pageviews and custom events
-	// except for PageviewCount (version) field.
+	PageUri     uri.Uri
+	ReferrerUri ReferrerUri
+	Client      uaparser.Client
+	CountryCode ipgeolocator.CountryCode
+	VisitorId   string
+	SessionUuid uuid.UUID
+	Utm         UtmParams
 
-	PageUri       uri.Uri
-	ReferrerUri   ReferrerUri
-	Client        uaparser.Client
-	CountryCode   ipgeolocator.CountryCode
-	VisitorId     string
-	SessionUuid   uuid.UUID
-	Utm           UtmParams
-	PageviewCount uint16
+	// Mutable fields.
+
+	TotalTimeOnPage time.Duration
+	PageviewCount   uint16
+	Version         uint16
 }
 
 // SessionTime returns session creation date time.
@@ -41,5 +43,7 @@ func (s *Session) MarshalZerologObject(e *zerolog.Event) {
 		Stringer("session_uuid", s.SessionUuid).
 		Time("session_time", s.SessionTime()).
 		Object("utp_params", &s.Utm).
-		Uint16("pageview_count", s.PageviewCount)
+		Dur("total_time_on_page", s.TotalTimeOnPage).
+		Uint16("pageview_count", s.PageviewCount).
+		Uint16("version", s.Version)
 }

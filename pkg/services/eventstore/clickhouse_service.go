@@ -166,7 +166,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 				ev.Session.Utm.Campaign,
 				ev.Session.Utm.Term,
 				ev.Session.Utm.Content,
-				ev.Session.PageviewCount-1, // Cancel previous version.
+				ev.Session.Version-1, // Cancel previous version.
 				-1,
 			)
 			if err != nil {
