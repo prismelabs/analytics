@@ -7,6 +7,7 @@ type metrics struct {
 	sessionsWait      prometheus.Gauge
 	sessionsCounter   *prometheus.CounterVec
 	sessionsPageviews prometheus.Histogram
+	opDuration        *prometheus.HistogramVec
 }
 
 func newMetrics(promRegistry *prometheus.Registry) metrics {
@@ -28,6 +29,11 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 			Help:    "Number of pageviews per sessions",
 			Buckets: []float64{1, 2, 3, 5, 10, 15, 25, 30, 50, 100},
 		}),
+		opDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Name:    "sessionstorage_op_micros",
+			Help:    "Histogram of session storage operation duration (in microseconds)",
+			Buckets: []float64{1, 2, 3, 5, 10, 15, 25, 30, 50, 100, 250, 500, 750, 1000, 1500, 2000},
+		}, []string{"op"}),
 	}
 
 	promRegistry.MustRegister(
@@ -35,6 +41,7 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 		m.sessionsWait,
 		m.sessionsCounter,
 		m.sessionsPageviews,
+		m.opDuration,
 	)
 
 	return m

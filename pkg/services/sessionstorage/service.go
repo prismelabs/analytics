@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/timing"
 	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -49,11 +50,12 @@ func (e *entry) isValid() bool {
 }
 
 type service struct {
-	logger  zerolog.Logger
-	cfg     Config
-	metrics metrics
-	mu      sync.RWMutex
-	data    map[uint64][]entry
+	logger         zerolog.Logger
+	cfg            Config
+	metrics        metrics
+	mu             sync.RWMutex
+	data           map[uint64][]entry
+	storeAsMetrics func(name string, dur time.Duration)
 }
 
 // ProvideService is a wire provider for in memory session storage.
@@ -74,6 +76,10 @@ func ProvideService(
 		metrics: newMetrics(promRegistry),
 		mu:      sync.RWMutex{},
 		data:    make(map[uint64][]entry),
+	}
+
+	service.storeAsMetrics = func(name string, dur time.Duration) {
+		service.metrics.opDuration.With(prometheus.Labels{"op": name}).Observe(float64(dur.Microseconds()))
 	}
 
 	go service.gc(cfg.gcInterval)
@@ -120,6 +126,8 @@ func (s *service) getValidSessionEntry(deviceId uint64, latestPath string) *entr
 
 // InsertSession implements Service.
 func (s *service) InsertSession(deviceId uint64, session event.Session) {
+	defer timing.Block()(s.storeAsMetrics)
+
 	s.mu.Lock()
 	newEntry := entry{
 		Session:   session,
@@ -163,6 +171,8 @@ func (s *service) InsertSession(deviceId uint64, session event.Session) {
 
 // AddPageview implements Service.
 func (s *service) AddPageview(deviceId uint64, referrer event.ReferrerUri, uri uri.Uri) (event.Session, bool) {
+	defer timing.Block()(s.storeAsMetrics)
+
 	s.mu.Lock()
 	entry := s.getValidSessionEntry(deviceId, referrer.Path())
 	if entry == nil {
@@ -182,6 +192,8 @@ func (s *service) AddPageview(deviceId uint64, referrer event.ReferrerUri, uri u
 
 // IdentifySession implements Service.
 func (s *service) IdentifySession(deviceId uint64, pageUri uri.Uri, visitorId string) (event.Session, bool) {
+	defer timing.Block()(s.storeAsMetrics)
+
 	s.mu.Lock()
 	entry := s.getValidSessionEntry(deviceId, pageUri.Path())
 	if entry == nil {
@@ -201,6 +213,8 @@ func (s *service) IdentifySession(deviceId uint64, pageUri uri.Uri, visitorId st
 
 // WaitSession implements Service.
 func (s *service) WaitSession(deviceId uint64, pageUri uri.Uri, timeout time.Duration) (event.Session, bool) {
+	defer timing.Block()(s.storeAsMetrics)
+
 	s.mu.RLock()
 	currentEntry := s.getEntry(deviceId, pageUri.Path())
 	s.mu.RUnlock()
