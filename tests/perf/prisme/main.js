@@ -37,18 +37,20 @@ export default function () {
 
   const ipAddr = randomIP()
 
+  const visitorState = { origin, ipAddr }
+
   // Entry pageview.
-  const response = pageView({ entryPageView: true, origin, ipAddr })
+  const response = pageView(visitorState)
   if (response.status !== 200) {
-    // console.error("entry pageview", response.status_text, response.error)
+    console.error('entry pageview', response.status_text, response.error)
     return
   }
 
   // Custom events.
   while (Math.random() < customEventRate) {
-    const response = customEvent({ origin, ipAddr })
+    const response = customEvent(visitorState)
     if (response.status !== 200) {
-      // console.error("custom event", response.status_text, response.error)
+      console.error('custom event', response.status_text, response.error)
       return
     }
   }
@@ -61,18 +63,18 @@ export default function () {
   let events = 0
   while (events < maxEventsPerSession) {
     // Pageview.
-    const response = pageView({ origin, ipAddr })
+    const response = pageView(visitorState)
     if (response.status !== 200) {
-      // console.error("pageview", response.status_text, response.error)
+      console.error('pageview', response.status_text, response.error)
       return
     }
     events++
 
     // Custom events.
     while (Math.random() < customEventRate) {
-      const response = customEvent({ origin, ipAddr })
+      const response = customEvent(visitorState)
       if (response.status !== 200) {
-        // console.error("custom event", response.status_text, response.error)
+        console.error('custom event', response.status_text, response.error)
         return
       }
       events++
@@ -85,18 +87,21 @@ export default function () {
   }
 }
 
-function pageView ({ entryPageView = false, origin, ipAddr }) {
+function pageView (visitorState) {
+  const { origin, ipAddr, referrer } = visitorState
+  const url = [
+    origin,
+    randomItem(['', 'foo', 'bar', 'qux', 'foo'])
+  ].join('/')
+
   const headers = {
     Origin: origin,
-    'X-Prisme-Referrer': [
-      origin,
-      randomItem(['', 'foo', 'bar', 'qux', 'foo'])
-    ].join('/'),
-    'X-Prisme-Document-Referrer': origin,
+    'X-Prisme-Referrer': url,
+    'X-Prisme-Document-Referrer': referrer ?? origin,
     'X-Forwarded-For': ipAddr
   }
 
-  if (entryPageView) {
+  if (!referrer) {
     if (Math.random() < directTrafficRate) {
       delete headers['X-Prisme-Document-Referrer']
     } else {
@@ -120,17 +125,17 @@ function pageView ({ entryPageView = false, origin, ipAddr }) {
     { headers, tags: { event_type: 'pageview' } }
   )
 
+  visitorState.referrer = url
+
   return response
 }
 
-function customEvent ({ origin, ipAddr }) {
+function customEvent (visitorState) {
+  const { origin, ipAddr, referrer } = visitorState
   const headers = {
     Origin: origin,
     'Content-Type': 'application/json',
-    'X-Prisme-Referrer': [
-      origin,
-      randomItem(['', 'foo', 'bar', 'qux', 'foo'])
-    ].join('/'),
+    'X-Prisme-Referrer': referrer ?? origin,
     'X-Forwarded-For': ipAddr
   }
 
