@@ -11,15 +11,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type AddPageviewResult struct {
-	Session           event.Session
-	DuplicatePageview bool
-}
-
 // Service define an in memory session storage.
 type Service interface {
-	// InsertSession stores given session.
-	InsertSession(deviceId uint64, session event.Session)
+	// InsertSession stores given session in memory. If number of visitor session
+	// exceed configured max session per visitor, this function returns false and
+	// session isn't stored.
+	InsertSession(deviceId uint64, session event.Session) bool
 	// AddPageview adds a pageview to a session with the given device id
 	// latest path (referrer). Session is returned along a true flag if it was
 	// found.
@@ -124,7 +121,7 @@ func (s *service) getValidSessionEntry(deviceId uint64, latestPath string) *entr
 }
 
 // InsertSession implements Service.
-func (s *service) InsertSession(deviceId uint64, session event.Session) {
+func (s *service) InsertSession(deviceId uint64, session event.Session) bool {
 	s.mu.Lock()
 	newEntry := entry{
 		Session:   session,
@@ -139,6 +136,10 @@ func (s *service) InsertSession(deviceId uint64, session event.Session) {
 		sessions = make([]entry, 1)
 		sessions[0] = newEntry
 		s.data[deviceId] = sessions
+	} else if len(sessions) >= int(s.cfg.maxSessionsPerVisitor) {
+		s.mu.Unlock()
+		// Prevent visitor from creating too many sessions.
+		return false
 	} else {
 		// New session only.
 
@@ -164,6 +165,8 @@ func (s *service) InsertSession(deviceId uint64, session event.Session) {
 	// Compute metrics.
 	s.metrics.sessionsCounter.With(prometheus.Labels{"type": "inserted"}).Inc()
 	s.metrics.activeSessions.Inc()
+
+	return true
 }
 
 // AddPageview implements Service.

@@ -17,8 +17,9 @@ import (
 func TestService(t *testing.T) {
 	logger := log.NewLogger("sessionstorage_test", io.Discard, true)
 	cfg := Config{
-		gcInterval:         10 * time.Second,
-		sessionInactiveTtl: 24 * time.Hour,
+		gcInterval:            10 * time.Second,
+		sessionInactiveTtl:    24 * time.Hour,
+		maxSessionsPerVisitor: 64,
 	}
 
 	mustParseUri := testutils.Must(uri.Parse)
@@ -36,7 +37,8 @@ func TestService(t *testing.T) {
 				PageviewCount: 1,
 			}
 
-			service.InsertSession(deviceId, session)
+			ok := service.InsertSession(deviceId, session)
+			require.True(t, ok)
 
 			entry := service.getValidSessionEntry(deviceId, pageUri.Path())
 			require.NotNil(t, entry)
@@ -68,13 +70,15 @@ func TestService(t *testing.T) {
 				PageviewCount: 1,
 			}
 
-			service.InsertSession(deviceId, sessionA)
+			ok := service.InsertSession(deviceId, sessionA)
+			require.True(t, ok)
 
 			sessionB := sessionA
 			sessionB.VisitorId = "prisme_YYY"
 
 			// Add another session on same path.
-			service.InsertSession(deviceId, sessionB)
+			ok = service.InsertSession(deviceId, sessionB)
+			require.True(t, ok)
 
 			// get session returns first matching session, here it is session A.
 			entry := service.getValidSessionEntry(deviceId, pageUri.Path())
@@ -94,6 +98,31 @@ func TestService(t *testing.T) {
 			require.Equal(t, float64(0),
 				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
 		})
+
+		t.Run("TooManySession", func(t *testing.T) {
+			testCfg := cfg
+			testCfg.maxSessionsPerVisitor = 1
+
+			promRegistry := prometheus.NewRegistry()
+			service := ProvideService(logger, testCfg, promRegistry).(*service)
+
+			deviceId := rand.Uint64()
+			pageUri := mustParseUri("https://example.com")
+			sessionA := event.Session{
+				PageUri:       pageUri,
+				VisitorId:     "prisme_XXX",
+				PageviewCount: 1,
+			}
+
+			ok := service.InsertSession(deviceId, sessionA)
+			require.True(t, ok)
+
+			sessionB := sessionA
+			sessionB.VisitorId = "prisme_YYY"
+
+			ok = service.InsertSession(deviceId, sessionB)
+			require.False(t, ok)
+		})
 	})
 
 	t.Run("AddPageview", func(t *testing.T) {
@@ -109,7 +138,8 @@ func TestService(t *testing.T) {
 				PageviewCount: 1,
 			}
 
-			service.InsertSession(deviceId, sessionV1)
+			ok := service.InsertSession(deviceId, sessionV1)
+			require.True(t, ok)
 
 			// Referrer doesn't match page uri of created session.
 			referrer := event.ReferrerUri{Uri: mustParseUri("https://example.com/bar")}
@@ -148,7 +178,8 @@ func TestService(t *testing.T) {
 				PageviewCount: 1,
 			}
 
-			service.InsertSession(deviceId, sessionV1)
+			ok := service.InsertSession(deviceId, sessionV1)
+			require.True(t, ok)
 
 			referrer := event.ReferrerUri{Uri: pageUri}
 			pageUri = mustParseUri("https://example.com/foo")
@@ -190,7 +221,8 @@ func TestService(t *testing.T) {
 				PageviewCount: 1,
 			}
 
-			service.InsertSession(deviceId, session)
+			ok := service.InsertSession(deviceId, session)
+			require.True(t, ok)
 
 			identifiedSession, ok := service.IdentifySession(deviceId, session.PageUri, "prisme_YYY")
 			require.True(t, ok)
@@ -210,7 +242,8 @@ func TestService(t *testing.T) {
 				PageviewCount: 1,
 			}
 
-			service.InsertSession(deviceId, session)
+			ok := service.InsertSession(deviceId, session)
+			require.True(t, ok)
 
 			identifiedSession, ok := service.IdentifySession(deviceId, mustParseUri("https://example.com/foo"), "prisme_YYY")
 			require.False(t, ok)
@@ -305,7 +338,8 @@ func TestService(t *testing.T) {
 					require.Equal(t, float64(1),
 						testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
 
-					service.InsertSession(deviceId, session)
+					ok := service.InsertSession(deviceId, session)
+					require.True(t, ok)
 				}()
 
 				// Wait for session.
@@ -371,7 +405,8 @@ func TestService(t *testing.T) {
 					require.Equal(t, float64(1),
 						testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
 
-					service.InsertSession(deviceId, session)
+					ok := service.InsertSession(deviceId, session)
+					require.True(t, ok)
 				}()
 
 				// Wait for session with /foo path.
@@ -413,7 +448,8 @@ func TestService(t *testing.T) {
 			}
 
 			// Insert session.
-			service.InsertSession(deviceId, session)
+			ok := service.InsertSession(deviceId, session)
+			require.True(t, ok)
 
 			now := time.Now()
 			actualSession, found := service.WaitSession(deviceId, pageUri, 10*time.Millisecond)
