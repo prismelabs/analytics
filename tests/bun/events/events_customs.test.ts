@@ -15,7 +15,7 @@ test('GET request instead of POST request', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/foo',
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     }
     // body: JSON.stringify({}) // GET request can't have body.
@@ -43,7 +43,7 @@ test('non registered domain in Origin header is rejected', async () => {
     headers: {
       Origin: 'https://example.com',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'https://example.com/foo?bar=baz#qux',
+      'X-Prisme-Referrer': 'https://example.com/',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({})
@@ -57,7 +57,7 @@ test('content type different than application/json is rejected', async () => {
     headers: {
       Origin: 'https://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'https://mywebsite.localhost/foo?bar=baz#qux',
+      'X-Prisme-Referrer': 'https://mywebsite.localhost/',
       'Content-Type': 'text/plain'
     },
     body: 'abc'
@@ -72,7 +72,7 @@ test('invalid sessionless custom event', async () => {
       Origin: 'http://mywebsite.localhost',
       // No session associated with this ip.
       'X-Forwarded-For': faker.internet.ip(),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({})
@@ -86,7 +86,7 @@ test('malformed json body', async () => {
     headers: {
       Origin: 'https://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'https://mywebsite.localhost/foo?bar=baz#qux',
+      'X-Prisme-Referrer': 'https://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
     body: '{"foo": "bar and foo, "num": 100' // No closing brace.
@@ -113,7 +113,7 @@ test('concurrent pageview and custom events', async () => {
       headers: {
         Origin: 'https://mywebsite.localhost',
         'X-Forwarded-For': ipAddr,
-        Referer: 'https://mywebsite.localhost/path',
+        Referer: 'https://mywebsite.localhost/',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({})
@@ -125,7 +125,7 @@ test('concurrent pageview and custom events', async () => {
       headers: {
         Origin: 'https://mywebsite.localhost',
         'X-Forwarded-For': ipAddr,
-        'X-Prisme-Referrer': 'https://mywebsite.localhost/path'
+        'X-Prisme-Referrer': 'https://mywebsite.localhost/'
       }
     })
   ]).then((results) => results.forEach((resp) => expect(resp.status).toBe(200)))
@@ -135,9 +135,9 @@ test('concurrent pageview and custom events', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -154,7 +154,7 @@ test('concurrent pageview and custom events', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/path',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -169,7 +169,7 @@ test('valid custom event request without body and Content-Type header', async ()
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html'
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/'
       // 'Content-Type': 'application/json' // not required if no body.
     }
   })
@@ -180,9 +180,9 @@ test('valid custom event request without body and Content-Type header', async ()
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -199,7 +199,7 @@ test('valid custom event request without body and Content-Type header', async ()
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -214,7 +214,7 @@ test('valid custom event with no properties', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({})
@@ -226,9 +226,9 @@ test('valid custom event with no properties', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -245,7 +245,7 @@ test('valid custom event with no properties', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -260,7 +260,7 @@ test('valid custom event with JSON bool as body', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(true)
@@ -272,9 +272,9 @@ test('valid custom event with JSON bool as body', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -291,7 +291,7 @@ test('valid custom event with JSON bool as body', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -306,7 +306,7 @@ test('valid custom event with JSON number as body', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(Math.random())
@@ -318,9 +318,9 @@ test('valid custom event with JSON number as body', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -337,7 +337,7 @@ test('valid custom event with JSON number as body', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -352,7 +352,7 @@ test('valid custom event with JSON string as body', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(Math.random().toString())
@@ -364,9 +364,9 @@ test('valid custom event with JSON string as body', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -384,7 +384,7 @@ test('valid custom event with JSON string as body', async () => {
     event: {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -403,7 +403,7 @@ test('valid custom event with few properties', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(props)
@@ -415,9 +415,9 @@ test('valid custom event with few properties', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -434,7 +434,7 @@ test('valid custom event with few properties', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -466,8 +466,7 @@ test('valid custom event with lot of properties', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
-      'X-Prisme-Document-Referrer': 'https://example.com/foo',
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(props)
@@ -479,9 +478,9 @@ test('valid custom event with lot of properties', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -498,7 +497,7 @@ test('valid custom event with lot of properties', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -513,7 +512,7 @@ test('valid custom event without X-Prisme-Referrer', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      Referer: 'http://mywebsite.localhost/index.html',
+      Referer: 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({})
@@ -525,9 +524,9 @@ test('valid custom event without X-Prisme-Referrer', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -544,7 +543,7 @@ test('valid custom event without X-Prisme-Referrer', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -571,9 +570,9 @@ test('valid custom event without trailing slash in referrer', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -607,8 +606,7 @@ test('valid custom event with Windows + Chrome user agent', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { userAgent }),
-      Referer: 'http://mywebsite.localhost',
-      'X-Prisme-Document-Referrer': 'https://www.example.com/foo',
+      Referer: 'http://mywebsite.localhost/',
       'Content-Type': 'application/json',
       'User-Agent': userAgent
     },
@@ -621,9 +619,9 @@ test('valid custom event with Windows + Chrome user agent', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Windows',
       browser_family: 'Chrome',
       device: 'Other',

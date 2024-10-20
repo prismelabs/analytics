@@ -65,7 +65,7 @@ test('invalid query params', async () => {
     headers: {
       Origin: 'https://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      Referer: 'https://mywebsite.localhost/path',
+      Referer: 'https://mywebsite.localhost/',
       'Content-Type': 'application/json'
     }
   })
@@ -92,7 +92,7 @@ test('concurrent pageview and custom events', async () => {
       headers: {
         Origin: 'https://mywebsite.localhost',
         'X-Forwarded-For': ipAddr,
-        Referer: 'https://mywebsite.localhost/path'
+        Referer: 'https://mywebsite.localhost/'
       }
     }),
     // Pageview concurrently.
@@ -102,7 +102,7 @@ test('concurrent pageview and custom events', async () => {
       headers: {
         Origin: 'https://mywebsite.localhost',
         'X-Forwarded-For': ipAddr,
-        'X-Prisme-Referrer': 'https://mywebsite.localhost/path'
+        'X-Prisme-Referrer': 'https://mywebsite.localhost/'
       }
     })
   ]).then((results) => results.forEach((resp) => expect(resp.status).toBe(200)))
@@ -112,9 +112,9 @@ test('concurrent pageview and custom events', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -131,7 +131,7 @@ test('concurrent pageview and custom events', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/path',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -146,7 +146,7 @@ test('valid custom event with no properties', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html'
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/'
     }
   })
   expect(response.status).toBe(200)
@@ -156,9 +156,9 @@ test('valid custom event with no properties', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -175,7 +175,7 @@ test('valid custom event with no properties', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -194,7 +194,7 @@ test('valid custom event with few properties', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html'
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/'
     }
   })
   expect(response.status).toBe(200)
@@ -204,9 +204,9 @@ test('valid custom event with few properties', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -223,7 +223,7 @@ test('valid custom event with few properties', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -255,8 +255,7 @@ test('valid custom event with lot of properties', async () => {
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/index.html',
-      'X-Prisme-Document-Referrer': 'https://example.com/foo'
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/'
     }
   })
   expect(response.status).toBe(200)
@@ -266,9 +265,9 @@ test('valid custom event with lot of properties', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Other',
       browser_family: 'Other',
       device: 'Other',
@@ -285,7 +284,7 @@ test('valid custom event with lot of properties', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/index.html',
+      path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       name: 'foo',
@@ -303,7 +302,6 @@ test('valid custom event with Windows + Chrome user agent', async () => {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { userAgent }),
       Referer: 'http://mywebsite.localhost',
-      'X-Prisme-Document-Referrer': 'https://www.example.com/foo',
       'User-Agent': userAgent
     }
   })
@@ -314,9 +312,9 @@ test('valid custom event with Windows + Chrome user agent', async () => {
   expect(data).toMatchObject({
     session: {
       domain: 'mywebsite.localhost',
-      entry_path: '/path',
+      entry_path: '/',
       exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/path',
+      exit_path: '/',
       operating_system: 'Windows',
       browser_family: 'Chrome',
       device: 'Other',
