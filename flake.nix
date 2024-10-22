@@ -30,9 +30,9 @@
           packages = {
             default = pkgs.buildGoModule {
               pname = "prisme";
-              version = "0.17.0";
+              version = "0.18.0";
               vendorHash =
-                "sha256-F3ZUU+hixLOOZrDjfHOuxHnopzIdc/9qxR6rMeUbt/0=";
+                "sha256-goF5Ee2Qm62bghLuK6wP7lNF8wdZoSwbTb6+mr1jDMY=";
 
               src = ./.;
               # Skip go test.
