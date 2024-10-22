@@ -16,7 +16,7 @@ func ProvideRequestId(cfg config.Server) RequestId {
 		var requestId string
 
 		if cfg.TrustProxy {
-			requestId = utils.UnsafeString(c.Request().Header.Peek("X-Request-Id"))
+			requestId = utils.UnsafeString(c.Request().Header.Peek(cfg.ProxyRequestIdHeader))
 		}
 
 		if requestId == "" {
