@@ -2,11 +2,12 @@ package clickhouse
 
 import (
 	"io"
+	"runtime"
 	"testing"
 
+	"github.com/negrel/secrecy"
 	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/prismelabs/analytics/pkg/log"
-	"github.com/prismelabs/analytics/pkg/secret"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,8 +19,8 @@ func TestClickhouseConnect(t *testing.T) {
 			TlsEnabled: false,
 			HostPort:   "down.localhost",
 			Database:   "analytics",
-			User:       secret.New("foo"),
-			Password:   secret.New("bar"),
+			User:       secrecy.NewSecretString(secrecy.UnsafeStringToBytes("foo")),
+			Password:   secrecy.NewSecretString(secrecy.UnsafeStringToBytes("bar")),
 		}
 
 		require.Panics(t, func() {
@@ -27,6 +28,7 @@ func TestClickhouseConnect(t *testing.T) {
 		})
 	})
 
+	runtime.GC()
 	// We're not testing a real connection to postgres in unit tests.
 }
 
@@ -38,8 +40,8 @@ func TestClickhouseConnectSql(t *testing.T) {
 			TlsEnabled: false,
 			HostPort:   "down.localhost",
 			Database:   "analytics",
-			User:       secret.New("foo"),
-			Password:   secret.New("bar"),
+			User:       secrecy.NewSecretString(secrecy.UnsafeStringToBytes("foo")),
+			Password:   secrecy.NewSecretString(secrecy.UnsafeStringToBytes("bar")),
 		}
 
 		require.Panics(t, func() {
@@ -47,5 +49,7 @@ func TestClickhouseConnectSql(t *testing.T) {
 		})
 	})
 
-	// We're not testing a real connection to postgres in unit tests.
+	runtime.GC()
+
+	// We're not testing a real connection to clickhouse in unit tests.
 }

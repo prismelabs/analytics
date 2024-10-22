@@ -1,12 +1,14 @@
 package config
 
-import "github.com/prismelabs/analytics/pkg/secret"
+import (
+	"github.com/negrel/secrecy"
+)
 
 // Grafana related options.
 type Grafana struct {
 	Url      string
-	User     secret.Secret[string]
-	Password secret.Secret[string]
+	User     secrecy.SecretString
+	Password secrecy.SecretString
 	OrgId    int64
 }
 
@@ -15,8 +17,8 @@ type Grafana struct {
 func GrafanaFromEnv() Grafana {
 	return Grafana{
 		Url:      MustGetEnv("PRISME_GRAFANA_URL"),
-		User:     secret.New(MustGetEnv("PRISME_GRAFANA_USER")),
-		Password: secret.New(MustGetEnv("PRISME_GRAFANA_PASSWORD")),
+		User:     secrecy.NewSecretString(secrecy.UnsafeStringToBytes(MustGetEnv("PRISME_GRAFANA_USER"))),
+		Password: secrecy.NewSecretString(secrecy.UnsafeStringToBytes(MustGetEnv("PRISME_GRAFANA_PASSWORD"))),
 		OrgId:    ParseIntEnvOrDefault("PRISME_GRAFANA_ORG_ID", 1, 64),
 	}
 }
