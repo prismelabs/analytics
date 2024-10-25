@@ -5,6 +5,7 @@ package ingestion
 
 import (
 	"github.com/google/wire"
+	"github.com/prismelabs/analytics/cmd/server/common"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/handlers"
 	"github.com/prismelabs/analytics/pkg/middlewares"
@@ -20,8 +21,8 @@ import (
 
 func Initialize(logger wired.BootstrapLogger) wired.App {
 	wire.Build(
-		ProvideFiber,
-		clickhouse.ProvideCh,
+		common.ProvideFiber,
+		clickhouse.ProvideClickhouse,
 		clickhouse.ProvideEmbeddedSourceDriver,
 		eventstore.ProvideConfig,
 		eventstore.ProvideService,

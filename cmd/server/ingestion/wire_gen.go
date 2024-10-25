@@ -7,6 +7,7 @@
 package ingestion
 
 import (
+	"github.com/prismelabs/analytics/cmd/server/common"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/handlers"
 	"github.com/prismelabs/analytics/pkg/middlewares"
@@ -32,7 +33,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	zerologLogger := wired.ProvideLogger(server)
 	configClickhouse := wired.ProvideClickhouseConfig(logger)
 	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
-	ch := clickhouse.ProvideCh(zerologLogger, configClickhouse, driver)
+	ch := clickhouse.ProvideClickhouse(zerologLogger, configClickhouse, driver)
 	registry := wired.ProvidePrometheusRegistry()
 	service := teardown.ProvideService()
 	eventstoreService := eventstore.ProvideService(config, ch, zerologLogger, registry, service)
@@ -56,7 +57,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	noscriptHandlersCache := middlewares.ProvideNoscriptHandlersCache()
 	postEventsCustom := handlers.ProvidePostEventsCustom(eventstoreService, saltmanagerService, sessionstorageService)
 	postEventsPageview := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, sessionstorageService)
-	app := ProvideFiber(apiEventsTimeout, eventsCors, eventsRateLimiter, getNoscriptEventsCustom, getNoscriptEventsPageviews, minimalFiber, nonRegisteredOriginFilter, noscriptHandlersCache, postEventsCustom, postEventsPageview)
+	app := common.ProvideFiber(apiEventsTimeout, eventsCors, eventsRateLimiter, getNoscriptEventsCustom, getNoscriptEventsPageviews, minimalFiber, nonRegisteredOriginFilter, noscriptHandlersCache, postEventsCustom, postEventsPageview)
 	promhttpLogger := wired.ProvidePromHttpLogger(server, zerologLogger)
 	setup := wired.ProvideSetup()
 	wiredApp := wired.ProvideApp(app, server, zerologLogger, promhttpLogger, registry, setup, service)

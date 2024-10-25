@@ -16,6 +16,17 @@ func ProvideClickhouseConfig(bootstrapLogger BootstrapLogger) config.Clickhouse 
 	return cfg
 }
 
+// ProvideChDbConfig is a wire provider for config.ChDb.
+func ProvideChDbConfig(bootstrapLogger BootstrapLogger) config.ChDb {
+	logger := zerolog.Logger(bootstrapLogger)
+
+	logger.Info().Msg("loading chdb configuration...")
+	cfg := config.ChDbFromEnv()
+	logger.Info().Any("config", cfg).Msg("chdb configuration successfully loaded.")
+
+	return cfg
+}
+
 // ProvideServerConfig is a wire provider for config.Server.
 func ProvideServerConfig(bootstrapLogger BootstrapLogger) config.Server {
 	logger := zerolog.Logger(bootstrapLogger)

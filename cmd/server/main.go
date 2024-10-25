@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/prismelabs/analytics/cmd/server/chdb"
 	"github.com/prismelabs/analytics/cmd/server/full"
 	"github.com/prismelabs/analytics/cmd/server/ingestion"
 	"github.com/prismelabs/analytics/pkg/config"
@@ -29,6 +30,9 @@ func main() {
 	logger.Info().Str("mode", mode).Msg("initilializing server...")
 
 	switch mode {
+	case "chdb":
+		app = chdb.Initialize(wired.BootstrapLogger(logger))
+
 	case "ingestion":
 		app = ingestion.Initialize(wired.BootstrapLogger(logger))
 

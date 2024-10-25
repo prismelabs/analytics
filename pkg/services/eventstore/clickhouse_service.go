@@ -47,7 +47,7 @@ func ProvideService(
 
 	service := &clickhouseService{
 		logger:          logger,
-		conn:            ch.Conn,
+		ch:              ch,
 		maxBatchSize:    cfg.MaxBatchSize,
 		maxBatchTimeout: cfg.MaxBatchTimeout,
 		pageViewRingBuf: ringo.NewWaiter(
@@ -81,7 +81,7 @@ func ProvideService(
 
 type clickhouseService struct {
 	logger             zerolog.Logger
-	conn               driver.Conn
+	ch                 clickhouse.Ch
 	maxBatchSize       uint64
 	maxBatchTimeout    time.Duration
 	pageViewRingBuf    ringo.Waiter[*event.PageView]
@@ -112,7 +112,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 
 	for {
 		if batch == nil {
-			batch, err = cs.conn.PrepareBatch(
+			batch, err = cs.ch.PrepareBatch(
 				context.Background(),
 				// pageviews table is a materialized view derived from sessions.
 				// sessions table engine is VersionedCollapsedMergeTree so we can
@@ -216,7 +216,7 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 
 	for {
 		if batch == nil {
-			batch, err = cs.conn.PrepareBatch(
+			batch, err = cs.ch.PrepareBatch(
 				context.Background(),
 				"INSERT INTO events_custom VALUES ($1, $2, $3, $4, $5, $6)",
 			)

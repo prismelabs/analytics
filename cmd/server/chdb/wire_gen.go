@@ -4,16 +4,14 @@
 //go:build !wireinject
 // +build !wireinject
 
-package full
+package chdb
 
 import (
 	"github.com/prismelabs/analytics/cmd/server/common"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
-	"github.com/prismelabs/analytics/pkg/grafana"
 	"github.com/prismelabs/analytics/pkg/handlers"
 	"github.com/prismelabs/analytics/pkg/middlewares"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
-	grafana2 "github.com/prismelabs/analytics/pkg/services/grafana"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/originregistry"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
@@ -33,9 +31,9 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	eventsRateLimiter := middlewares.ProvideEventsRateLimiter(server, storage)
 	config := eventstore.ProvideConfig()
 	zerologLogger := wired.ProvideLogger(server)
-	configClickhouse := wired.ProvideClickhouseConfig(logger)
+	chDb := wired.ProvideChDbConfig(logger)
 	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
-	ch := clickhouse.ProvideClickhouse(zerologLogger, configClickhouse, driver)
+	ch := clickhouse.ProvideChDb(zerologLogger, chDb, driver)
 	registry := wired.ProvidePrometheusRegistry()
 	service := teardown.ProvideService()
 	eventstoreService := eventstore.ProvideService(config, ch, zerologLogger, registry, service)
@@ -61,10 +59,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	postEventsPageview := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, sessionstorageService)
 	app := common.ProvideFiber(apiEventsTimeout, eventsCors, eventsRateLimiter, getNoscriptEventsCustom, getNoscriptEventsPageviews, minimalFiber, nonRegisteredOriginFilter, noscriptHandlersCache, postEventsCustom, postEventsPageview)
 	promhttpLogger := wired.ProvidePromHttpLogger(server, zerologLogger)
-	configGrafana := wired.ProvideGrafanaConfig(logger)
-	client := grafana.ProvideClient(configGrafana)
-	grafanaService := grafana2.ProvideService(client, configClickhouse)
-	setup := ProvideSetup(zerologLogger, client, grafanaService)
+	setup := wired.ProvideSetup()
 	wiredApp := wired.ProvideApp(app, server, zerologLogger, promhttpLogger, registry, setup, service)
 	return wiredApp
 }

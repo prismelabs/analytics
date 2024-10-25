@@ -22,7 +22,7 @@ func Initialize(logger wired.BootstrapLogger) App {
 	config := ProvideConfig()
 	configClickhouse := wired.ProvideClickhouseConfig(logger)
 	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
-	ch := clickhouse.ProvideCh(zerologLogger, configClickhouse, driver)
+	ch := clickhouse.ProvideClickhouse(zerologLogger, configClickhouse, driver)
 	app := ProvideApp(zerologLogger, config, ch)
 	return app
 }

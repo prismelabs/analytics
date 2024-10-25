@@ -15,7 +15,7 @@ func Initialize(logger wired.BootstrapLogger) App {
 		ProvideConfig,
 		ProvideLogger,
 		wired.ProvideClickhouseConfig,
-		clickhouse.ProvideCh,
+		clickhouse.ProvideClickhouse,
 		clickhouse.ProvideEmbeddedSourceDriver,
 	)
 

@@ -1,17 +1,15 @@
 //go:build wireinject
 // +build wireinject
 
-package full
+package chdb
 
 import (
 	"github.com/google/wire"
 	"github.com/prismelabs/analytics/cmd/server/common"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
-	grafanaCli "github.com/prismelabs/analytics/pkg/grafana"
 	"github.com/prismelabs/analytics/pkg/handlers"
 	"github.com/prismelabs/analytics/pkg/middlewares"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
-	"github.com/prismelabs/analytics/pkg/services/grafana"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/originregistry"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
@@ -24,13 +22,10 @@ import (
 func Initialize(logger wired.BootstrapLogger) wired.App {
 	wire.Build(
 		common.ProvideFiber,
-		ProvideSetup,
-		clickhouse.ProvideClickhouse,
+		clickhouse.ProvideChDb,
 		clickhouse.ProvideEmbeddedSourceDriver,
 		eventstore.ProvideConfig,
 		eventstore.ProvideService,
-		grafana.ProvideService,
-		grafanaCli.ProvideClient,
 		handlers.ProvideGetNoscriptEventsCustom,
 		handlers.ProvideGetNoscriptEventsPageviews,
 		handlers.ProvideHealthCheck,
@@ -54,15 +49,15 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		teardown.ProvideService,
 		uaparser.ProvideService,
 		wired.ProvideApp,
-		wired.ProvideClickhouseConfig,
+		wired.ProvideChDbConfig,
 		wired.ProvideFiberStorage,
-		wired.ProvideGrafanaConfig,
 		wired.ProvideLogger,
 		wired.ProvideMinimalFiber,
 		wired.ProvideMinimalFiberConfig,
 		wired.ProvidePromHttpLogger,
 		wired.ProvidePrometheusRegistry,
 		wired.ProvideServerConfig,
+		wired.ProvideSetup,
 	)
 	return wired.App{}
 }

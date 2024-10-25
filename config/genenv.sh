@@ -20,6 +20,8 @@ setenv PRISME_CLICKHOUSE_DB "prisme"
 setenv PRISME_CLICKHOUSE_USER "clickhouse"
 setenv PRISME_CLICKHOUSE_PASSWORD "password"
 
+setenv PRISME_CHDB_PATH "/data"
+
 # Origin registry options.
 setenv PRISME_ORIGIN_REGISTRY_ORIGINS "localhost,mywebsite.localhost,foo.mywebsite.localhost"
 

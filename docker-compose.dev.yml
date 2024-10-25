@@ -8,6 +8,7 @@ services:
     command: "/app/prisme ${ARGS:-}"
     volumes:
       - "./:/app:ro"
+      - "chdb:/data:rw"
     ports:
       - "8000:8000"
       - "9090:9090"
@@ -15,3 +16,6 @@ services:
       default:
         aliases:
           - "prisme.localhost"
+
+volumes:
+  chdb:

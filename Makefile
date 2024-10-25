@@ -118,7 +118,7 @@ nix/build:
 
 .PHONY: docker/build
 docker/build:
-	nix build -L .#docker
+	nix build -L .#docker --show-trace
 	$(DOCKER) load < result
 	if [ "$${REMOVE_RESULT:=1}" = "1" ]; then rm -f result; fi
 
