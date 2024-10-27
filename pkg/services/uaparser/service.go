@@ -2,8 +2,8 @@ package uaparser
 
 import (
 	"strconv"
-	"strings"
 
+	"github.com/prismelabs/analytics/pkg/embedded"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/ua-parser/uap-go/uaparser"
@@ -23,7 +23,10 @@ func ProvideService(
 		Str("service", "uaparser").
 		Logger()
 
-	parser := uaparser.NewFromSaved()
+	parser, err := uaparser.NewFromBytes(embedded.UapRegexes)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to load user agent parser regexes")
+	}
 
 	counter := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "uaparser_parse_total",
@@ -43,11 +46,18 @@ type service struct {
 // ParseUserAgent implements Service.
 func (s service) ParseUserAgent(userAgent string) Client {
 	client := s.parser.Parse(userAgent)
+
+	isBot := isBotBrowserFamilyRegex.MatchString(client.UserAgent.Family)
+
 	result := Client{
 		BrowserFamily:   client.UserAgent.Family,
 		OperatingSystem: client.Os.Family,
 		Device:          client.Device.Family,
-		IsBot:           strings.Contains(client.UserAgent.Family, "Bot") || strings.Contains(client.UserAgent.Family, "bot") || strings.Contains(client.Device.Family, "Spider"),
+		IsBot:           isBot,
+	}
+
+	if client.Device.Family == "K" {
+		client.Device.Family = "Other"
 	}
 
 	s.counter.With(prometheus.Labels{
