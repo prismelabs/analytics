@@ -56,8 +56,9 @@ func (s service) ParseUserAgent(userAgent string) Client {
 		IsBot:           isBot,
 	}
 
-	if client.Device.Family == "K" {
-		client.Device.Family = "Other"
+	// https://www.youtube.com/watch?v=ftDVCo8SFD4
+	if result.Device == "K" {
+		result.Device = "Other"
 	}
 
 	s.counter.With(prometheus.Labels{

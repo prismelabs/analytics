@@ -31,7 +31,7 @@ func TestService(t *testing.T) {
 		{
 			expectedClient: Client{
 				BrowserFamily:   "Safari",
-				OperatingSystem: "Mac OS X",
+				OperatingSystem: "Mac OS",
 				Device:          "Mac",
 			},
 			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.1",
@@ -39,7 +39,7 @@ func TestService(t *testing.T) {
 		{
 			expectedClient: Client{
 				BrowserFamily:   "Chrome",
-				OperatingSystem: "Mac OS X",
+				OperatingSystem: "Mac OS",
 				Device:          "Mac",
 			},
 			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.3",
@@ -62,15 +62,15 @@ func TestService(t *testing.T) {
 		},
 		{
 			expectedClient: Client{
-				BrowserFamily:   "Chrome Mobile",
+				BrowserFamily:   "Chrome",
 				OperatingSystem: "Android",
-				Device:          "K", // https://www.youtube.com/watch?v=ftDVCo8SFD4
+				Device:          "Other",
 			},
 			userAgent: "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.3",
 		},
 		{
 			expectedClient: Client{
-				BrowserFamily:   "Mobile Safari",
+				BrowserFamily:   "Safari",
 				OperatingSystem: "iOS",
 				Device:          "iPhone",
 			},
@@ -78,7 +78,7 @@ func TestService(t *testing.T) {
 		},
 		{
 			expectedClient: Client{
-				BrowserFamily:   "Applebot",
+				BrowserFamily:   "bot",
 				OperatingSystem: "Other",
 				Device:          "Spider",
 				IsBot:           true,
@@ -87,7 +87,7 @@ func TestService(t *testing.T) {
 		},
 		{
 			expectedClient: Client{
-				BrowserFamily:   "AdsBot-Google",
+				BrowserFamily:   "bot",
 				OperatingSystem: "Other",
 				Device:          "Spider",
 				IsBot:           true,

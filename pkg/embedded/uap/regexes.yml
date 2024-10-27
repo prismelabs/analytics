@@ -1,3 +1,4 @@
+# Copied from https://github.com/ua-parser/uap-core/blob/master/regexes.yaml
 user_agent_parsers:
   #### SPECIAL CASES TOP ####
 
@@ -149,6 +150,7 @@ user_agent_parsers:
 
   # Bots
   - regex: '(CSimpleSpider|Cityreview Robot|CrawlDaddy|CrawlFire|Finderbots|Index crawler|Job Roboter|KiwiStatus Spider|Lijit Crawler|QuerySeekerSpider|ScollSpider|Trends Crawler|USyd-NLP-Spider|SiteCat Webbot|BotName\/\$BotVersion|123metaspider-Bot|1470\.net crawler|50\.nu|8bo Crawler Bot|Aboundex|Accoona-[A-z]{1,30}-Agent|AdsBot-Google(?:-[a-z]{1,30}|)|altavista|AppEngine-Google|archive.{0,30}\.org_bot|archiver|Ask Jeeves|[Bb]ai[Dd]u[Ss]pider(?:-[A-Za-z]{1,30})(?:-[A-Za-z]{1,30}|)|bingbot|BingPreview|blitzbot|BlogBridge|Bloglovin|BoardReader Blog Indexer|BoardReader Favicon Fetcher|boitho.com-dc|BotSeer|BUbiNG|\b\w{0,30}favicon\w{0,30}\b|\bYeti(?:-[a-z]{1,30}|)|Catchpoint(?: bot|)|[Cc]harlotte|Checklinks|clumboot|Comodo HTTP\(S\) Crawler|Comodo-Webinspector-Crawler|ConveraCrawler|CRAWL-E|CrawlConvera|Daumoa(?:-feedfetcher|)|Feed Seeker Bot|Feedbin|findlinks|Flamingo_SearchEngine|FollowSite Bot|furlbot|Genieo|gigabot|GomezAgent|gonzo1|(?:[a-zA-Z]{1,30}-|)Googlebot(?:-[a-zA-Z]{1,30}|)|Google SketchUp|grub-client|gsa-crawler|heritrix|HiddenMarket|holmes|HooWWWer|htdig|ia_archiver|ICC-Crawler|Icarus6j|ichiro(?:/mobile|)|IconSurf|IlTrovatore(?:-Setaccio|)|InfuzApp|Innovazion Crawler|InternetArchive|IP2[a-z]{1,30}Bot|jbot\b|KaloogaBot|Kraken|Kurzor|larbin|LEIA|LesnikBot|Linguee Bot|LinkAider|LinkedInBot|Lite Bot|Llaut|lycos|Mail\.RU_Bot|masscan|masidani_bot|Mediapartners-Google|Microsoft .{0,30} Bot|mogimogi|mozDex|MJ12bot|msnbot(?:-media {0,2}|)|msrbot|Mtps Feed Aggregation System|netresearch|Netvibes|NewsGator[^/]{0,30}|^NING|Nutch[^/]{0,30}|Nymesis|ObjectsSearch|OgScrper|Orbiter|OOZBOT|PagePeeker|PagesInventory|PaxleFramework|Peeplo Screenshot Bot|PHPCrawl|PlantyNet_WebRobot|Pompos|Qwantify|Read%20Later|Reaper|RedCarpet|Retreiver|Riddler|Rival IQ|scooter|Scrapy|Scrubby|searchsight|seekbot|semanticdiscovery|SemrushBot|Simpy|SimplePie|SEOstats|SimpleRSS|SiteCon|Slackbot-LinkExpanding|Slack-ImgProxy|Slurp|snappy|Speedy Spider|Squrl Java|Stringer|TheUsefulbot|ThumbShotsBot|Thumbshots\.ru|Tiny Tiny RSS|Twitterbot|WhatsApp|URL2PNG|Vagabondo|VoilaBot|^vortex|Votay bot|^voyager|WASALive.Bot|Web-sniffer|WebThumb|WeSEE:[A-z]{1,30}|WhatWeb|WIRE|WordPress|Wotbox|www\.almaden\.ibm\.com|Xenu(?:.s|) Link Sleuth|Xerka [A-z]{1,30}Bot|yacy(?:bot|)|YahooSeeker|Yahoo! Slurp|Yandex\w{1,30}|YodaoBot(?:-[A-z]{1,30}|)|YottaaMonitor|Yowedo|^Zao|^Zao-Crawler|ZeBot_www\.ze\.bz|ZooShot|ZyBorg|ArcGIS Hub Indexer)(?:[ /]v?(\d+)(?:\.(\d+)(?:\.(\d+)|)|)|)'
+    family_replacement: 'bot'
 
   # AWS S3 Clients
   # must come before "Bots General matcher" to catch "boto"/"boto3" before "bot"
@@ -184,10 +186,13 @@ user_agent_parsers:
 
   # Bots General matcher 'name/0.0'
   - regex: '^.{0,200}?(?:\/[A-Za-z0-9\.]{0,50}|) {0,2}([A-Za-z0-9 \-_\!\[\]:]{0,50}(?:[Aa]rchiver|[Ii]ndexer|[Ss]craper|[Bb]ot|[Ss]pider|[Cc]rawl[a-z]{0,50}))[/ ](\d+)(?:\.(\d+)(?:\.(\d+)|)|)'
+    family_replacement: 'bot'
   # Bots containing bot(but not CUBOT)
   - regex: '^.{0,200}?((?:[A-Za-z][A-Za-z0-9 -]{0,50}|)[^C][^Uu][Bb]ot)\b(?:(?:[ /]| v)(\d+)(?:\.(\d+)|)(?:\.(\d+)|)|)'
+    family_replacement: 'bot'
   # Bots containing spider|scrape|Crawl
   - regex: '^.{0,200}?((?:[A-z0-9]{1,50}|[A-z\-]{1,50} ?|)(?: the |)(?:[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss]crape|[Cc][Rr][Aa][Ww][Ll])[A-z0-9]{0,50})(?:(?:[ /]| v)(\d+)(?:\.(\d+)|)(?:\.(\d+)|)|)'
+    family_replacement: 'bot'
 
   # HbbTV standard defines what features the browser should understand.
   # but it's like targeting "HTML5 browsers", effective browser support depends on the model
@@ -240,30 +245,30 @@ user_agent_parsers:
 
   # Firefox
   - regex: '(Fennec)/(\d+)\.(\d+)\.?([ab]?\d+[a-z]*)'
-    family_replacement: 'Firefox Mobile'
+    family_replacement: 'Firefox'
   - regex: '(Fennec)/(\d+)\.(\d+)(pre)'
-    family_replacement: 'Firefox Mobile'
+    family_replacement: 'Firefox'
   - regex: '(Fennec)/(\d+)\.(\d+)'
-    family_replacement: 'Firefox Mobile'
+    family_replacement: 'Firefox'
   - regex: '(?:Mobile|Tablet);.{0,200}(Firefox)/(\d+)\.(\d+)'
-    family_replacement: 'Firefox Mobile'
+    family_replacement: 'Firefox'
   - regex: '(Namoroka|Shiretoko|Minefield)/(\d+)\.(\d+)\.(\d+(?:pre|))'
-    family_replacement: 'Firefox ($1)'
+    family_replacement: 'Firefox'
   - regex: '(Firefox)/(\d+)\.(\d+)(a\d+[a-z]*)'
-    family_replacement: 'Firefox Alpha'
+    family_replacement: 'Firefox'
   - regex: '(Firefox)/(\d+)\.(\d+)(b\d+[a-z]*)'
-    family_replacement: 'Firefox Beta'
+    family_replacement: 'Firefox'
   - regex: '(Firefox)-(?:\d+\.\d+|)/(\d+)\.(\d+)(a\d+[a-z]*)'
-    family_replacement: 'Firefox Alpha'
+    family_replacement: 'Firefox'
   - regex: '(Firefox)-(?:\d+\.\d+|)/(\d+)\.(\d+)(b\d+[a-z]*)'
-    family_replacement: 'Firefox Beta'
+    family_replacement: 'Firefox'
   - regex: '(Namoroka|Shiretoko|Minefield)/(\d+)\.(\d+)([ab]\d+[a-z]*|)'
-    family_replacement: 'Firefox ($1)'
+    family_replacement: 'Firefox'
   - regex: '(Firefox).{0,200}Tablet browser (\d+)\.(\d+)\.(\d+)'
     family_replacement: 'MicroB'
   - regex: '(MozillaDeveloperPreview)/(\d+)\.(\d+)([ab]\d+[a-z]*|)'
   - regex: '(FxiOS)/(\d+)\.(\d+)(\.(\d+)|)(\.(\d+)|)'
-    family_replacement: 'Firefox iOS'
+    family_replacement: 'Firefox'
 
   # e.g.: Flock/2.0b2
   - regex: '(Flock)/(\d+)\.(\d+)(b\d+?)'
@@ -294,18 +299,18 @@ user_agent_parsers:
   - regex: '(Opera Tablet).{0,200}Version/(\d+)\.(\d+)(?:\.(\d+)|)'
   - regex: '(Opera Mini)(?:/att|)/?(\d+|)(?:\.(\d+)|)(?:\.(\d+)|)'
   - regex: '(Opera)/.{1,100}Opera Mobi.{1,100}Version/(\d+)\.(\d+)'
-    family_replacement: 'Opera Mobile'
+    family_replacement: 'Opera'
   - regex: '(Opera)/(\d+)\.(\d+).{1,100}Opera Mobi'
-    family_replacement: 'Opera Mobile'
+    family_replacement: 'Opera'
   - regex: 'Opera Mobi.{1,100}(Opera)(?:/|\s+)(\d+)\.(\d+)'
-    family_replacement: 'Opera Mobile'
+    family_replacement: 'Opera'
   - regex: 'Opera Mobi'
-    family_replacement: 'Opera Mobile'
+    family_replacement: 'Opera'
   - regex: '(Opera)/9.80.{0,200}Version/(\d+)\.(\d+)(?:\.(\d+)|)'
 
   # Opera 14 for Android uses a WebKit render engine.
   - regex: '(?:Mobile Safari).{1,300}(OPR)/(\d+)\.(\d+)\.(\d+)'
-    family_replacement: 'Opera Mobile'
+    family_replacement: 'Opera'
 
   # Opera >=15 for Desktop is similar to Chrome but includes an "OPR" Version string.
   - regex: '(?:Chrome).{1,300}(OPR)/(\d+)\.(\d+)\.(\d+)'
@@ -313,15 +318,15 @@ user_agent_parsers:
 
   # Opera Coast
   - regex: '(Coast)/(\d+).(\d+).(\d+)'
-    family_replacement: 'Opera Coast'
+    family_replacement: 'Opera'
 
   # Opera Mini for iOS (from version 8.0.0)
   - regex: '(OPiOS)/(\d+).(\d+).(\d+)'
-    family_replacement: 'Opera Mini'
+    family_replacement: 'Opera'
 
   # Opera Neon
   - regex: 'Chrome/.{1,200}( MMS)/(\d+).(\d+).(\d+)'
-    family_replacement: 'Opera Neon'
+    family_replacement: 'Opera'
 
   # Palm WebOS looks a lot like Safari.
   - regex: '(hpw|web)OS/(\d+)\.(\d+)(?:\.(\d+)|)'
@@ -413,9 +418,9 @@ user_agent_parsers:
 
   # Edge Mobile
   - regex: 'Windows Phone .{0,200}(Edge)/(\d+)\.(\d+)'
-    family_replacement: 'Edge Mobile'
+    family_replacement: 'Edge'
   - regex: '(EdgiOS|EdgA)/(\d+)(?:\.(\d+)|)(?:\.(\d+)|)(?:\.(\d+)|)'
-    family_replacement: 'Edge Mobile'
+    family_replacement: 'Edge'
 
   # Oculus Browser, should go before Samsung Internet
   - regex: '(OculusBrowser)/(\d+)\.(\d+).0.0(?:\.([0-9\-]+)|)'
@@ -477,11 +482,11 @@ user_agent_parsers:
 
   # DuckDuckGo
   - regex: 'Mozilla.{1,200}Mobile.{1,100}(DuckDuckGo)/(\d+)'
-    family_replacement: 'DuckDuckGo Mobile'
+    family_replacement: 'DuckDuckGo'
   - regex: 'Mozilla.{1,200}(DuckDuckGo)/(\d+)'
     family_replacement: 'DuckDuckGo'
   - regex: 'Mozilla.{1,200}Mobile.{1,100}(Ddg)/(\d+)(?:\.(\d+)|)'
-    family_replacement: 'DuckDuckGo Mobile'
+    family_replacement: 'DuckDuckGo'
   - regex: 'Mozilla.{1,200}(Ddg)/(\d+)(?:\.(\d+)|)'
     family_replacement: 'DuckDuckGo'
 
@@ -491,9 +496,9 @@ user_agent_parsers:
 
   # Ecosia on iOS / Android
   - regex: '(Ecosia) ios@(\d+)(?:\.(\d+)|)(?:\.(\d+)|)(?:\.(\d+)|)'
-    family_replacement: 'Ecosia iOS'
+    family_replacement: 'Ecosia'
   - regex: '(Ecosia) android@(\d+)(?:\.(\d+)|)(?:\.(\d+)|)(?:\.(\d+)|)'
-    family_replacement: 'Ecosia Android'
+    family_replacement: 'Ecosia'
 
   # VivoBrowser
   - regex: '(VivoBrowser)\/(\d+)\.(\d+)\.(\d+)\.(\d+)'
@@ -503,17 +508,17 @@ user_agent_parsers:
 
   # Chrome Mobile
   - regex: 'Version/.{1,300}(Chrome)/(\d+)\.(\d+)\.(\d+)\.(\d+)'
-    family_replacement: 'Chrome Mobile WebView'
+    family_replacement: 'Chrome'
   - regex: '; wv\).{1,300}(Chrome)/(\d+)\.(\d+)\.(\d+)\.(\d+)'
-    family_replacement: 'Chrome Mobile WebView'
+    family_replacement: 'Chrome'
   - regex: '(CrMo)/(\d+)\.(\d+)\.(\d+)\.(\d+)'
-    family_replacement: 'Chrome Mobile'
+    family_replacement: 'Chrome'
   - regex: '(CriOS)/(\d+)(?:\.(\d+)|)(?:\.(\d+)|)(?:\.(\d+)|)'
     family_replacement: 'Chrome Mobile iOS'
   - regex: '(Chrome)/(\d+)\.(\d+)\.(\d+)\.(\d+) Mobile(?:[ /]|$)'
-    family_replacement: 'Chrome Mobile'
+    family_replacement: 'Chrome'
   - regex: ' Mobile .{1,300}(Chrome)/(\d+)\.(\d+)\.(\d+)\.(\d+)'
-    family_replacement: 'Chrome Mobile'
+    family_replacement: 'Chrome'
 
   # Chrome Frame must come before MSIE.
   - regex: '(chromeframe)/(\d+)\.(\d+)\.(\d+)'
@@ -677,6 +682,7 @@ user_agent_parsers:
 
   # Chrome/Chromium/major_version.minor_version
   - regex: '(Chromium|Chrome)/(\d+)\.(\d+)(?:\.(\d+)|)(?:\.(\d+)|)'
+    family_replacement: 'Chrome'
 
   ##########
   # IE Mobile needs to happen before Android to catch cases such as:
@@ -688,7 +694,7 @@ user_agent_parsers:
 
   # IE Mobile
   - regex: '(IEMobile)[ /](\d+)\.(\d+)'
-    family_replacement: 'IE Mobile'
+    family_replacement: 'IE'
 
   # Baca Berita App News Reader
   - regex: '(BacaBerita App)\/(\d+)\.(\d+)\.(\d+)'
@@ -838,15 +844,15 @@ user_agent_parsers:
   - regex: '(iPod|iPhone|iPad).{1,200}GSA/(\d+)\.(\d+)\.(\d+)(?:\.(\d+)|) Mobile'
     family_replacement: 'Google'
   - regex: '(iPod|iPhone|iPad).{1,200}Version/(\d+)\.(\d+)(?:\.(\d+)|).{1,200}[ +]Safari'
-    family_replacement: 'Mobile Safari'
+    family_replacement: 'Safari'
   - regex: '(iPod|iPod touch|iPhone|iPad);.{0,30}CPU.{0,30}OS[ +](\d+)_(\d+)(?:_(\d+)|).{0,30} AppleNews\/\d+\.\d+(?:\.\d+|)'
-    family_replacement: 'Mobile Safari UI/WKWebView'
+    family_replacement: 'Safari'
   - regex: '(iPod|iPhone|iPad).{1,200}Version/(\d+)\.(\d+)(?:\.(\d+)|)'
-    family_replacement: 'Mobile Safari UI/WKWebView'
+    family_replacement: 'Safari'
   - regex: '(iPod|iPod touch|iPhone|iPad).{0,200} Safari'
-    family_replacement: 'Mobile Safari'
+    family_replacement: 'Safari'
   - regex: '(iPod|iPod touch|iPhone|iPad)'
-    family_replacement: 'Mobile Safari UI/WKWebView'
+    family_replacement: 'Safari'
   - regex: '(Watch)(\d+),(\d+)'
     family_replacement: 'Apple $1 App'
 
@@ -921,7 +927,7 @@ user_agent_parsers:
 
   # WebKit Nightly
   - regex: '(AppleWebKit)/(\d+)(?:\.(\d+)|)\+ .{0,200} Safari'
-    family_replacement: 'WebKit Nightly'
+    family_replacement: 'WebKit'
 
   # Safari
   - regex: '(Version)/(\d+)\.(\d+)(?:\.(\d+)|).{0,100}Safari/'
@@ -1166,7 +1172,7 @@ os_parsers:
   # Ex: Mozilla/5.0 (Fuchsia) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CrKey/1.56.500000
   # These are some intermediate "Nest Hub" Chromecast devices running Fuchsia.
   - regex: 'Fuchsia.*(CrKey)(?:[/](\d+)\.(\d+)(?:\.(\d+)|)|)'
-    os_replacement: 'Chromecast Fuchsia'
+    os_replacement: 'Fuchsia'
 
   # Ex: Mozilla/5.0 (X11; Linux armv7l) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.225 Safari/537.36 CrKey/1.56.500000 DeviceType/SmartSpeaker
   - regex: 'Linux.*(CrKey)(?:[/](\d+)\.(\d+)(?:\.(\d+)|)|).*DeviceType/SmartSpeaker'
@@ -1175,7 +1181,7 @@ os_parsers:
   # Ex: Mozilla/5.0 (X11; Linux armv7l) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.225 Safari/537.36 CrKey/1.56.500000 DeviceType/Chromecast
   # These are the oldest Chromecast devices that ran Linux.
   - regex: 'Linux.*(CrKey)(?:[/](\d+)\.(\d+)(?:\.(\d+)|)|)'
-    os_replacement: 'Chromecast Linux'
+    os_replacement: 'Linux'
 
   ##########
   # Android
@@ -1350,35 +1356,35 @@ os_parsers:
   # @ref: http://www.puredarwin.org/curious/versions
   ##########
   - regex: '((?:Mac[ +]?|; )OS[ +]X)[\s+/](?:(\d+)[_.](\d+)(?:[_.](\d+)|)|Mach-O)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
   - regex: 'Mac OS X\s.{1,50}\s(\d+).(\d+).(\d+)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '$1'
     os_v2_replacement: '$2'
     os_v3_replacement: '$3'
   # Leopard
   - regex: ' (Dar)(win)/(9).(\d+).{0,100}\((?:i386|x86_64|Power Macintosh)\)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '10'
     os_v2_replacement: '5'
   # Snow Leopard
   - regex: ' (Dar)(win)/(10).(\d+).{0,100}\((?:i386|x86_64)\)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '10'
     os_v2_replacement: '6'
   # Lion
   - regex: ' (Dar)(win)/(11).(\d+).{0,100}\((?:i386|x86_64)\)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '10'
     os_v2_replacement: '7'
   # Mountain Lion
   - regex: ' (Dar)(win)/(12).(\d+).{0,100}\((?:i386|x86_64)\)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '10'
     os_v2_replacement: '8'
   # Mavericks
   - regex: ' (Dar)(win)/(13).(\d+).{0,100}\((?:i386|x86_64)\)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '10'
     os_v2_replacement: '9'
   # Yosemite is Darwin/14.x but patch versions are inconsistent in the Darwin string;
@@ -1395,14 +1401,14 @@ os_parsers:
 
   # Box Drive and Box Sync on Mac OS X use OSX version numbers, not Darwin
   - regex: '^Box.{0,200};(Darwin)/(10)\.(1\d)(?:\.(\d+)|)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
   
   ##########
   # Hashicorp API
   # APN/1.0 HashiCorp/1.0 Terraform/1.8.0 (+https://www.terraform.io) terraform-provider-aws/4.67.0 (+https://registry.terraform.io/providers/hashicorp/aws) aws-sdk-go/1.44.261 (go1.19.8; darwin; arm64)
   ##########
   - regex: 'darwin; arm64'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
 
   ##########
   # iOS
@@ -1456,11 +1462,11 @@ os_parsers:
     os_replacement: 'iOS'
     os_v1_replacement: '8'
   - regex: '(CF)(Network)/(720)\.(\d)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '10'
     os_v2_replacement: '10'
   - regex: '(CF)(Network)/(760)\.(\d)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '10'
     os_v2_replacement: '11'
   - regex: 'CFNetwork/7.{0,100} Darwin/15\.4\.\d+'
@@ -1495,15 +1501,15 @@ os_parsers:
   # @ref: https://en.wikipedia.org/wiki/Darwin_(operating_system)#Release_history
   ##########
   - regex: 'CFNetwork/.{0,100} Darwin/17\.\d+.{0,100}\(x86_64\)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '10'
     os_v2_replacement: '13'
   - regex: 'CFNetwork/.{0,100} Darwin/16\.\d+.{0,100}\(x86_64\)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '10'
     os_v2_replacement: '12'
   - regex: 'CFNetwork/8.{0,100} Darwin/15\.\d+.{0,100}\(x86_64\)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '10'
     os_v2_replacement: '11'
   ##########
@@ -1874,7 +1880,8 @@ os_parsers:
   # Generic patterns
   # since the majority of os cases are very specific, these go last
   ##########
-  - regex: '(Fedora|Red Hat|PCLinuxOS|Puppy|Ubuntu|Kindle|Bada|Sailfish|Lubuntu|BackTrack|Slackware|(?:Free|Open|Net|\b)BSD)[/ ](\d+)\.(\d+)(?:\.(\d+)|)(?:\.(\d+)|)'
+  - regex: '(Fedora|Red Hat|PCLinuxOS|Puppy|Ubuntu|Kindle|Bada|Sailfish|Lubuntu|BackTrack|Slackware)[/ ](\d+)\.(\d+)(?:\.(\d+)|)(?:\.(\d+)|)'
+  - regex: '(?:Free|Open|Net|\b)BSD[/ ](\d+)\.(\d+)(?:\.(\d+)|)(?:\.(\d+)|)'
 
   # Gentoo Linux + Kernel Version
   - regex: '(Linux)[ /](\d+)\.(\d+)(?:\.(\d+)|).{0,100}gentoo'
@@ -1885,7 +1892,9 @@ os_parsers:
 
   # just os
   - regex: '(Windows|Android|WeTab|Maemo|Web0S)'
-  - regex: '(Ubuntu|Kubuntu|Arch Linux|CentOS|Slackware|Gentoo|openSUSE|SUSE|Red Hat|Fedora|PCLinuxOS|Mageia|SerenityOS|(?:Free|Open|Net|\b)BSD)'
+  - regex: '(Ubuntu|Kubuntu|Arch Linux|CentOS|Slackware|Gentoo|openSUSE|SUSE|Red Hat|Fedora|PCLinuxOS|Mageia)'
+    os_replacement: 'Linux'
+  - regex: '(?:Free|Open|Net|\b)BSD'
   # Linux + Kernel Version
   - regex: '(Linux)(?:[ /](\d+)\.(\d+)(?:\.(\d+)|)|)'
   - regex: 'SunOS'
@@ -1894,7 +1903,7 @@ os_parsers:
   - regex: '\(linux-gnu\)'
     os_replacement: 'Linux'
   - regex: '\(x86_64-redhat-linux-gnu\)'
-    os_replacement: 'Red Hat'
+    os_replacement: 'Linux'
   - regex: '\((freebsd)(\d+)\.(\d+)\)'
     os_replacement: 'FreeBSD'
   - regex: 'linux'
@@ -1910,7 +1919,7 @@ os_parsers:
   # APN/1.0 HashiCorp/1.0 Terraform/1.8.1 (+https://www.terraform.io) terraform-provider-aws/4.67.0 (+https://registry.terraform.io/providers/hashicorp/aws) aws-sdk-go-v2/1.18.0 os/macos lang/go/1.19.8 md/GOOS/darwin md/GOARCH/arm64 api/identitystore/1.16.11
   ##########
   - regex: 'os\/macos[#]?(\d*)[.]?(\d*)[.]?(\d*)'
-    os_replacement: 'Mac OS X'
+    os_replacement: 'Mac OS'
     os_v1_replacement: '$1'
     os_v2_replacement: '$2'
     os_v3_replacement: '$3'
