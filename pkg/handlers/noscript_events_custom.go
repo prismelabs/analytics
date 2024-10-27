@@ -26,12 +26,17 @@ func ProvideGetNoscriptEventsCustom(
 			return err
 		}
 
+		requestReferrer, err := hutils.PeekAndParseReferrerHeader(c)
+		if err != nil {
+			return err
+		}
+
 		return eventsCustomHandler(
 			c.UserContext(),
 			eventStore,
 			saltManagerService,
 			sessionStorage,
-			hutils.PeekReferrerHeader(c),
+			requestReferrer,
 			c.Request().Header.UserAgent(),
 			utils.UnsafeBytes(c.IP()),
 			c.Params("name"),

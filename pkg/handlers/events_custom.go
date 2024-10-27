@@ -18,7 +18,7 @@ import (
 
 type PostEventsCustom fiber.Handler
 
-// ProvidePostEventsCustom is a wire provider for POST /api/v1/events/custom/:name events handler.
+// ProvidePostEventsCustom is a wire provider for POST /api/v1/events/custom/:name handler.
 func ProvidePostEventsCustom(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
@@ -32,13 +32,19 @@ func ProvidePostEventsCustom(
 			return fiber.NewError(fiber.StatusBadRequest, "content type is not application/json")
 		}
 
+		// Parse referrer.
+		referrer, err := hutils.PeekAndParseReferrerHeader(c)
+		if err != nil {
+			return err
+		}
+
 		data := dataview.NewJsonData(hutils.BodyOrEmptyJsonObj(c))
 		return eventsCustomHandler(
 			c.UserContext(),
 			eventStore,
 			saltManagerService,
 			sessionStorage,
-			hutils.PeekReferrerHeader(c),
+			referrer,
 			c.Request().Header.UserAgent(),
 			utils.UnsafeBytes(c.IP()),
 			c.Params("name"),
@@ -52,16 +58,13 @@ func eventsCustomHandler(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstorage.Service,
-	requestReferrer, userAgent, ipAddr []byte,
+	requestReferrer uri.Uri,
+	userAgent, ipAddr []byte,
 	eventName string,
 	kvCollector dataview.KvCollector,
 ) (err error) {
-	customEv := event.Custom{}
-
-	// Parse page URI.
-	customEv.PageUri, err = uri.ParseBytes(requestReferrer)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
+	customEv := event.Custom{
+		PageUri: requestReferrer,
 	}
 
 	// Compute device id.

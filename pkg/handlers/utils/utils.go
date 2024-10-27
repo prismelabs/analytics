@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
+	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/valyala/fasthttp"
 )
 
@@ -42,6 +43,18 @@ func PeekReferrerHeader(c *fiber.Ctx) []byte {
 	return referrer
 }
 
+// PeekAndParseReferrerHeader retrieves and parses prisme or standard referrer
+// header. In case of error, a fiber error with status 400 bad request is
+// returned.
+func PeekAndParseReferrerHeader(c *fiber.Ctx) (uri.Uri, error) {
+	referrer := PeekReferrerHeader(c)
+	result, err := uri.ParseBytes(referrer)
+	if err != nil {
+		return uri.Uri{}, fiber.NewError(fiber.StatusBadRequest, `invalid "Referer" or "X-Prisme-Referrer"`)
+	}
+	return result, nil
+}
+
 // PeekReferrerQueryOrHeader peek referrer from "referrer" query parameter
 // and fallback to standard Referer header otherwise.
 func PeekReferrerQueryOrHeader(c *fiber.Ctx) []byte {
@@ -57,6 +70,18 @@ func PeekReferrerQueryOrHeader(c *fiber.Ctx) []byte {
 	}
 
 	return referrer
+}
+
+// PeekAndParseReferrerHeader retrieves and parses referrer from query parameter
+// or standard header. In case of error, a fiber error with status 400 bad
+// request is returned.
+func PeekAndParseReferrerQueryHeader(c *fiber.Ctx) (uri.Uri, error) {
+	referrer := PeekReferrerQueryOrHeader(c)
+	result, err := uri.ParseBytes(referrer)
+	if err != nil {
+		return uri.Uri{}, fiber.NewError(fiber.StatusBadRequest, `invalid "referrer" query parameter or "Referer" header`)
+	}
+	return result, nil
 }
 
 // ComputeDeviceId computes xxh3 hash of the given byte slices.

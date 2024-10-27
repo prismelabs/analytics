@@ -21,9 +21,9 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type PostEventsPageview fiber.Handler
+type PostEventsPageviews fiber.Handler
 
-// ProvidePostEventsPageViews is a wire provider for POST /api/v1/events/pageviews events handler.
+// ProvidePostEventsPageViews is a wire provider for POST /api/v1/events/pageviews handler.
 func ProvidePostEventsPageViews(
 	logger zerolog.Logger,
 	eventStore eventstore.Service,
@@ -31,10 +31,13 @@ func ProvidePostEventsPageViews(
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstorage.Service,
-) PostEventsPageview {
+) PostEventsPageviews {
 	return func(c *fiber.Ctx) error {
 		// Referrer of the POST request, that is the viewed page.
-		requestReferrer := hutils.PeekReferrerHeader(c)
+		requestReferrer, err := hutils.PeekAndParseReferrerHeader(c)
+		if err != nil {
+			return err
+		}
 
 		return eventsPageviewsHandler(
 			c.UserContext(),
@@ -44,9 +47,9 @@ func ProvidePostEventsPageViews(
 			saltManagerService,
 			sessionStorage,
 			&c.Request().Header,
-			c.Context().UserAgent(),
-			c.Request().Header.Peek("X-Prisme-Document-Referrer"),
 			requestReferrer,
+			c.Request().Header.Peek("X-Prisme-Document-Referrer"),
+			c.Context().UserAgent(),
 			utils.UnsafeBytes(c.IP()),
 			utils.UnsafeString(c.Request().Header.Peek("X-Prisme-Visitor-Id")),
 		)
@@ -61,22 +64,19 @@ func eventsPageviewsHandler(
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstorage.Service,
 	headers *fasthttp.RequestHeader,
-	userAgent, documentReferrer, requestReferrer, ipAddr []byte,
+	requestReferrer uri.Uri,
+	documentReferrer, userAgent, ipAddr []byte,
 	visitorId string,
 ) (err error) {
 	var referrerUri event.ReferrerUri
-	pageView := event.PageView{}
+	pageView := event.PageView{
+		PageUri: requestReferrer,
+	}
 
 	// Parse referrer URI.
 	referrerUri, err = event.ParseReferrerUri(documentReferrer)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid X-Prisme-Document-Referrer")
-	}
-
-	// Parse page URI.
-	pageView.PageUri, err = uri.ParseBytes(requestReferrer)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid Referer or X-Prisme-Referrer")
 	}
 
 	// Compute device id.

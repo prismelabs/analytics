@@ -32,7 +32,10 @@ func ProvideGetNoscriptEventsPageviews(
 		}
 
 		// Referrer of the POST request, that is the viewed page.
-		requestReferrer := hutils.PeekReferrerQueryOrHeader(c)
+		requestReferrer, err := hutils.PeekAndParseReferrerQueryHeader(c)
+		if err != nil {
+			return err
+		}
 
 		return eventsPageviewsHandler(
 			c.UserContext(),
@@ -42,9 +45,9 @@ func ProvideGetNoscriptEventsPageviews(
 			saltManagerService,
 			sessionStorage,
 			&c.Request().Header,
-			c.Context().UserAgent(),
-			utils.UnsafeBytes(c.Query("document-referrer")),
 			requestReferrer,
+			utils.UnsafeBytes(c.Query("document-referrer")),
+			c.Context().UserAgent(),
 			utils.UnsafeBytes(c.IP()),
 			c.Query("visitor-id"),
 		)

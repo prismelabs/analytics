@@ -33,6 +33,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		handlers.ProvideGetNoscriptEventsCustom,
 		handlers.ProvideGetNoscriptEventsPageviews,
 		handlers.ProvideHealthCheck,
+		handlers.ProvidePostEventsClicks,
 		handlers.ProvidePostEventsCustom,
 		handlers.ProvidePostEventsPageViews,
 		ipgeolocator.ProvideMmdbService,

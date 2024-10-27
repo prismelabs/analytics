@@ -20,6 +20,8 @@
   var manual = (!!currentScriptDataset.manual && currentScriptDataset.manual !== "false") || false
   // Visitor ID.
   var visitorId = currentScriptDataset.visitorId;
+  // Track outbound links.
+  var outboundLinks = currentScriptDataset.outboundLinks !== "false"
 
   // State variables.
   var referrer = document.referrer.replace(loc.host, domain);
@@ -75,6 +77,37 @@
     pageviewCount++
   }
 
+  function sendClick(options) {
+    options = defaultOptions(options)
+
+    fetch(prismeUrl.concat("/api/v1/events/clicks"), {
+      method: methodPost,
+      headers: configureHeaders(options, {
+        "Content-Type": "application/json",
+      }),
+      keepalive: true,
+      referrerPolicy: referrerPolicy,
+      body: JSON.stringify({ tag: options.tag, id: options.id })
+    });
+  }
+
+  function handleLinkClickEvent(event) {
+    // Ignore auxclick event with non middle button click or event target
+    // isn't an element.
+    if ((event.type === 'auxclick' && event.button !== 1) ||
+      !(event.target instanceof Element)) return
+
+    var link = event.target.closest("a")
+    var url = new URL(link.href || "", loc.origin)
+
+    if (outboundLinks && url.host !== loc.host) sendClick({ tag: "a", id: url })
+  }
+
+  if (outboundLinks) {
+    document.addEventListener('click', handleLinkClickEvent)
+    document.addEventListener('auxclick', handleLinkClickEvent)
+  }
+
   window.prisme = {
     pageview: pageview,
     trigger(eventName, properties, options) {
@@ -89,7 +122,8 @@
         referrerPolicy: referrerPolicy,
         body: JSON.stringify(properties)
       });
-    }
+    },
+    click: sendClick,
   }
 
   // Manual tracking insn't enabled.

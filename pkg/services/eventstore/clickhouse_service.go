@@ -41,7 +41,8 @@ func ProvideService(
 		// Wait for last batch to be sent.
 		<-batchDone
 		<-batchDone
-		logger.Info().Msg("event batch loops cancelled.")
+		<-batchDone
+		logger.Info().Msg("event batch loops canceled.")
 		return nil
 	})
 
@@ -68,11 +69,21 @@ func ProvideService(
 			),
 			ringo.WithWaiterContext[*event.Custom](ctx),
 		),
+		clickEventRingBuf: ringo.NewWaiter(
+			ringo.NewManyToOne(
+				int(cfg.MaxBatchSize*cfg.RingBuffersFactor),
+				ringo.WithManyToOneCollisionHandler[*event.Click](ringo.CollisionHandlerFunc(func(_ any) {
+					logger.Warn().Msg("custom events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_RING_BUFFERS_FACTOR or PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+				})),
+			),
+			ringo.WithWaiterContext[*event.Click](ctx),
+		),
 		metrics: newMetrics(promRegistry),
 	}
 
 	go service.batchPageViewLoop(batchDone)
 	go service.batchCustomEventLoop(batchDone)
+	go service.batchClickEventLoop(batchDone)
 
 	logger.Info().Msg("clickhouse based event store configured")
 
@@ -86,7 +97,14 @@ type clickhouseService struct {
 	maxBatchTimeout    time.Duration
 	pageViewRingBuf    ringo.Waiter[*event.PageView]
 	customEventRingBuf ringo.Waiter[*event.Custom]
+	clickEventRingBuf  ringo.Waiter[*event.Click]
 	metrics            metrics
+}
+
+// StoreClick implements Service.
+func (cs *clickhouseService) StoreClick(_ context.Context, ev *event.Click) error {
+	cs.clickEventRingBuf.Push(ev)
+	return nil
 }
 
 // StorePageView implements Service.
@@ -130,7 +148,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 
 		// Wait for next event.
 		ev, done, dropped := cs.pageViewRingBuf.Next()
-		// Ring buffer context was cancelled.
+		// Ring buffer context was canceled.
 		if done {
 			cs.logger.Info().Msg("page view ring buffer done, sending last batch...")
 			cs.sendBatch(batch, promLabels)
@@ -218,7 +236,7 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 		if batch == nil {
 			batch, err = cs.conn.PrepareBatch(
 				context.Background(),
-				"INSERT INTO events_custom VALUES ($1, $2, $3, $4, $5, $6)",
+				"INSERT INTO events_custom",
 			)
 			if err != nil {
 				cs.logger.Err(err).Msg("failed to prepare next custom events batch")
@@ -230,7 +248,7 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 
 		// Wait for next event.
 		ev, done, dropped := cs.customEventRingBuf.Next()
-		// Ring buffer context was cancelled.
+		// Ring buffer context was canceled.
 		if done {
 			cs.logger.Info().Msg("custom ring buffer done, sending last batch...")
 			cs.sendBatch(batch, promLabels)
@@ -258,6 +276,67 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append custom event to batch")
+		}
+
+		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {
+			go cs.sendBatch(batch, promLabels)
+			batch = nil
+		}
+	}
+}
+
+func (cs *clickhouseService) batchClickEventLoop(batchDone chan<- struct{}) {
+	var batch driver.Batch
+	var err error
+	batchCreationDate := time.Now()
+
+	promLabels := prometheus.Labels{
+		"type": "click",
+	}
+
+	for {
+		if batch == nil {
+			batch, err = cs.conn.PrepareBatch(
+				context.Background(),
+				"INSERT INTO clicks",
+			)
+			if err != nil {
+				cs.logger.Err(err).Msg("failed to prepare next click events batch")
+				continue
+			}
+
+			batchCreationDate = time.Now()
+		}
+
+		// Wait for next event.
+		ev, done, dropped := cs.clickEventRingBuf.Next()
+		// Ring buffer context was canceled.
+		if done {
+			cs.logger.Info().Msg("click ring buffer done, sending last batch...")
+			cs.sendBatch(batch, promLabels)
+			cs.logger.Info().Msg("last batch of click events sent.")
+			batchDone <- struct{}{}
+			return
+		}
+		if dropped > 0 {
+			cs.logger.Info().Int("dropped", dropped).Msg("click events dropped")
+			cs.metrics.droppedEvents.With(promLabels).Add(float64(dropped))
+		}
+
+		cs.logger.Debug().Object("click_event", ev).Msg("appending click event to batch...")
+
+		// Append to batch.
+		err = batch.Append(
+			ev.Timestamp,
+			ev.Session.PageUri.Host(),
+			ev.PageUri.Path(),
+			ev.Session.VisitorId,
+			ev.Session.SessionUuid,
+			ev.Tag,
+			ev.Id,
+		)
+		if err != nil {
+			cs.logger.Err(err).Msg("failed to append click event to batch")
 		}
 
 		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {
