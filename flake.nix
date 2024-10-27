@@ -1,7 +1,10 @@
 {
-  inputs = { flake-utils.url = "github:numtide/flake-utils"; };
+  inputs = {
+    flake-utils.url = "github:numtide/flake-utils";
+    gengeommdb.url = "github:negrel/gengeommdb";
+  };
 
-  outputs = { self, nixpkgs, flake-utils, ... }:
+  outputs = { self, nixpkgs, flake-utils, gengeommdb, ... }:
     let
       outputsWithoutSystem = { };
       outputsWithSystem = flake-utils.lib.eachDefaultSystem (system:
@@ -11,7 +14,7 @@
         in {
           devShells = {
             default = pkgs.mkShell {
-              buildInputs = with pkgs; [
+              buildInputs = (with pkgs; [
                 go
                 mockgen # Go mock generator
                 gopls # Go LSP
@@ -24,7 +27,7 @@
                 minify # JS minifier
                 clickhouse # clickhouse client
                 hyperfine # binary benchmarks
-              ];
+              ]) ++ (with gengeommdb.packages.${system}; [ default ]);
             };
           };
           packages = {
