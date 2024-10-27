@@ -41,6 +41,7 @@ func ProvideGetNoscriptEventsPageviews(
 			ipGeolocatorService,
 			saltManagerService,
 			sessionStorage,
+			&c.Request().Header,
 			c.Context().UserAgent(),
 			utils.UnsafeBytes(c.Query("document-referrer")),
 			requestReferrer,

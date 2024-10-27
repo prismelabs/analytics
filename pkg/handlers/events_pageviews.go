@@ -43,6 +43,7 @@ func ProvidePostEventsPageViews(
 			ipGeolocatorService,
 			saltManagerService,
 			sessionStorage,
+			&c.Request().Header,
 			c.Context().UserAgent(),
 			c.Request().Header.Peek("X-Prisme-Document-Referrer"),
 			requestReferrer,
@@ -59,6 +60,7 @@ func eventsPageviewsHandler(
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstorage.Service,
+	headers *fasthttp.RequestHeader,
 	userAgent, documentReferrer, requestReferrer, ipAddr []byte,
 	visitorId string,
 ) (err error) {
@@ -142,6 +144,7 @@ func eventsPageviewsHandler(
 		if client.IsBot {
 			return fiber.NewError(fiber.StatusBadRequest, "bot session filtered")
 		}
+		hutils.ExtractClientHints(headers, &client)
 
 		sessionUuid, err := uuid.NewV7()
 		if err != nil {

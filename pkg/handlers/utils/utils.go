@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/valyala/fasthttp"
 )
 
@@ -115,4 +116,15 @@ func ContextTimeout(ctx context.Context) time.Duration {
 	}
 
 	return time.Until(deadline)
+}
+
+// ExtractClientHints parses Sec-Ch-Ua-XXX headers and adds them to the given
+// *uaparser.Client.
+func ExtractClientHints(headers *fasthttp.RequestHeader, client *uaparser.Client) {
+	if model := string(headers.Peek("Sec-Ch-Ua-Model")); model != "" {
+		client.Device = model
+	}
+	if os := string(headers.Peek("Sec-Ch-Ua-Platform")); os != "" {
+		client.OperatingSystem = os
+	}
 }
