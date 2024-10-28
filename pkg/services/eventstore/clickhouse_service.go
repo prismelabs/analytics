@@ -69,21 +69,21 @@ func ProvideService(
 			),
 			ringo.WithWaiterContext[*event.Custom](ctx),
 		),
-		clickEventRingBuf: ringo.NewWaiter(
+		outboundLinkClickEventRingBuf: ringo.NewWaiter(
 			ringo.NewManyToOne(
 				int(cfg.MaxBatchSize*cfg.RingBuffersFactor),
-				ringo.WithManyToOneCollisionHandler[*event.Click](ringo.CollisionHandlerFunc(func(_ any) {
-					logger.Warn().Msg("custom events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_RING_BUFFERS_FACTOR or PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+				ringo.WithManyToOneCollisionHandler[*event.OutboundLinkClick](ringo.CollisionHandlerFunc(func(_ any) {
+					logger.Warn().Msg("outbound link click events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_RING_BUFFERS_FACTOR or PRISME_EVENTSTORE_MAX_BATCH_SIZE")
 				})),
 			),
-			ringo.WithWaiterContext[*event.Click](ctx),
+			ringo.WithWaiterContext[*event.OutboundLinkClick](ctx),
 		),
 		metrics: newMetrics(promRegistry),
 	}
 
 	go service.batchPageViewLoop(batchDone)
 	go service.batchCustomEventLoop(batchDone)
-	go service.batchClickEventLoop(batchDone)
+	go service.batchOutboundLinkClickEventLoop(batchDone)
 
 	logger.Info().Msg("clickhouse based event store configured")
 
@@ -91,19 +91,19 @@ func ProvideService(
 }
 
 type clickhouseService struct {
-	logger             zerolog.Logger
-	conn               driver.Conn
-	maxBatchSize       uint64
-	maxBatchTimeout    time.Duration
-	pageViewRingBuf    ringo.Waiter[*event.PageView]
-	customEventRingBuf ringo.Waiter[*event.Custom]
-	clickEventRingBuf  ringo.Waiter[*event.Click]
-	metrics            metrics
+	logger                        zerolog.Logger
+	conn                          driver.Conn
+	maxBatchSize                  uint64
+	maxBatchTimeout               time.Duration
+	pageViewRingBuf               ringo.Waiter[*event.PageView]
+	customEventRingBuf            ringo.Waiter[*event.Custom]
+	outboundLinkClickEventRingBuf ringo.Waiter[*event.OutboundLinkClick]
+	metrics                       metrics
 }
 
-// StoreClick implements Service.
-func (cs *clickhouseService) StoreClick(_ context.Context, ev *event.Click) error {
-	cs.clickEventRingBuf.Push(ev)
+// StoreOutboundLinkClick implements Service.
+func (cs *clickhouseService) StoreOutboundLinkClick(_ context.Context, ev *event.OutboundLinkClick) error {
+	cs.outboundLinkClickEventRingBuf.Push(ev)
 	return nil
 }
 
@@ -285,23 +285,23 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 	}
 }
 
-func (cs *clickhouseService) batchClickEventLoop(batchDone chan<- struct{}) {
+func (cs *clickhouseService) batchOutboundLinkClickEventLoop(batchDone chan<- struct{}) {
 	var batch driver.Batch
 	var err error
 	batchCreationDate := time.Now()
 
 	promLabels := prometheus.Labels{
-		"type": "click",
+		"type": "outbound_link_click",
 	}
 
 	for {
 		if batch == nil {
 			batch, err = cs.conn.PrepareBatch(
 				context.Background(),
-				"INSERT INTO clicks",
+				"INSERT INTO outbound_link_clicks",
 			)
 			if err != nil {
-				cs.logger.Err(err).Msg("failed to prepare next click events batch")
+				cs.logger.Err(err).Msg("failed to prepare next outbound link click events batch")
 				continue
 			}
 
@@ -309,21 +309,21 @@ func (cs *clickhouseService) batchClickEventLoop(batchDone chan<- struct{}) {
 		}
 
 		// Wait for next event.
-		ev, done, dropped := cs.clickEventRingBuf.Next()
+		ev, done, dropped := cs.outboundLinkClickEventRingBuf.Next()
 		// Ring buffer context was canceled.
 		if done {
-			cs.logger.Info().Msg("click ring buffer done, sending last batch...")
+			cs.logger.Info().Msg("outbound link click ring buffer done, sending last batch...")
 			cs.sendBatch(batch, promLabels)
-			cs.logger.Info().Msg("last batch of click events sent.")
+			cs.logger.Info().Msg("last batch of outbound link click events sent.")
 			batchDone <- struct{}{}
 			return
 		}
 		if dropped > 0 {
-			cs.logger.Info().Int("dropped", dropped).Msg("click events dropped")
+			cs.logger.Info().Int("dropped", dropped).Msg("outbound link click events dropped")
 			cs.metrics.droppedEvents.With(promLabels).Add(float64(dropped))
 		}
 
-		cs.logger.Debug().Object("click_event", ev).Msg("appending click event to batch...")
+		cs.logger.Debug().Object("outbound_link_click_event", ev).Msg("appending outbound link click event to batch...")
 
 		// Append to batch.
 		err = batch.Append(
@@ -332,11 +332,10 @@ func (cs *clickhouseService) batchClickEventLoop(batchDone chan<- struct{}) {
 			ev.PageUri.Path(),
 			ev.Session.VisitorId,
 			ev.Session.SessionUuid,
-			ev.Tag,
-			ev.Attr,
+			ev.Link,
 		)
 		if err != nil {
-			cs.logger.Err(err).Msg("failed to append click event to batch")
+			cs.logger.Err(err).Msg("failed to append outbound link click event to batch")
 		}
 
 		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {

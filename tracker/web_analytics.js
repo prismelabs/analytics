@@ -21,9 +21,9 @@
   // Visitor ID.
   var visitorId = currentScriptDataset.visitorId;
   // Track outbound links.
-  var outboundLinks = currentScriptDataset.outboundLinks !== "false"
+  var trackOutboundLinks = currentScriptDataset.outboundLinks !== "false"
   // Track file downloads.
-  var fileDownloads = currentScriptDataset.fileDownloads !== "false"
+  var trackFileDownloads = currentScriptDataset.fileDownloads !== "false"
   var extraDownloadsFileTypes = (currentScriptDataset.extraDownloadsFileTypes || "").split(",")
 
   // State variables.
@@ -94,6 +94,16 @@
     return headers
   }
 
+  function shouldFollowLink(event, anchor) {
+    // Another handler prevent default behavior.
+    if (event.defaultPrevented) { return false }
+
+    var targetsCurrentWindow = !anchor.target || anchor.target.match(/^_(self|parent|top)$/i)
+    var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && event.type === 'click'
+    return targetsCurrentWindow && isRegularClick
+  }
+
+
   function pageview(options) {
     options = defaultOptions(options)
 
@@ -110,35 +120,16 @@
     pageviewCount++
   }
 
-  function sendClick(options) {
+  function sendOutboundLinkClick(url, options) {
     options = defaultOptions(options)
 
-    return fetch(prismeUrl.concat("/api/v1/events/clicks"), {
+    return fetch(prismeUrl.concat("/api/v1/events/clicks/outbound-link"), {
       method: methodPost,
-      headers: configureHeaders(options, {
-        "Content-Type": "application/json",
-      }),
+      headers: configureHeaders(options, {}),
       keepalive: true,
       referrerPolicy: referrerPolicy,
-      body: JSON.stringify({ tag: options.tag, attr: options.attr })
+      body: url
     });
-  }
-
-  function sendClickEvent(event, url, options) {
-      // Follow links only if keepalive isn't supported.
-      var followed = supportsKeepAlive
-      var followLink = () => {
-        if (!followed) {
-          followed = true
-          global.location.assign(url)
-        }
-      }
-      // Firefox stable doesn't support keepalive.
-      if (!supportsKeepAlive) {
-        event.preventDefault()
-        setTimeout(followLink, 5000)
-      }
-      sendClick(options).finally(followLink)
   }
 
   function handleLinkClickEvent(event) {
@@ -147,22 +138,34 @@
     if ((event.type === 'auxclick' && event.button !== 1) ||
       !(event.target instanceof Element)) return
 
-    var link = event.target.closest("a")
-    if (!link) return
-    var url = new URL(link.href || "", loc.origin)
+    var anchor = event.target.closest("a")
+    if (!anchor) return
+    var url = new URL(anchor.href || "", loc.origin)
     url.search = ""
 
-    if (outboundLinks && url.host !== loc.host)
-      sendClickEvent(event, url, { tag: "a", attr: url.href })
+    // Outbound links.
+    if (trackOutboundLinks && url.host !== loc.host) {
+      var shouldFollowLinkManually = !supportsKeepAlive && shouldFollowLink(event, url)
+      var followed = false
+      function followLink() {
+        if (!followed && shouldFollowLinkManually) {
+          followed = true
+          global.location.assign(url)
+        }
+      }
 
-    console.log(link.getAttribute("download"), trackFileDownloadsTypes.includes(url.pathname.split('.').pop()))
-    if (fileDownloads &&
-      (link.getAttribute("download") !== null ||
-        trackFileDownloadsTypes.includes(url.pathname.split('.').pop())))
-      sendClickEvent(event, url, { tag: "a", attr: url.href })
+      console.log("follow link manually", shouldFollowLinkManually)
+      if (shouldFollowLinkManually) {
+        event.preventDefault()
+        setTimeout(followLink, 5000)
+      }
+
+      // Send event.
+      sendOutboundLinkClick(url).finally(followLink)
+    }
   }
 
-  if (outboundLinks) {
+  if (trackOutboundLinks || trackFileDownloads) {
     document.addEventListener('click', handleLinkClickEvent)
     document.addEventListener('auxclick', handleLinkClickEvent)
   }
@@ -182,7 +185,6 @@
         body: JSON.stringify(properties)
       });
     },
-    click: sendClick,
   }
 
   // Manual tracking insn't enabled.

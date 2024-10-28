@@ -12,14 +12,12 @@ import (
 
 var ErrUriIsRelative = errors.New("uri is relative")
 
-// Parse parses an URI and normalize it. Raw query args are copied and stored
-// if extractQuery is true.
+// Parse parses an absolute URI and normalize it.
 func Parse(uriStr string) (Uri, error) {
 	return ParseBytes(utils.UnsafeBytes(uriStr))
 }
 
-// ParseBytes parses an URI and normalize it. Raw query args are copied and stored
-// if extractQuery is true.
+// ParseBytes parses an URI and normalize it.
 func ParseBytes(uri []byte) (Uri, error) {
 	furi := fasthttp.URI{}
 	err := furi.Parse(nil, uri)

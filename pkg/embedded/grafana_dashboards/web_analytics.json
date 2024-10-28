@@ -1265,8 +1265,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									}
 								]
 							},
@@ -1345,8 +1344,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									},
 									{
 										"color": "red",
@@ -1446,8 +1444,7 @@
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green",
-										"value": null
+										"color": "green"
 									}
 								]
 							},
@@ -2044,7 +2041,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 1,
-						"y": 37
+						"y": 24
 					},
 					"id": 35,
 					"options": {
@@ -2087,7 +2084,7 @@
 							},
 							"pluginVersion": "4.5.0",
 							"queryType": "table",
-							"rawSql": "SELECT attr, COUNT(attr) AS outbound_link_clicks\nFROM clicks\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND tag = 'a'\nAND startsWith(attr, 'http')\nAND NOT (startsWith(attr, concat('http://', domain)) OR startsWith(attr, concat('https://', domain)))\nAND session_uuid IN (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nGROUP BY attr\nORDER BY outbound_link_clicks DESC LIMIT 50",
+							"rawSql": "SELECT link, COUNT(link) AS link_count\nFROM outbound_link_clicks\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nGROUP BY link\nORDER BY link_count DESC LIMIT 50",
 							"refId": "A"
 						}
 					],
@@ -2128,7 +2125,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 12,
-						"y": 37
+						"y": 24
 					},
 					"id": 21,
 					"options": {

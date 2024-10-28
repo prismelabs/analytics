@@ -95,7 +95,7 @@ func TestIntegService(t *testing.T) {
 				labels, 10))
 	})
 
-	t.Run("MultipleEvents/PageviewsAndCustom", func(t *testing.T) {
+	t.Run("MultipleEvents/Pageviews/Custom/OutboundLinkClick", func(t *testing.T) {
 		promRegistry := prometheus.NewRegistry()
 		service := ProvideService(cfg, ch, logger, promRegistry, teardownService)
 
@@ -104,22 +104,23 @@ func TestIntegService(t *testing.T) {
 		sessionsCount := 10
 		for i := 0; i < sessionsCount; i++ {
 			sessionUuid := uuid.Must(uuid.NewV7())
+			session := event.Session{
+				PageUri:       testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
+				ReferrerUri:   event.ReferrerUri{},
+				Client:        uaparser.Client{},
+				CountryCode:   ipgeolocator.CountryCode{},
+				VisitorId:     "multipleEventsTestCase",
+				SessionUuid:   sessionUuid,
+				Utm:           event.UtmParams{},
+				PageviewCount: 1,
+			}
 
 			// Pageview to create entry in sessions table.
 			eventTime := time.Now().UTC().Round(time.Second)
 			err := service.StorePageView(context.Background(), &event.PageView{
 				Timestamp: eventTime,
 				PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
-				Session: event.Session{
-					PageUri:       testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
-					ReferrerUri:   event.ReferrerUri{},
-					Client:        uaparser.Client{},
-					CountryCode:   ipgeolocator.CountryCode{},
-					VisitorId:     "multipleEventsTestCase",
-					SessionUuid:   sessionUuid,
-					Utm:           event.UtmParams{},
-					PageviewCount: 1,
-				},
+				Session:   session,
 			})
 			require.NoError(t, err)
 
@@ -128,19 +129,19 @@ func TestIntegService(t *testing.T) {
 			err = service.StoreCustom(context.Background(), &event.Custom{
 				Timestamp: eventTime,
 				PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
-				Session: event.Session{
-					PageUri:       testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
-					ReferrerUri:   event.ReferrerUri{},
-					Client:        uaparser.Client{},
-					CountryCode:   ipgeolocator.CountryCode{},
-					VisitorId:     "multipleEventsTestCase",
-					SessionUuid:   sessionUuid,
-					Utm:           event.UtmParams{},
-					PageviewCount: 1,
-				},
-				Name:   "foo",
-				Keys:   []string{},
-				Values: []string{},
+				Session:   session,
+				Name:      "foo",
+				Keys:      []string{},
+				Values:    []string{},
+			})
+			require.NoError(t, err)
+
+			eventTime = time.Now().UTC().Round(time.Second)
+			err = service.StoreOutboundLinkClick(context.Background(), &event.OutboundLinkClick{
+				Timestamp: eventTime,
+				PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
+				Session:   session,
+				Link:      testutils.Must(uri.Parse)("http://example.com"),
 			})
 			require.NoError(t, err)
 
@@ -200,6 +201,29 @@ func TestIntegService(t *testing.T) {
 		// Check custom metrics.
 		{
 			labels := prometheus.Labels{"type": "custom"}
+			require.Equal(t, float64(0),
+				testutils.CounterValue(t, promRegistry, "eventstore_batch_dropped_total",
+					labels))
+			require.Equal(t, float64(0),
+				testutils.CounterValue(t, promRegistry, "eventstore_batch_retry_total",
+					labels))
+			require.Equal(t, float64(sessionsCount),
+				testutils.CounterValue(t, promRegistry, "eventstore_events_total",
+					labels))
+			require.Equal(t, float64(0),
+				testutils.CounterValue(t, promRegistry, "eventstore_ring_buffers_dropped_events_total",
+					labels))
+			require.Greater(t,
+				testutils.HistogramSumValue(t, promRegistry, "eventstore_send_batch_duration_seconds", labels),
+				float64(0))
+			require.Equal(t, float64(sessionsCount),
+				testutils.HistogramSumValue(t, promRegistry, "eventstore_batch_size_events",
+					labels))
+		}
+
+		// Check outbound link click metrics.
+		{
+			labels := prometheus.Labels{"type": "outbound_link_click"}
 			require.Equal(t, float64(0),
 				testutils.CounterValue(t, promRegistry, "eventstore_batch_dropped_total",
 					labels))

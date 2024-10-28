@@ -1,4 +1,4 @@
-CREATE TABLE clicks (
+CREATE TABLE outbound_link_clicks (
   timestamp DateTime('UTC'),
   domain String,
   path String,
@@ -7,8 +7,7 @@ CREATE TABLE clicks (
   session_uuid UUID,
   session_timestamp DateTime('UTC') ALIAS UUIDv7ToDateTime(session_uuid, 'UTC'),
   session_id UInt128 ALIAS toUInt128(session_uuid),
-  tag String,
-  attr String
+  link String
 )
 ENGINE = MergeTree
 ORDER BY (
@@ -19,7 +18,6 @@ ORDER BY (
   toUInt128(session_uuid),
   timestamp,
   path,
-  tag,
-  attr
+  link,
 )
 PARTITION BY toUInt128(session_uuid) % 32;

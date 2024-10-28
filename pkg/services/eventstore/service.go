@@ -10,5 +10,5 @@ import (
 type Service interface {
 	StorePageView(context.Context, *event.PageView) error
 	StoreCustom(context.Context, *event.Custom) error
-	StoreClick(context.Context, *event.Click) error
+	StoreOutboundLinkClick(context.Context, *event.OutboundLinkClick) error
 }

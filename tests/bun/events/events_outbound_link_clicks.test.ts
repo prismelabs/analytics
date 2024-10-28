@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { COUNTRY_CODE_REGEX, PRISME_CLICK_EVENTS_URL, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
+import { COUNTRY_CODE_REGEX, PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
 import { randomIpWithSession } from '../utils'
 
 const seed = new Date().getTime()
@@ -10,13 +10,12 @@ console.log('faker seed', seed)
 faker.seed(seed)
 
 test('GET request instead of POST request', async () => {
-  const response = await fetch(PRISME_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
     method: 'GET',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
-      'Content-Type': 'application/json'
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/'
     }
     // body: JSON.stringify({}) // GET request can't have body.
   })
@@ -24,72 +23,67 @@ test('GET request instead of POST request', async () => {
 })
 
 test('invalid URL in X-Prisme-Referrer header', async () => {
-  const response = await fetch(PRISME_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'not an url',
-      'Content-Type': 'application/json'
+      'X-Prisme-Referrer': 'not an url'
     },
-    body: JSON.stringify({})
+    body: 'https://www.example.com'
   })
   expect(response.status).toBe(400)
 })
 
 test('non registered domain in Origin header is rejected', async () => {
-  const response = await fetch(PRISME_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'https://example.com',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'https://example.com/',
-      'Content-Type': 'application/json'
+      'X-Prisme-Referrer': 'https://example.com/'
     },
-    body: JSON.stringify({})
+    body: 'https://www.example.com'
   })
   expect(response.status).toBe(400)
 })
 
-test('content type different than application/json is rejected', async () => {
-  const response = await fetch(PRISME_CLICK_EVENTS_URL, {
+test('relative outbound link/uri in body', async () => {
+  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'https://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'https://mywebsite.localhost/',
-      'Content-Type': 'text/plain'
+      'X-Prisme-Referrer': 'https://mywebsite.localhost/'
     },
-    body: 'abc'
+    body: '/foo/bar/baz'
   })
   expect(response.status).toBe(400)
 })
 
-test('invalid sessionless click event', async () => {
-  const response = await fetch(PRISME_CLICK_EVENTS_URL, {
+test('invalid sessionless outbound link click event', async () => {
+  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
       // No session associated with this ip.
       'X-Forwarded-For': faker.internet.ip(),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
-      'Content-Type': 'application/json'
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/'
     },
-    body: JSON.stringify({})
+    body: '/foo/bar/baz'
   })
   expect(response.status).toBe(400)
 })
 
-test('malformed json body', async () => {
-  const response = await fetch(PRISME_CLICK_EVENTS_URL, {
+test('invalid internal link click event', async () => {
+  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
     method: 'POST',
     headers: {
-      Origin: 'https://mywebsite.localhost',
+      Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'https://mywebsite.localhost/',
-      'Content-Type': 'application/json'
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/'
     },
-    body: '{"foo": "bar and foo", "num": 100' // No closing brace.
+    body: 'https://mywebsite.localhost/foo'
   })
   expect(response.status).toBe(400)
 })
@@ -103,20 +97,19 @@ test('valid test cases break', async () => {
   Bun.sleepSync(1000)
 })
 
-test('valid click event', async () => {
-  const response = await fetch(PRISME_CLICK_EVENTS_URL, {
+test('valid outbound link click event', async () => {
+  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
-      'Content-Type': 'application/json'
+      'X-Prisme-Referrer': 'http://mywebsite.localhost/'
     },
-    body: JSON.stringify({ tag: 'a', attr: 'https://anotherwebsite.localhost/' })
+    body: 'https://anotherwebsite.localhost/'
   })
   expect(response.status).toBe(200)
 
-  const data = await getLatestClickEvent()
+  const data = await getLatestOutboundLinkClickEvent()
 
   expect(data).toMatchObject({
     session: {
@@ -143,26 +136,24 @@ test('valid click event', async () => {
       path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      tag: 'a',
-      attr: 'https://anotherwebsite.localhost/'
+      link: 'https://anotherwebsite.localhost/'
     }
   })
 })
 
-test('concurrent pageview and click event', async () => {
+test('concurrent pageview and outbound link click event', async () => {
   const ipAddr = faker.internet.ip()
 
   await Promise.all([
     // Click events first.
-    fetch(PRISME_CLICK_EVENTS_URL, {
+    fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
       method: 'POST',
       headers: {
         Origin: 'http://mywebsite.localhost',
         'X-Forwarded-For': ipAddr,
-        'X-Prisme-Referrer': 'http://mywebsite.localhost/',
-        'Content-Type': 'application/json'
+        'X-Prisme-Referrer': 'http://mywebsite.localhost/'
       },
-      body: JSON.stringify({ tag: 'a', attr: 'https://anotherwebsite.localhost/' })
+      body: 'https://anotherwebsite.localhost/'
     }),
     // Pageview concurrently.
     // This pageview will create session that will be used for both events.
@@ -176,7 +167,7 @@ test('concurrent pageview and click event', async () => {
     })
   ]).then((results) => results.forEach((resp) => expect(resp.status).toBe(200)))
 
-  const data = await getLatestClickEvent()
+  const data = await getLatestOutboundLinkClickEvent()
 
   expect(data).toMatchObject({
     session: {
@@ -203,26 +194,24 @@ test('concurrent pageview and click event', async () => {
       path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      tag: 'a',
-      attr: 'https://anotherwebsite.localhost/'
+      link: 'https://anotherwebsite.localhost/'
     }
   })
 })
 
 test('valid click event without X-Prisme-Referrer', async () => {
-  const response = await fetch(PRISME_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      Referer: 'http://mywebsite.localhost/',
-      'Content-Type': 'application/json'
+      Referer: 'http://mywebsite.localhost/'
     },
-    body: JSON.stringify({ tag: 'a', attr: 'https://anotherwebsite.localhost/' })
+    body: 'https://anotherwebsite.localhost/'
   })
   expect(response.status).toBe(200)
 
-  const data = await getLatestClickEvent()
+  const data = await getLatestOutboundLinkClickEvent()
 
   expect(data).toMatchObject({
     session: {
@@ -249,26 +238,24 @@ test('valid click event without X-Prisme-Referrer', async () => {
       path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      tag: 'a',
-      attr: 'https://anotherwebsite.localhost/'
+      link: 'https://anotherwebsite.localhost/'
     }
   })
 })
 
 test('valid click event without trailing slash in referrer', async () => {
-  const response = await fetch(PRISME_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      Referer: 'http://mywebsite.localhost',
-      'Content-Type': 'application/json'
+      Referer: 'http://mywebsite.localhost'
     },
-    body: JSON.stringify({ tag: 'a', attr: 'https://anotherwebsite.localhost/' })
+    body: 'https://anotherwebsite.localhost/'
   })
   expect(response.status).toBe(200)
 
-  const data = await getLatestClickEvent()
+  const data = await getLatestOutboundLinkClickEvent()
 
   expect(data).toMatchObject({
     session: {
@@ -295,8 +282,7 @@ test('valid click event without trailing slash in referrer', async () => {
       path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      tag: 'a',
-      attr: 'https://anotherwebsite.localhost/'
+      link: 'https://anotherwebsite.localhost/'
     }
   })
 })
@@ -304,20 +290,19 @@ test('valid click event without trailing slash in referrer', async () => {
 test('valid click event with Windows + Chrome user agent', async () => {
   const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3'
 
-  const response = await fetch(PRISME_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
       'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { userAgent }),
       Referer: 'http://mywebsite.localhost',
-      'Content-Type': 'application/json',
       'User-Agent': userAgent
     },
-    body: JSON.stringify({ tag: 'a', attr: 'https://anotherwebsite.localhost/' })
+    body: 'https://anotherwebsite.localhost/'
   })
   expect(response.status).toBe(200)
 
-  const data = await getLatestClickEvent()
+  const data = await getLatestOutboundLinkClickEvent()
 
   expect(data).toMatchObject({
     session: {
@@ -344,13 +329,12 @@ test('valid click event with Windows + Chrome user agent', async () => {
       path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      tag: 'a',
-      attr: 'https://anotherwebsite.localhost/'
+      link: 'https://anotherwebsite.localhost/'
     }
   })
 })
 
-async function getLatestClickEvent (): Promise<any> {
+async function getLatestOutboundLinkClickEvent (): Promise<any> {
   // Wait for clickhouse to ingest batch.
   Bun.sleepSync(1000)
 
@@ -369,7 +353,7 @@ async function getLatestClickEvent (): Promise<any> {
   delete session.sign
 
   const clickEvents = await client.query({
-    query: `SELECT * FROM clicks WHERE visitor_id = '${session.visitor_id as string}' ORDER BY timestamp DESC LIMIT 1`
+    query: `SELECT * FROM outbound_link_clicks WHERE visitor_id = '${session.visitor_id as string}' ORDER BY timestamp DESC LIMIT 1`
   })
   const clickEvent = await clickEvents.json().then((r: any) => r.data[0])
   if (clickEvent === null || clickEvent === undefined) return null
