@@ -63,7 +63,12 @@ with [Grafana](https://github.com/grafana/grafana) that provides:
 
 ## Getting started
 
-Simply add tracking script to your website:
+Follow
+[this guide](https://www.prismeanalytics.com/docs/guides/self-host-prisme-docker/)
+to self-host a Prisme analytics instance or create an account on
+[Prisme Cloud](https://app.prismeanalytics.com/sign_up).
+
+Then, you can simply add tracking script to your website:
 
 ```html
 <script src="https://<your-prisme-instance-hostname>/static/wa.js" defer></script>
@@ -72,7 +77,7 @@ Simply add tracking script to your website:
 </noscript>
 ```
 
-That's it! You should now see data in you `Web Analytics` dashboard.
+That's it! You should now see data in your `Web Analytics` dashboard.
 
 ## Configuration
 
