@@ -89,7 +89,7 @@ test('malformed json body', async () => {
       'X-Prisme-Referrer': 'https://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
-    body: '{"foo": "bar and foo, "num": 100' // No closing brace.
+    body: '{"foo": "bar and foo", "num": 100' // No closing brace.
   })
   expect(response.status).toBe(400)
 })
@@ -103,7 +103,7 @@ test('valid test cases break', async () => {
   Bun.sleepSync(1000)
 })
 
-test('concurrent pageview and custom events', async () => {
+test('concurrent pageview and custom event', async () => {
   const ipAddr = faker.internet.ip()
 
   await Promise.all([
