@@ -22,12 +22,43 @@
   var visitorId = currentScriptDataset.visitorId;
   // Track outbound links.
   var outboundLinks = currentScriptDataset.outboundLinks !== "false"
+  // Track file downloads.
+  var fileDownloads = currentScriptDataset.fileDownloads !== "false"
+  var extraDownloadsFileTypes = (currentScriptDataset.extraDownloadsFileTypes || "").split(",")
 
   // State variables.
   var referrer = document.referrer.replace(loc.host, domain);
   var pageviewCount = 1
   var global = globalThis
   var supportsKeepAlive = 'Request' in global && 'keepalive' in new Request('')
+  var trackFileDownloadsTypes = [
+    '7z',
+    'avi',
+    'csv',
+    'dmg'
+    'docx',
+    'exe',
+    'gz',
+    'key',
+    'midi',
+    'mov',
+    'mp3',
+    'mp4',
+    'mpeg',
+    'pdf',
+    'pkg',
+    'pps',
+    'ppt',
+    'pptx',
+    'rar',
+    'rtf',
+    'txt',
+    'wav',
+    'wma',
+    'wmv',
+    'xlsx',
+    'zip',
+  ].concat(extraDownloadsFileTypes)
 
   function defaultOptions(options) {
     if (!options) options = {}
@@ -93,18 +124,7 @@
     });
   }
 
-  function handleLinkClickEvent(event) {
-    // Ignore auxclick event with non middle button click or event target
-    // isn't an element.
-    if ((event.type === 'auxclick' && event.button !== 1) ||
-      !(event.target instanceof Element)) return
-
-    var link = event.target.closest("a")
-    if (!link) return
-    var url = new URL(link.href || "", loc.origin)
-    url.search = ""
-
-    if (outboundLinks && url.host !== loc.host) {
+  function sendClickEvent(event, url, options) {
       // Follow links only if keepalive isn't supported.
       var followed = supportsKeepAlive
       var followLink = () => {
@@ -118,8 +138,28 @@
         event.preventDefault()
         setTimeout(followLink, 5000)
       }
-      sendClick({ tag: "a", attr: url }).finally(followLink)
-    }
+      sendClick(options).finally(followLink)
+  }
+
+  function handleLinkClickEvent(event) {
+    // Ignore auxclick event with non middle button click or event target
+    // isn't an element.
+    if ((event.type === 'auxclick' && event.button !== 1) ||
+      !(event.target instanceof Element)) return
+
+    var link = event.target.closest("a")
+    if (!link) return
+    var url = new URL(link.href || "", loc.origin)
+    url.search = ""
+
+    if (outboundLinks && url.host !== loc.host)
+      sendClickEvent(event, url, { tag: "a", attr: url.href })
+
+    console.log(link.getAttribute("download"), trackFileDownloadsTypes.includes(url.pathname.split('.').pop()))
+    if (fileDownloads &&
+      (link.getAttribute("download") !== null ||
+        trackFileDownloadsTypes.includes(url.pathname.split('.').pop())))
+      sendClickEvent(event, url, { tag: "a", attr: url.href })
   }
 
   if (outboundLinks) {
