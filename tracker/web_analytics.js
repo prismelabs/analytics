@@ -26,6 +26,8 @@
   // State variables.
   var referrer = document.referrer.replace(loc.host, domain);
   var pageviewCount = 1
+  var global = globalThis
+  var supportsKeepAlive = 'Request' in global && 'keepalive' in new Request('')
 
   function defaultOptions(options) {
     if (!options) options = {}
@@ -80,14 +82,14 @@
   function sendClick(options) {
     options = defaultOptions(options)
 
-    fetch(prismeUrl.concat("/api/v1/events/clicks"), {
+    return fetch(prismeUrl.concat("/api/v1/events/clicks"), {
       method: methodPost,
       headers: configureHeaders(options, {
         "Content-Type": "application/json",
       }),
       keepalive: true,
       referrerPolicy: referrerPolicy,
-      body: JSON.stringify({ tag: options.tag, id: options.id })
+      body: JSON.stringify({ tag: options.tag, attr: options.attr })
     });
   }
 
@@ -98,9 +100,26 @@
       !(event.target instanceof Element)) return
 
     var link = event.target.closest("a")
+    if (!link) return
     var url = new URL(link.href || "", loc.origin)
+    url.search = ""
 
-    if (outboundLinks && url.host !== loc.host) sendClick({ tag: "a", id: url })
+    if (outboundLinks && url.host !== loc.host) {
+      // Follow links only if keepalive isn't supported.
+      var followed = supportsKeepAlive
+      var followLink = () => {
+        if (!followed) {
+          followed = true
+          global.location.assign(url)
+        }
+      }
+      // Firefox stable doesn't support keepalive.
+      if (!supportsKeepAlive) {
+        event.preventDefault()
+        setTimeout(followLink, 5000)
+      }
+      sendClick({ tag: "a", attr: url }).finally(followLink)
+    }
   }
 
   if (outboundLinks) {
@@ -108,7 +127,7 @@
     document.addEventListener('auxclick', handleLinkClickEvent)
   }
 
-  window.prisme = {
+  global.prisme = {
     pageview: pageview,
     trigger(eventName, properties, options) {
       options = defaultOptions(options)
@@ -129,20 +148,20 @@
   // Manual tracking insn't enabled.
   if (!manual) {
     // Don't expose pageview function.
-    delete window.prisme.pageview
+    delete global.prisme.pageview
 
     // Trigger automatic pageview.
     pageview();
 
     // If website use a front end router, listen to push state and pop state
     // events to send pageview.
-    if (window.history) {
-      var pushState = window.history.pushState;
-      window.history.pushState = function() {
-        pushState.apply(window.history, arguments);
+    if (global.history) {
+      var pushState = global.history.pushState;
+      global.history.pushState = function() {
+        pushState.apply(global.history, arguments);
         pageview();
       }
-      window.addEventListener('popstate', pageview)
+      global.addEventListener('popstate', pageview)
     }
   }
 })();
