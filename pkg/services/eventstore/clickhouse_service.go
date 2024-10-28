@@ -333,7 +333,7 @@ func (cs *clickhouseService) batchClickEventLoop(batchDone chan<- struct{}) {
 			ev.Session.VisitorId,
 			ev.Session.SessionUuid,
 			ev.Tag,
-			ev.Id,
+			ev.Attr,
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append click event to batch")

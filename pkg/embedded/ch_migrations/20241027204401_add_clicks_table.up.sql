@@ -8,7 +8,7 @@ CREATE TABLE clicks (
   session_timestamp DateTime('UTC') ALIAS UUIDv7ToDateTime(session_uuid, 'UTC'),
   session_id UInt128 ALIAS toUInt128(session_uuid),
   tag String,
-  id String
+  attr String
 )
 ENGINE = MergeTree
 ORDER BY (
@@ -20,6 +20,6 @@ ORDER BY (
   timestamp,
   path,
   tag,
-  id
+  attr
 )
 PARTITION BY toUInt128(session_uuid) % 32;

@@ -47,7 +47,7 @@ func ProvidePostEventsClicks(
 		if err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
-		id, err := jsonView.GetString("id")
+		attr, err := jsonView.GetString("attr")
 		if err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
@@ -69,7 +69,7 @@ func ProvidePostEventsClicks(
 		// Add event data.
 		clickEv.Timestamp = time.Now().UTC()
 		clickEv.Tag = tag
-		clickEv.Id = id
+		clickEv.Attr = attr
 
 		// Store event.
 		err = eventStore.StoreClick(ctx, &clickEv)

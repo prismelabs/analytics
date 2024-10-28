@@ -15,7 +15,7 @@ type Click struct {
 	PageUri   uri.Uri
 	Session   Session
 	Tag       string
-	Id        string
+	Attr      string
 }
 
 // MarshalZerologObject implements zerolog.LogObjectMarshaler.
@@ -25,5 +25,5 @@ func (c *Click) MarshalZerologObject(e *zerolog.Event) {
 		Stringer("page_uri", c.PageUri).
 		Object("session", &c.Session).
 		Str("tag", c.Tag).
-		Str("id", c.Id)
+		Str("attr", c.Attr)
 }

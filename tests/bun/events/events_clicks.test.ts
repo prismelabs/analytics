@@ -112,7 +112,7 @@ test('valid click event', async () => {
       'X-Prisme-Referrer': 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ tag: 'a', id: 'https://anotherwebsite.localhost/' })
+    body: JSON.stringify({ tag: 'a', attr: 'https://anotherwebsite.localhost/' })
   })
   expect(response.status).toBe(200)
 
@@ -144,7 +144,7 @@ test('valid click event', async () => {
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       tag: 'a',
-      id: 'https://anotherwebsite.localhost/'
+      attr: 'https://anotherwebsite.localhost/'
     }
   })
 })
@@ -162,7 +162,7 @@ test('concurrent pageview and click event', async () => {
         'X-Prisme-Referrer': 'http://mywebsite.localhost/',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ tag: 'a', id: 'https://anotherwebsite.localhost/' })
+      body: JSON.stringify({ tag: 'a', attr: 'https://anotherwebsite.localhost/' })
     }),
     // Pageview concurrently.
     // This pageview will create session that will be used for both events.
@@ -204,7 +204,7 @@ test('concurrent pageview and click event', async () => {
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       tag: 'a',
-      id: 'https://anotherwebsite.localhost/'
+      attr: 'https://anotherwebsite.localhost/'
     }
   })
 })
@@ -218,7 +218,7 @@ test('valid click event without X-Prisme-Referrer', async () => {
       Referer: 'http://mywebsite.localhost/',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ tag: 'a', id: 'https://anotherwebsite.localhost/' })
+    body: JSON.stringify({ tag: 'a', attr: 'https://anotherwebsite.localhost/' })
   })
   expect(response.status).toBe(200)
 
@@ -250,7 +250,7 @@ test('valid click event without X-Prisme-Referrer', async () => {
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       tag: 'a',
-      id: 'https://anotherwebsite.localhost/'
+      attr: 'https://anotherwebsite.localhost/'
     }
   })
 })
@@ -264,7 +264,7 @@ test('valid click event without trailing slash in referrer', async () => {
       Referer: 'http://mywebsite.localhost',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ tag: 'a', id: 'https://anotherwebsite.localhost/' })
+    body: JSON.stringify({ tag: 'a', attr: 'https://anotherwebsite.localhost/' })
   })
   expect(response.status).toBe(200)
 
@@ -296,7 +296,7 @@ test('valid click event without trailing slash in referrer', async () => {
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       tag: 'a',
-      id: 'https://anotherwebsite.localhost/'
+      attr: 'https://anotherwebsite.localhost/'
     }
   })
 })
@@ -313,7 +313,7 @@ test('valid click event with Windows + Chrome user agent', async () => {
       'Content-Type': 'application/json',
       'User-Agent': userAgent
     },
-    body: JSON.stringify({ tag: 'a', id: 'https://anotherwebsite.localhost/' })
+    body: JSON.stringify({ tag: 'a', attr: 'https://anotherwebsite.localhost/' })
   })
   expect(response.status).toBe(200)
 
@@ -345,7 +345,7 @@ test('valid click event with Windows + Chrome user agent', async () => {
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       tag: 'a',
-      id: 'https://anotherwebsite.localhost/'
+      attr: 'https://anotherwebsite.localhost/'
     }
   })
 })
