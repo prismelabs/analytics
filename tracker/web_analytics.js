@@ -1,17 +1,25 @@
 (function () {
   // For better minification.
+  var doc = document
+  var addEventListenerString = "addEventListener"
+  var documentAddEventListener = doc[addEventListenerString]
   var currentScript = document.currentScript
   var loc = location
   var currentScriptDataset = currentScript.dataset
   var currentScriptUrl = new URL(currentScript.src)
-  var referrerPolicy ="no-referrer-when-downgrade"
-  var methodPost = "POST"
   var scheme = loc.protocol;
+  var global = globalThis
+  var doFetch = global.fetch
+  var history = global.history
+  var visitorIdString = "visitorId"
+  var targetString = "target"
 
   // Script options.
   //
   // URL of prisme instance.
   var prismeUrl = currentScriptDataset.prismeUrl || currentScriptUrl.origin
+  var prismeApiEventsUrl = prismeUrl.concat("/api/v1/events")
+  var prismeApiEventsClickUrl = prismeApiEventsUrl.concat("/clicks")
   // Tracked website domain.
   var domain = currentScriptDataset.domain || loc.host;
   // Path of current page.
@@ -19,7 +27,7 @@
   // Enable/disable manual tracking.
   var manual = (!!currentScriptDataset.manual && currentScriptDataset.manual !== "false") || false
   // Visitor ID.
-  var visitorId = currentScriptDataset.visitorId;
+  var visitorId = currentScriptDataset[visitorIdString];
   // Track outbound links.
   var trackOutboundLinks = currentScriptDataset.outboundLinks !== "false"
   // Track file downloads.
@@ -27,15 +35,14 @@
   var extraDownloadsFileTypes = (currentScriptDataset.extraDownloadsFileTypes || "").split(",")
 
   // State variables.
-  var referrer = document.referrer.replace(loc.host, domain);
+  var referrer = doc.referrer.replace(loc.host, domain);
   var pageviewCount = 1
-  var global = globalThis
   var supportsKeepAlive = 'Request' in global && 'keepalive' in new Request('')
   var trackFileDownloadsTypes = [
     '7z',
     'avi',
     'csv',
-    'dmg'
+    'dmg',
     'docx',
     'exe',
     'gz',
@@ -76,7 +83,7 @@
       else options.path = path
     }
 
-    if (!options.visitorId) options.visitorId = visitorId
+    if (!options[visitorIdString]) options[visitorIdString] = visitorId
 
     options.url = scheme.concat("//", options.domain, options.path, loc.search)
 
@@ -87,18 +94,26 @@
     headers["Access-Control-Max-Age"] = 3600 // 1 hour
     headers["X-Prisme-Referrer"] = options.url
 
-    if (options.visitorId) {
-      headers["X-Prisme-Visitor-Id"] = options.visitorId.toString()
+    if (options[visitorIdString]) {
+      headers["X-Prisme-Visitor-Id"] = options[visitorIdString].toString()
     }
 
     return headers
+  }
+
+  function fetchDefaultOptions(options) {
+    return Object.assign({}, {
+      method: "POST",
+      referrerPolicy: "no-referrer-when-downgrade",
+      keepalive: true,
+    }, options)
   }
 
   function shouldFollowLink(event, anchor) {
     // Another handler prevent default behavior.
     if (event.defaultPrevented) { return false }
 
-    var targetsCurrentWindow = !anchor.target || anchor.target.match(/^_(self|parent|top)$/i)
+    var targetsCurrentWindow = !anchor[targetString] || anchor[targetString].match(/^_(self|parent|top)$/i)
     var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && event.type === 'click'
     return targetsCurrentWindow && isRegularClick
   }
@@ -107,38 +122,32 @@
   function pageview(options) {
     options = defaultOptions(options)
 
-    fetch(prismeUrl.concat("/api/v1/events/pageviews"), {
-      method: methodPost,
+    doFetch(prismeApiEventsUrl.concat("/pageviews"), fetchDefaultOptions({
       headers: configureHeaders(options, {
         "X-Prisme-Document-Referrer": referrer,
       }),
-      keepalive: true,
-      referrerPolicy: referrerPolicy
-    });
+    }));
 
     referrer = options.url
     pageviewCount++
   }
 
-  function sendOutboundLinkClick(url, options) {
+  function sendClickEvent(kind, url, options) {
     options = defaultOptions(options)
 
-    return fetch(prismeUrl.concat("/api/v1/events/clicks/outbound-link"), {
-      method: methodPost,
+    return doFetch(prismeApiEventsClickUrl.concat(kind), fetchDefaultOptions({
       headers: configureHeaders(options, {}),
-      keepalive: true,
-      referrerPolicy: referrerPolicy,
       body: url
-    });
+    }));
   }
 
   function handleLinkClickEvent(event) {
     // Ignore auxclick event with non middle button click or event target
     // isn't an element.
     if ((event.type === 'auxclick' && event.button !== 1) ||
-      !(event.target instanceof Element)) return
+      !(event[targetString] instanceof Element)) return
 
-    var anchor = event.target.closest("a")
+    var anchor = event[targetString].closest("a")
     if (!anchor) return
     var url = new URL(anchor.href || "", loc.origin)
     url.search = ""
@@ -154,56 +163,60 @@
         }
       }
 
-      console.log("follow link manually", shouldFollowLinkManually)
       if (shouldFollowLinkManually) {
         event.preventDefault()
         setTimeout(followLink, 5000)
       }
 
       // Send event.
-      sendOutboundLinkClick(url).finally(followLink)
+      sendClickEvent("/outbound-link", url).finally(followLink)
+    }
+
+    // File downloads.
+    if (trackFileDownloads &&
+      (trackFileDownloadsTypes.includes(url.pathname.split(".").pop()) ||
+        anchor.getAttribute("download") !== null)) {
+      return sendClickEvent("/file-download", url)
     }
   }
 
-  if (trackOutboundLinks || trackFileDownloads) {
-    document.addEventListener('click', handleLinkClickEvent)
-    document.addEventListener('auxclick', handleLinkClickEvent)
+  if (!manual && (trackOutboundLinks || trackFileDownloads)) {
+    documentAddEventListener('click', handleLinkClickEvent)
+    documentAddEventListener('auxclick', handleLinkClickEvent)
   }
 
-  global.prisme = {
+  var globalPrisme = {
     pageview: pageview,
     trigger(eventName, properties, options) {
       options = defaultOptions(options)
 
-      fetch(prismeUrl.concat("/api/v1/events/custom/", eventName), {
-        method: methodPost,
+      doFetch(prismeUrl.concat("/api/v1/events/custom/", eventName), fetchDefaultOptions({
         headers: configureHeaders(options, {
           "Content-Type": "application/json",
         }),
-        keepalive: true,
-        referrerPolicy: referrerPolicy,
         body: JSON.stringify(properties)
-      });
+      }));
     },
   }
+  global.prisme = globalPrisme
 
   // Manual tracking insn't enabled.
   if (!manual) {
     // Don't expose pageview function.
-    delete global.prisme.pageview
+    delete globalPrisme.pageview
 
     // Trigger automatic pageview.
     pageview();
 
     // If website use a front end router, listen to push state and pop state
     // events to send pageview.
-    if (global.history) {
-      var pushState = global.history.pushState;
-      global.history.pushState = function() {
-        pushState.apply(global.history, arguments);
+    if (history) {
+      var pushState = history.pushState;
+      history.pushState = function() {
+        pushState.apply(history, arguments);
         pageview();
       }
-      global.addEventListener('popstate', pageview)
+      global[addEventListenerString]('popstate', pageview)
     }
   }
 })();

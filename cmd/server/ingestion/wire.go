@@ -27,6 +27,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		handlers.ProvideGetNoscriptEventsCustom,
 		handlers.ProvideGetNoscriptEventsPageviews,
 		handlers.ProvideHealthCheck,
+		handlers.ProvidePostEventsClicksFileDownload,
 		handlers.ProvidePostEventsClicksOutboundLink,
 		handlers.ProvidePostEventsCustom,
 		handlers.ProvidePostEventsPageViews,

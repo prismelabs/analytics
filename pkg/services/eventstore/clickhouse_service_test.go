@@ -145,6 +145,15 @@ func TestIntegService(t *testing.T) {
 			})
 			require.NoError(t, err)
 
+			eventTime = time.Now().UTC().Round(time.Second)
+			err = service.StoreFileDownload(context.Background(), &event.FileDownload{
+				Timestamp: eventTime,
+				PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
+				Session:   session,
+				FileUrl:   testutils.Must(uri.Parse)("http://mywebsite.localhost/slide.pdf"),
+			})
+			require.NoError(t, err)
+
 			// Ensure events are stored.
 			time.Sleep(50 * time.Millisecond)
 		}
@@ -224,6 +233,29 @@ func TestIntegService(t *testing.T) {
 		// Check outbound link click metrics.
 		{
 			labels := prometheus.Labels{"type": "outbound_link_click"}
+			require.Equal(t, float64(0),
+				testutils.CounterValue(t, promRegistry, "eventstore_batch_dropped_total",
+					labels))
+			require.Equal(t, float64(0),
+				testutils.CounterValue(t, promRegistry, "eventstore_batch_retry_total",
+					labels))
+			require.Equal(t, float64(sessionsCount),
+				testutils.CounterValue(t, promRegistry, "eventstore_events_total",
+					labels))
+			require.Equal(t, float64(0),
+				testutils.CounterValue(t, promRegistry, "eventstore_ring_buffers_dropped_events_total",
+					labels))
+			require.Greater(t,
+				testutils.HistogramSumValue(t, promRegistry, "eventstore_send_batch_duration_seconds", labels),
+				float64(0))
+			require.Equal(t, float64(sessionsCount),
+				testutils.HistogramSumValue(t, promRegistry, "eventstore_batch_size_events",
+					labels))
+		}
+
+		// Check file download metrics.
+		{
+			labels := prometheus.Labels{"type": "file_download"}
 			require.Equal(t, float64(0),
 				testutils.CounterValue(t, promRegistry, "eventstore_batch_dropped_total",
 					labels))

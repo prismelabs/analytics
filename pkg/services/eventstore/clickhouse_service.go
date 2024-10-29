@@ -42,6 +42,7 @@ func ProvideService(
 		<-batchDone
 		<-batchDone
 		<-batchDone
+		<-batchDone
 		logger.Info().Msg("event batch loops canceled.")
 		return nil
 	})
@@ -78,12 +79,22 @@ func ProvideService(
 			),
 			ringo.WithWaiterContext[*event.OutboundLinkClick](ctx),
 		),
+		fileDownloadEventRingBuf: ringo.NewWaiter(
+			ringo.NewManyToOne(
+				int(cfg.MaxBatchSize*cfg.RingBuffersFactor),
+				ringo.WithManyToOneCollisionHandler[*event.FileDownload](ringo.CollisionHandlerFunc(func(_ any) {
+					logger.Warn().Msg("file download events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_RING_BUFFERS_FACTOR or PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+				})),
+			),
+			ringo.WithWaiterContext[*event.FileDownload](ctx),
+		),
 		metrics: newMetrics(promRegistry),
 	}
 
 	go service.batchPageViewLoop(batchDone)
 	go service.batchCustomEventLoop(batchDone)
 	go service.batchOutboundLinkClickEventLoop(batchDone)
+	go service.batchFileDownloadEventLoop(batchDone)
 
 	logger.Info().Msg("clickhouse based event store configured")
 
@@ -98,7 +109,14 @@ type clickhouseService struct {
 	pageViewRingBuf               ringo.Waiter[*event.PageView]
 	customEventRingBuf            ringo.Waiter[*event.Custom]
 	outboundLinkClickEventRingBuf ringo.Waiter[*event.OutboundLinkClick]
+	fileDownloadEventRingBuf      ringo.Waiter[*event.FileDownload]
 	metrics                       metrics
+}
+
+// StoreFileDownload implements Service.
+func (cs *clickhouseService) StoreFileDownload(_ context.Context, ev *event.FileDownload) error {
+	cs.fileDownloadEventRingBuf.Push(ev)
+	return nil
 }
 
 // StoreOutboundLinkClick implements Service.
@@ -150,7 +168,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 		ev, done, dropped := cs.pageViewRingBuf.Next()
 		// Ring buffer context was canceled.
 		if done {
-			cs.logger.Info().Msg("page view ring buffer done, sending last batch...")
+			cs.logger.Info().Msg("page view events ring buffer done, sending last batch...")
 			cs.sendBatch(batch, promLabels)
 			cs.logger.Info().Msg("last batch of page view events sent.")
 			batchDone <- struct{}{}
@@ -250,7 +268,7 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 		ev, done, dropped := cs.customEventRingBuf.Next()
 		// Ring buffer context was canceled.
 		if done {
-			cs.logger.Info().Msg("custom ring buffer done, sending last batch...")
+			cs.logger.Info().Msg("custom events ring buffer done, sending last batch...")
 			cs.sendBatch(batch, promLabels)
 			cs.logger.Info().Msg("last batch of custom events sent.")
 			batchDone <- struct{}{}
@@ -312,7 +330,7 @@ func (cs *clickhouseService) batchOutboundLinkClickEventLoop(batchDone chan<- st
 		ev, done, dropped := cs.outboundLinkClickEventRingBuf.Next()
 		// Ring buffer context was canceled.
 		if done {
-			cs.logger.Info().Msg("outbound link click ring buffer done, sending last batch...")
+			cs.logger.Info().Msg("outbound link click events ring buffer done, sending last batch...")
 			cs.sendBatch(batch, promLabels)
 			cs.logger.Info().Msg("last batch of outbound link click events sent.")
 			batchDone <- struct{}{}
@@ -336,6 +354,66 @@ func (cs *clickhouseService) batchOutboundLinkClickEventLoop(batchDone chan<- st
 		)
 		if err != nil {
 			cs.logger.Err(err).Msg("failed to append outbound link click event to batch")
+		}
+
+		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {
+			go cs.sendBatch(batch, promLabels)
+			batch = nil
+		}
+	}
+}
+
+func (cs *clickhouseService) batchFileDownloadEventLoop(batchDone chan<- struct{}) {
+	var batch driver.Batch
+	var err error
+	batchCreationDate := time.Now()
+
+	promLabels := prometheus.Labels{
+		"type": "file_download",
+	}
+
+	for {
+		if batch == nil {
+			batch, err = cs.conn.PrepareBatch(
+				context.Background(),
+				"INSERT INTO file_downloads",
+			)
+			if err != nil {
+				cs.logger.Err(err).Msg("failed to prepare next file download events batch")
+				continue
+			}
+
+			batchCreationDate = time.Now()
+		}
+
+		// Wait for next event.
+		ev, done, dropped := cs.fileDownloadEventRingBuf.Next()
+		// Ring buffer context was canceled.
+		if done {
+			cs.logger.Info().Msg("file download events ring buffer done, sending last batch...")
+			cs.sendBatch(batch, promLabels)
+			cs.logger.Info().Msg("last batch of file download events sent.")
+			batchDone <- struct{}{}
+			return
+		}
+		if dropped > 0 {
+			cs.logger.Info().Int("dropped", dropped).Msg("file download events dropped")
+			cs.metrics.droppedEvents.With(promLabels).Add(float64(dropped))
+		}
+
+		cs.logger.Debug().Object("fild_download_event", ev).Msg("appending file download event to batch...")
+
+		// Append to batch.
+		err = batch.Append(
+			ev.Timestamp,
+			ev.Session.PageUri.Host(),
+			ev.PageUri.Path(),
+			ev.Session.VisitorId,
+			ev.Session.SessionUuid,
+			ev.FileUrl,
+		)
+		if err != nil {
+			cs.logger.Err(err).Msg("failed to append file download event to batch")
 		}
 
 		if uint64(batch.Rows()) >= cs.maxBatchSize || time.Since(batchCreationDate) > cs.maxBatchTimeout {

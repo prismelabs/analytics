@@ -17,6 +17,7 @@ func ProvideFiber(
 	nonRegisteredOriginFilterMiddleware middlewares.NonRegisteredOriginFilter,
 	noscriptHandlersCacheMiddleware middlewares.NoscriptHandlersCache,
 	postCustomEventHandler handlers.PostEventsCustom,
+	postFileDownloadClickEventHandler handlers.PostEventsClicksFileDownload,
 	postOutboundLinkClickEventHandler handlers.PostEventsClicksOutboundLink,
 	postPageViewEventHandler handlers.PostEventsPageviews,
 ) *fiber.App {
@@ -46,6 +47,8 @@ func ProvideFiber(
 	app.Get("/api/v1/noscript/events/custom/:name", fiber.Handler(getNoscriptCustomEventHandler))
 
 	app.Post("/api/v1/events/clicks/outbound-link", fiber.Handler(postOutboundLinkClickEventHandler))
+
+	app.Post("/api/v1/events/clicks/file-download", fiber.Handler(postFileDownloadClickEventHandler))
 
 	return app
 }
