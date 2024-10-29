@@ -1020,7 +1020,7 @@
 						"h": 12,
 						"w": 11,
 						"x": 1,
-						"y": 30
+						"y": 20
 					},
 					"id": 13,
 					"options": {
@@ -1133,7 +1133,7 @@
 						"h": 12,
 						"w": 11,
 						"x": 12,
-						"y": 30
+						"y": 20
 					},
 					"id": 19,
 					"options": {
@@ -1556,7 +1556,7 @@
 						"h": 13,
 						"w": 15,
 						"x": 1,
-						"y": 55
+						"y": 47
 					},
 					"id": 15,
 					"options": {
@@ -1642,7 +1642,7 @@
 							"zoom": 10
 						}
 					},
-					"pluginVersion": "11.0.0",
+					"pluginVersion": "11.2.1",
 					"targets": [
 						{
 							"datasource": {
@@ -1699,7 +1699,7 @@
 						"h": 13,
 						"w": 7,
 						"x": 16,
-						"y": 55
+						"y": 47
 					},
 					"id": 18,
 					"options": {
@@ -1721,7 +1721,7 @@
 						"sizing": "manual",
 						"valueMode": "color"
 					},
-					"pluginVersion": "11.0.0",
+					"pluginVersion": "11.2.1",
 					"targets": [
 						{
 							"datasource": {
@@ -1811,7 +1811,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 1,
-						"y": 69
+						"y": 61
 					},
 					"id": 4,
 					"options": {
@@ -1922,7 +1922,7 @@
 						"h": 13,
 						"w": 11,
 						"x": 12,
-						"y": 69
+						"y": 61
 					},
 					"id": 5,
 					"options": {
@@ -2021,7 +2021,7 @@
 							"color": {
 								"mode": "continuous-BlPu"
 							},
-							"displayName": "${__field.labels[attr]}",
+							"displayName": "${__field.labels[outbound_link]}",
 							"fieldMinMax": false,
 							"mappings": [],
 							"thresholds": {
@@ -2084,11 +2084,97 @@
 							},
 							"pluginVersion": "4.5.0",
 							"queryType": "table",
-							"rawSql": "SELECT link, COUNT(link) AS link_count\nFROM outbound_link_clicks\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nGROUP BY link\nORDER BY link_count DESC LIMIT 50",
+							"rawSql": "SELECT link AS outbound_link, COUNT(outbound_link) AS link_count\nFROM outbound_link_clicks\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nGROUP BY outbound_link\nORDER BY link_count DESC LIMIT 50",
 							"refId": "A"
 						}
 					],
 					"title": "Top Outbound Links",
+					"type": "bargauge"
+				},
+				{
+					"datasource": {
+						"default": true,
+						"type": "grafana-clickhouse-datasource",
+						"uid": "{{ .DatasourceClickhouseUid }}"
+					},
+					"description": "Top 10 of the most downloaded files.",
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "continuous-BlPu"
+							},
+							"displayName": "${__field.labels[url]}",
+							"fieldMinMax": true,
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							},
+							"unit": "short"
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 13,
+						"w": 11,
+						"x": 12,
+						"y": 24
+					},
+					"id": 36,
+					"options": {
+						"displayMode": "lcd",
+						"maxVizHeight": 41,
+						"minVizHeight": 25,
+						"minVizWidth": 8,
+						"namePlacement": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": [
+								"lastNotNull"
+							],
+							"fields": "",
+							"limit": 10,
+							"values": true
+						},
+						"showUnfilled": true,
+						"sizing": "manual",
+						"valueMode": "color"
+					},
+					"pluginVersion": "11.2.1",
+					"targets": [
+						{
+							"datasource": {
+								"type": "grafana-clickhouse-datasource",
+								"uid": "{{ .DatasourceClickhouseUid }}"
+							},
+							"editorType": "sql",
+							"format": 1,
+							"meta": {
+								"builderOptions": {
+									"columns": [],
+									"database": "",
+									"limit": 1000,
+									"mode": "list",
+									"queryType": "table",
+									"table": ""
+								}
+							},
+							"pluginVersion": "4.5.0",
+							"queryType": "table",
+							"rawSql": "SELECT url, COUNT(url) AS download\nFROM file_downloads\nWHERE $__timeFilter(timestamp)\nAND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\nAND session_uuid IN (\n  SELECT session_uuid\n  FROM sessions\n  WHERE ($__timeFilter(session_timestamp) OR $__timeFilter(exit_timestamp))\n  AND $__conditionalAll(domain IN (${domains:sqlstring}), ${domains})\n  AND $__conditionalAll(entry_path IN (${entry_paths:sqlstring}), ${entry_paths})\n  AND $__conditionalAll(operating_system IN (${operating_systems:sqlstring}), ${operating_systems})\n  AND $__conditionalAll(browser_family IN (${browsers:sqlstring}), ${browsers})\n  AND $__conditionalAll(referrer_domain IN (${referrals:sqlstring}), ${referrals})\n  AND $__conditionalAll(country_code IN (${locations:sqlstring}), ${countries_name})\n  AND $__conditionalAll(exit_path IN (${exit_paths:sqlstring}), ${exit_paths})\n  AND $__conditionalAll(utm_source IN (${utm_sources:sqlstring}), ${utm_sources})\n  AND $__conditionalAll(utm_medium IN (${utm_mediums:sqlstring}), ${utm_mediums})\n  AND $__conditionalAll(utm_campaign IN (${utm_campaigns:sqlstring}), ${utm_campaigns})\n  AND $__conditionalAll(utm_term IN (${utm_terms:sqlstring}), ${utm_terms})\n  AND $__conditionalAll(utm_content IN (${utm_contents:sqlstring}), ${utm_contents})\n  GROUP BY session_uuid\n)\nGROUP BY url\nORDER BY download DESC LIMIT 50",
+							"refId": "A"
+						}
+					],
+					"title": "Top File Downloads",
 					"type": "bargauge"
 				},
 				{
@@ -2124,8 +2210,8 @@
 					"gridPos": {
 						"h": 13,
 						"w": 11,
-						"x": 12,
-						"y": 24
+						"x": 1,
+						"y": 37
 					},
 					"id": 21,
 					"options": {
