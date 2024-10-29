@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -150,6 +151,8 @@ func ExtractClientHints(headers *fasthttp.RequestHeader, client *uaparser.Client
 		client.Device = model
 	}
 	if os := string(headers.Peek("Sec-Ch-Ua-Platform")); os != "" {
-		client.OperatingSystem = os
+		osBytes := bytes.TrimPrefix(utils.UnsafeBytes(os), []byte(`"`))
+		osBytes = bytes.TrimSuffix(osBytes, []byte(`"`))
+		client.OperatingSystem = utils.UnsafeString(osBytes)
 	}
 }
