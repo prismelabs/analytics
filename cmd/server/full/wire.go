@@ -22,7 +22,6 @@ import (
 
 func Initialize(logger wired.BootstrapLogger) wired.App {
 	wire.Build(
-		ProvideFiber,
 		ProvideSetup,
 		clickhouse.ProvideCh,
 		clickhouse.ProvideEmbeddedSourceDriver,
@@ -55,6 +54,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		uaparser.ProvideService,
 		wired.ProvideApp,
 		wired.ProvideClickhouseConfig,
+		wired.ProvideFiber,
 		wired.ProvideFiberStorage,
 		wired.ProvideGrafanaConfig,
 		wired.ProvideLogger,

@@ -59,7 +59,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	postEventsCustom := handlers.ProvidePostEventsCustom(eventstoreService, saltmanagerService, sessionstorageService)
 	postEventsClicksOutboundLink := handlers.ProvidePostEventsClicksOutboundLink(eventstoreService, saltmanagerService, sessionstorageService)
 	postEventsPageviews := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, sessionstorageService)
-	app := ProvideFiber(apiEventsTimeout, eventsCors, eventsRateLimiter, getNoscriptEventsCustom, getNoscriptEventsPageviews, minimalFiber, nonRegisteredOriginFilter, noscriptHandlersCache, postEventsCustom, postEventsClicksOutboundLink, postEventsPageviews)
+	app := wired.ProvideFiber(apiEventsTimeout, eventsCors, eventsRateLimiter, getNoscriptEventsCustom, getNoscriptEventsPageviews, minimalFiber, nonRegisteredOriginFilter, noscriptHandlersCache, postEventsCustom, postEventsClicksOutboundLink, postEventsPageviews)
 	promhttpLogger := wired.ProvidePromHttpLogger(server, zerologLogger)
 	configGrafana := wired.ProvideGrafanaConfig(logger)
 	client := grafana.ProvideClient(configGrafana)

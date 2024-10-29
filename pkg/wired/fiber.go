@@ -1,10 +1,9 @@
-package full
+package wired
 
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/analytics/pkg/handlers"
 	"github.com/prismelabs/analytics/pkg/middlewares"
-	"github.com/prismelabs/analytics/pkg/wired"
 )
 
 // ProvideFiber is a wire provider for fiber.App.
@@ -14,7 +13,7 @@ func ProvideFiber(
 	eventsRateLimiterMiddleware middlewares.EventsRateLimiter,
 	getNoscriptCustomEventHandler handlers.GetNoscriptEventsCustom,
 	getNoscriptPageViewEventHandler handlers.GetNoscriptEventsPageviews,
-	minimalFiber wired.MinimalFiber,
+	minimalFiber MinimalFiber,
 	nonRegisteredOriginFilterMiddleware middlewares.NonRegisteredOriginFilter,
 	noscriptHandlersCacheMiddleware middlewares.NoscriptHandlersCache,
 	postCustomEventHandler handlers.PostEventsCustom,
