@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/valyala/fasthttp"
@@ -25,6 +26,12 @@ func ParseBytes(uri []byte) (Uri, error) {
 		return Uri{}, err
 	}
 
+	return NewFromFasthttpUri(&furi)
+}
+
+// NewFromFasthttpUri returns a new URI from the given URI.
+// This function panics if the given *fasthttp.URI is nil.
+func NewFromFasthttpUri(furi *fasthttp.URI) (Uri, error) {
 	if len(furi.Host()) == 0 {
 		return Uri{}, ErrUriIsRelative
 	}
@@ -67,6 +74,17 @@ func (u *Uri) Scheme() string {
 func (u *Uri) Host() string {
 	start := u.schemeLen + len("://")
 	return utils.UnsafeString(u.data[start : start+u.hostLen])
+}
+
+// HostName returns hostname of URI: www.example.com for
+// https://www.example.com:8080/foo/bar?q=baz#bang
+func (u *Uri) HostName() string {
+	host := u.Host()
+	portIndex := strings.LastIndexByte(host, ':')
+	if portIndex > 0 {
+		return host[:portIndex]
+	}
+	return host
 }
 
 // Path returns normalized path of URI: /foo/bar for

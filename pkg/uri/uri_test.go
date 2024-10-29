@@ -11,35 +11,38 @@ import (
 func TestUri(t *testing.T) {
 	t.Run("Parse", func(t *testing.T) {
 		type testCase struct {
-			uri                             string
-			scheme, host, path, hash, query string
-			expectedError                   error
+			uri                                       string
+			scheme, host, hostname, path, hash, query string
+			expectedError                             error
 		}
 
 		testCases := []testCase{
 			{
-				uri:    "https://example.org:8080/foo/bar?q=baz#bang",
-				scheme: "https",
-				host:   "example.org:8080",
-				path:   "/foo/bar",
-				query:  "q=baz",
-				hash:   "bang",
+				uri:      "https://example.org:8080/foo/bar?q=baz#bang",
+				scheme:   "https",
+				host:     "example.org:8080",
+				hostname: "example.org",
+				path:     "/foo/bar",
+				query:    "q=baz",
+				hash:     "bang",
 			},
 			{
-				uri:    "https://example.org:8080/foo/../bar#bang?foo=bar",
-				scheme: "https",
-				host:   "example.org:8080",
-				path:   "/bar",
-				query:  "",
-				hash:   "bang?foo=bar",
+				uri:      "https://example.org:8080/foo/../bar#bang?foo=bar",
+				scheme:   "https",
+				host:     "example.org:8080",
+				hostname: "example.org",
+				path:     "/bar",
+				query:    "",
+				hash:     "bang?foo=bar",
 			},
 			{
-				uri:    "https://example.org:8080",
-				scheme: "https",
-				host:   "example.org:8080",
-				path:   "/",
-				query:  "",
-				hash:   "",
+				uri:      "https://example.org:8080",
+				scheme:   "https",
+				host:     "example.org:8080",
+				hostname: "example.org",
+				path:     "/",
+				query:    "",
+				hash:     "",
 			},
 			{
 				uri:           "./hello/world",
@@ -61,6 +64,7 @@ func TestUri(t *testing.T) {
 
 				require.Equal(t, tcase.scheme, uri.Scheme())
 				require.Equal(t, tcase.host, uri.Host())
+				require.Equal(t, tcase.hostname, uri.HostName())
 				require.Equal(t, tcase.path, uri.Path())
 				require.Equal(t, tcase.query, uri.QueryString())
 				require.Equal(t, tcase.hash, uri.Hash())
