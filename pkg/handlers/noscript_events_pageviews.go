@@ -31,7 +31,7 @@ func ProvideGetNoscriptEventsPageviews(
 			return err
 		}
 
-		// Referrer of the POST request, that is the viewed page.
+		// Referrer of the GET request, that is the viewed page.
 		requestReferrer, err := hutils.PeekAndParseReferrerQueryHeader(c)
 		if err != nil {
 			return err
