@@ -14,50 +14,55 @@ import (
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
-type PostEventsClicksFileDownload fiber.Handler
+type PostEventsOutboundLink fiber.Handler
 
-// ProvidePostEventsClicksFileDownload is a wire provider for POST
-// /api/v1/events/clicks/file-download handler.
-func ProvidePostEventsClicksFileDownload(
+// ProvidePostEventsOutboundLink is a wire provider for POST
+// /api/v1/events/outbound-link handler.
+func ProvidePostEventsOutboundLink(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstorage.Service,
-) PostEventsClicksFileDownload {
+) PostEventsOutboundLink {
 	return func(c *fiber.Ctx) error {
 		var err error
-		FileDownloadEv := event.FileDownload{}
+		outboundLinkClickEv := event.OutboundLinkClick{}
 
-		fileUri, err := uri.ParseBytes(c.Body())
+		outboundUri, err := uri.ParseBytes(c.Body())
 		if err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid outbound link: %v", err.Error()))
 		}
 
 		// Parse referrer.
-		FileDownloadEv.PageUri, err = hutils.PeekAndParseReferrerHeader(c)
+		outboundLinkClickEv.PageUri, err = hutils.PeekAndParseReferrerHeader(c)
 		if err != nil {
 			return err
+		}
+
+		// Check that link is external.
+		if outboundUri.Host() == outboundLinkClickEv.PageUri.Host() {
+			return fiber.NewError(fiber.StatusBadRequest, "internal link")
 		}
 
 		// Compute device id.
 		deviceId := hutils.ComputeDeviceId(
 			saltManagerService.StaticSalt().Bytes(), c.Request().Header.UserAgent(),
-			utils.UnsafeBytes(c.IP()), utils.UnsafeBytes(FileDownloadEv.PageUri.Host()),
+			utils.UnsafeBytes(c.IP()), utils.UnsafeBytes(outboundLinkClickEv.PageUri.Host()),
 		)
 
 		// Retrieve visitor session.
 		ctx := c.UserContext()
 		var ok bool
-		FileDownloadEv.Session, ok = sessionStorage.WaitSession(deviceId, FileDownloadEv.PageUri, hutils.ContextTimeout(ctx))
+		outboundLinkClickEv.Session, ok = sessionStorage.WaitSession(deviceId, outboundLinkClickEv.PageUri, hutils.ContextTimeout(ctx))
 		if !ok {
 			return errSessionNotFound
 		}
 
 		// Add event data.
-		FileDownloadEv.Timestamp = time.Now().UTC()
-		FileDownloadEv.FileUrl = fileUri
+		outboundLinkClickEv.Timestamp = time.Now().UTC()
+		outboundLinkClickEv.Link = outboundUri
 
 		// Store event.
-		err = eventStore.StoreFileDownload(ctx, &FileDownloadEv)
+		err = eventStore.StoreOutboundLinkClick(ctx, &outboundLinkClickEv)
 		if err != nil {
 			return fmt.Errorf("failed to store custom event: %w", err)
 		}

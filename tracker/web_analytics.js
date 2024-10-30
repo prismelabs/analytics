@@ -19,7 +19,6 @@
   // URL of prisme instance.
   var prismeUrl = currentScriptDataset.prismeUrl || currentScriptUrl.origin
   var prismeApiEventsUrl = prismeUrl.concat("/api/v1/events")
-  var prismeApiEventsClickUrl = prismeApiEventsUrl.concat("/clicks")
   // Tracked website domain.
   var domain = currentScriptDataset.domain || loc.host;
   // Path of current page.
@@ -135,7 +134,7 @@
   function sendClickEvent(kind, url, options) {
     options = defaultOptions(options)
 
-    return doFetch(prismeApiEventsClickUrl.concat(kind), fetchDefaultOptions({
+    return doFetch(prismeApiEventsUrl.concat(kind), fetchDefaultOptions({
       headers: configureHeaders(options, {}),
       body: url
     }));
