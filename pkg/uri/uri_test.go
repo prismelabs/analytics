@@ -11,9 +11,9 @@ import (
 func TestUri(t *testing.T) {
 	t.Run("Parse", func(t *testing.T) {
 		type testCase struct {
-			uri                                       string
-			scheme, host, hostname, path, hash, query string
-			expectedError                             error
+			uri                                               string
+			scheme, host, hostname, origin, path, hash, query string
+			expectedError                                     error
 		}
 
 		testCases := []testCase{
@@ -22,6 +22,7 @@ func TestUri(t *testing.T) {
 				scheme:   "https",
 				host:     "example.org:8080",
 				hostname: "example.org",
+				origin:   "https://example.org:8080",
 				path:     "/foo/bar",
 				query:    "q=baz",
 				hash:     "bang",
@@ -31,6 +32,7 @@ func TestUri(t *testing.T) {
 				scheme:   "https",
 				host:     "example.org:8080",
 				hostname: "example.org",
+				origin:   "https://example.org:8080",
 				path:     "/bar",
 				query:    "",
 				hash:     "bang?foo=bar",
@@ -40,6 +42,7 @@ func TestUri(t *testing.T) {
 				scheme:   "https",
 				host:     "example.org:8080",
 				hostname: "example.org",
+				origin:   "https://example.org:8080",
 				path:     "/",
 				query:    "",
 				hash:     "",
@@ -65,6 +68,7 @@ func TestUri(t *testing.T) {
 				require.Equal(t, tcase.scheme, uri.Scheme())
 				require.Equal(t, tcase.host, uri.Host())
 				require.Equal(t, tcase.hostname, uri.HostName())
+				require.Equal(t, tcase.origin, string(uri.OriginBytes()))
 				require.Equal(t, tcase.path, uri.Path())
 				require.Equal(t, tcase.query, uri.QueryString())
 				require.Equal(t, tcase.hash, uri.Hash())

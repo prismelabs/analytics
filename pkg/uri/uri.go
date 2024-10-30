@@ -118,6 +118,13 @@ func (u *Uri) Hash() string {
 	return utils.UnsafeString(u.data[start : start+u.hashLen])
 }
 
+// OriginBytes returns URL without path and query params: https://www.example.com:8080
+// for https://www.example.com:8080/foo/bar?q=baz#bang
+func (u *Uri) OriginBytes() []byte {
+	end := u.schemeLen + len("://") + u.hostLen
+	return u.data[:end]
+}
+
 // String implements fmt.Stringer.
 func (u Uri) String() string {
 	if u.queryLen == 0 {
