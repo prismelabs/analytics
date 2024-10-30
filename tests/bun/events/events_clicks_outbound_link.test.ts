@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 import { faker } from '@faker-js/faker'
 
 import { createClient } from '@clickhouse/client-web'
-import { COUNTRY_CODE_REGEX, PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
+import { COUNTRY_CODE_REGEX, PRISME_OUTBOUND_LINK_EVENTS_URL, PRISME_PAGEVIEWS_URL, PRISME_VISITOR_ID_REGEX, TIMESTAMP_REGEX, UUID_V7_REGEX } from '../const'
 import { randomIpWithSession } from '../utils'
 
 const seed = new Date().getTime()
@@ -10,7 +10,7 @@ console.log('faker seed', seed)
 faker.seed(seed)
 
 test('GET request instead of POST request', async () => {
-  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
     method: 'GET',
     headers: {
       Origin: 'http://mywebsite.localhost',
@@ -23,7 +23,7 @@ test('GET request instead of POST request', async () => {
 })
 
 test('invalid URL in X-Prisme-Referrer header', async () => {
-  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
@@ -36,7 +36,7 @@ test('invalid URL in X-Prisme-Referrer header', async () => {
 })
 
 test('non registered domain in Origin header is rejected', async () => {
-  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'https://example.com',
@@ -49,7 +49,7 @@ test('non registered domain in Origin header is rejected', async () => {
 })
 
 test('relative outbound link/uri in body', async () => {
-  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'https://mywebsite.localhost',
@@ -62,7 +62,7 @@ test('relative outbound link/uri in body', async () => {
 })
 
 test('invalid sessionless outbound link click event', async () => {
-  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
@@ -70,7 +70,49 @@ test('invalid sessionless outbound link click event', async () => {
       'X-Forwarded-For': faker.internet.ip(),
       'X-Prisme-Referrer': 'http://mywebsite.localhost/'
     },
-    body: '/foo/bar/baz'
+    body: 'https://www.example.com'
+  })
+  expect(response.status).toBe(400)
+})
+
+test('invalid Ping-From header', async () => {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
+      'Ping-From': '/relative/url',
+      'Ping-To': 'https://www.example.com'
+    },
+    body: 'PING'
+  })
+  expect(response.status).toBe(400)
+})
+
+test('invalid Ping-To header', async () => {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
+      'Ping-From': 'http://mywebsite.localhost',
+      'Ping-To': ''
+    },
+    body: 'PING'
+  })
+  expect(response.status).toBe(400)
+})
+
+test('invalid ping request, no session associated with Ping-From page', async () => {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost', { path: '/bar' }),
+      'Ping-From': 'http://mywebsite.localhost/foo',
+      'Ping-To': 'https://www.example.com/page1'
+    },
+    body: 'PING'
   })
   expect(response.status).toBe(400)
 })
@@ -85,7 +127,7 @@ test('valid test cases break', async () => {
 })
 
 test('valid outbound link click event', async () => {
-  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
@@ -128,12 +170,57 @@ test('valid outbound link click event', async () => {
   })
 })
 
+test('valid ping request', async () => {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
+      'Ping-From': 'http://mywebsite.localhost/foo',
+      'Ping-To': 'https://www.example.com/page1'
+    },
+    body: 'PING'
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestOutboundLinkClickEvent()
+
+  expect(data).toMatchObject({
+    session: {
+      domain: 'mywebsite.localhost',
+      entry_path: '/',
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: '/',
+      operating_system: 'Other',
+      browser_family: 'Other',
+      device: 'Other',
+      referrer_domain: 'direct',
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      utm_content: '',
+      version: 1
+    },
+    event: {
+      domain: 'mywebsite.localhost',
+      path: '/foo',
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      link: 'https://www.example.com/page1'
+    }
+  })
+})
+
 test('concurrent pageview and outbound link click event', async () => {
   const ipAddr = faker.internet.ip()
 
   await Promise.all([
     // Click events first.
-    fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
+    fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
       method: 'POST',
       headers: {
         Origin: 'http://mywebsite.localhost',
@@ -187,7 +274,7 @@ test('concurrent pageview and outbound link click event', async () => {
 })
 
 test('valid click event without X-Prisme-Referrer', async () => {
-  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
@@ -231,7 +318,7 @@ test('valid click event without X-Prisme-Referrer', async () => {
 })
 
 test('valid click event without trailing slash in referrer', async () => {
-  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
@@ -277,7 +364,7 @@ test('valid click event without trailing slash in referrer', async () => {
 test('valid click event with Windows + Chrome user agent', async () => {
   const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3'
 
-  const response = await fetch(PRISME_OUTBOUND_LINK_CLICK_EVENTS_URL, {
+  const response = await fetch(PRISME_OUTBOUND_LINK_EVENTS_URL, {
     method: 'POST',
     headers: {
       Origin: 'http://mywebsite.localhost',
