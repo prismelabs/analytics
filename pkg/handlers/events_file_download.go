@@ -25,39 +25,65 @@ func ProvidePostEventsFileDownload(
 ) PostEventsFileDownload {
 	return func(c *fiber.Ctx) error {
 		var err error
-		FileDownloadEv := event.FileDownload{}
+		fileDownloadEv := event.FileDownload{}
 
-		fileUri, err := uri.ParseBytes(c.Body())
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid outbound link: %v", err.Error()))
-		}
+		var fileUri uri.Uri
+		isPing := utils.UnsafeString(c.Body()) == "PING"
 
-		// Parse referrer.
-		FileDownloadEv.PageUri, err = hutils.PeekAndParseReferrerHeader(c)
-		if err != nil {
-			return err
+		// Ping attribute of HTML anchor element.
+		if isPing {
+			// Parse URI of visitor pages.
+			fileDownloadEv.PageUri, err = uri.ParseBytes(c.Request().Header.Peek(fiber.HeaderPingFrom))
+			if err != nil {
+				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid Ping-From header: %v", err.Error()))
+			}
+
+			// Parse URI of downloaded file.
+			fileUri, err = uri.ParseBytes(c.Request().Header.Peek(fiber.HeaderPingTo))
+			if err != nil {
+				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid Ping-To header: %v", err.Error()))
+			}
+		} else {
+			// Parse referrer.
+			fileDownloadEv.PageUri, err = hutils.PeekAndParseReferrerHeader(c)
+			if err != nil {
+				return err
+			}
+
+			// Parse URI of downloaded file.
+			fileUri, err = uri.ParseBytes(c.Body())
+			if err != nil {
+				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid outbound link: %v", err.Error()))
+			}
 		}
 
 		// Compute device id.
 		deviceId := hutils.ComputeDeviceId(
 			saltManagerService.StaticSalt().Bytes(), c.Request().Header.UserAgent(),
-			utils.UnsafeBytes(c.IP()), utils.UnsafeBytes(FileDownloadEv.PageUri.Host()),
+			utils.UnsafeBytes(c.IP()), utils.UnsafeBytes(fileDownloadEv.PageUri.Host()),
 		)
 
 		// Retrieve visitor session.
 		ctx := c.UserContext()
 		var ok bool
-		FileDownloadEv.Session, ok = sessionStorage.WaitSession(deviceId, FileDownloadEv.PageUri, hutils.ContextTimeout(ctx))
+		fileDownloadEv.Session, ok = sessionStorage.WaitSession(deviceId, fileDownloadEv.PageUri, hutils.ContextTimeout(ctx))
+		if !ok && isPing {
+			originUri, err := uri.ParseBytes(fileDownloadEv.PageUri.OriginBytes())
+			if err != nil {
+				panic(err)
+			}
+			fileDownloadEv.Session, ok = sessionStorage.WaitSession(deviceId, originUri, hutils.ContextTimeout(ctx))
+		}
 		if !ok {
 			return errSessionNotFound
 		}
 
 		// Add event data.
-		FileDownloadEv.Timestamp = time.Now().UTC()
-		FileDownloadEv.FileUrl = fileUri
+		fileDownloadEv.Timestamp = time.Now().UTC()
+		fileDownloadEv.FileUrl = fileUri
 
 		// Store event.
-		err = eventStore.StoreFileDownload(ctx, &FileDownloadEv)
+		err = eventStore.StoreFileDownload(ctx, &fileDownloadEv)
 		if err != nil {
 			return fmt.Errorf("failed to store custom event: %w", err)
 		}

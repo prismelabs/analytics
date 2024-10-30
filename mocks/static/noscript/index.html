@@ -10,15 +10,19 @@
 <body>
 	<h1>Index</h1>
 	<img src="http://prisme.localhost:8000/api/v1/noscript/events/pageviews?visitor-id=noscript-visitor" crossorigin=""
-		fetchpriority="high" />
-	<img src="http://prisme.localhost:8000/api/v1/noscript/events/custom/noscript-event?prop-extra=foo" crossorigin=""
-		fetchpriority="low" />
+		fetchpriority="high" style="position:fixed;top:-1px" />
+	<img src='http://prisme.localhost:8000/api/v1/noscript/events/custom/noscript-event?prop-extra="foo"' crossorigin=""
+		fetchpriority="low" style="position:fixed;top:-1px" />
 	<a href="/">Home</a>
 	<a href="/login.html">Login</a>
 	<a href="/manual.html">Manual tracking</a>
 	<a href="/pets/index.html">Pets</a>
 	<a href="/noscript/index.html">No script</a>
 	<a href="/noscript/index2.html">No script 2</a>
+	<a href="http://prisme.localhost:8000/api/v1/noscript/events/outbound-link?url=http://www.example.com">External</a>
+	<a href="http://www.example.com" ping="http://prisme.localhost:8000/api/v1/events/outbound-link">
+		External via ping
+	</a>
 </body>
 
 </html>

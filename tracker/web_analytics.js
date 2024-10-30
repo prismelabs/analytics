@@ -199,6 +199,15 @@
   }
   global.prisme = globalPrisme
 
+  // Filter ping attributes of anchor to prevent double outbound link
+  // click / file download event
+  doc.querySelectorAll('a[ping]').forEach(function(anchor) {
+    anchor.ping = anchor.ping
+      .split(" ")
+      .filter((url) => !url.includes(prismeUrl))
+      .join(" ")
+  })
+
   // Manual tracking insn't enabled.
   if (!manual) {
     // Don't expose pageview function.

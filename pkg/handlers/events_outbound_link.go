@@ -27,17 +27,35 @@ func ProvidePostEventsOutboundLink(
 		var err error
 		outboundLinkClickEv := event.OutboundLinkClick{}
 
-		outboundUri, err := uri.ParseBytes(c.Body())
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid outbound link: %v", err.Error()))
-		}
+		var outboundUri uri.Uri
+		isPing := utils.UnsafeString(c.Body()) == "PING"
 
-		// Parse referrer.
-		outboundLinkClickEv.PageUri, err = hutils.PeekAndParseReferrerHeader(c)
-		if err != nil {
-			return err
-		}
+		// Ping attribute of HTML anchor element.
+		if isPing {
+			// Parse URI of visitor pages.
+			outboundLinkClickEv.PageUri, err = uri.ParseBytes(c.Request().Header.Peek(fiber.HeaderPingFrom))
+			if err != nil {
+				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf(`invalid "Ping-From" header: %v`, err.Error()))
+			}
 
+			// Parse outbound URI.
+			outboundUri, err = uri.ParseBytes(c.Request().Header.Peek(fiber.HeaderPingTo))
+			if err != nil {
+				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf(`invalid "Ping-To" header: %v`, err.Error()))
+			}
+		} else {
+			// Parse referrer header.
+			outboundLinkClickEv.PageUri, err = hutils.PeekAndParseReferrerHeader(c)
+			if err != nil {
+				return err
+			}
+
+			// Parse outbound URI.
+			outboundUri, err = uri.ParseBytes(c.Body())
+			if err != nil {
+				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid outbound link: %v", err.Error()))
+			}
+		}
 		// Check that link is external.
 		if outboundUri.Host() == outboundLinkClickEv.PageUri.Host() {
 			return fiber.NewError(fiber.StatusBadRequest, "internal link")
@@ -53,6 +71,16 @@ func ProvidePostEventsOutboundLink(
 		ctx := c.UserContext()
 		var ok bool
 		outboundLinkClickEv.Session, ok = sessionStorage.WaitSession(deviceId, outboundLinkClickEv.PageUri, hutils.ContextTimeout(ctx))
+		if !ok && isPing {
+			originUri, err := uri.ParseBytes(outboundLinkClickEv.PageUri.OriginBytes())
+			if err != nil {
+				panic(err)
+			}
+			// Try to find session using origin of URI because sometimes browser don't
+			// send path in referrer. This is needed to avoid "no session found" error
+			// when session exists.
+			outboundLinkClickEv.Session, ok = sessionStorage.WaitSession(deviceId, originUri, hutils.ContextTimeout(ctx))
+		}
 		if !ok {
 			return errSessionNotFound
 		}
