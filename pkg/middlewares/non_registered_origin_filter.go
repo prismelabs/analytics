@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,13 +22,13 @@ func ProvideNonRegisteredOriginFilter(originRegistry originregistry.Service) Non
 		}
 
 		portIndex := strings.LastIndexByte(origin, ':')
-		if portIndex != -1 {
+		if portIndex > 0 {
 			origin = origin[:portIndex]
 		}
 
 		registered, err := originRegistry.IsOriginRegistered(c.UserContext(), origin)
 		if err != nil {
-			return fiber.ErrInternalServerError
+			return fmt.Errorf("failed to verify if origin is registered: %w", err)
 		}
 		if !registered {
 			return fiber.NewError(fiber.StatusBadRequest, "origin not registered")
