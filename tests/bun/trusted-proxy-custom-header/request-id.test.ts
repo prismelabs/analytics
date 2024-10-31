@@ -7,7 +7,7 @@ test('X-Request-Id is used when present', async () => {
   // Generate an access log.
   await fetch('http://prisme.localhost/', {
     headers: {
-      'X-Request-Id': requestId
+      'X-Custom-Request-Id': requestId
     }
   })
 
@@ -21,7 +21,7 @@ test('X-Request-Id is used when present', async () => {
   expect(lastLog.request_id).toBe(requestId)
 })
 
-test('Random UUID v4 is used when X-Request-Id is missing', async () => {
+test('Random UUID v4 is used when X-Custom-Request-Id is missing', async () => {
   // Generate an access log.
   await fetch('http://prisme.localhost/')
 
