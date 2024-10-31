@@ -87,7 +87,8 @@ You can find configuration documentation on
 ## Performance
 
 Prisme Analytics ingestion server is **easily** capable of ingesting more than
-50,000 req/s on my AMD Ryzen 7 7840U w/ Radeon 780M Graphics.
+50,000 req/s on my AMD Ryzen 7 7840U w/ Radeon 780M Graphics with injectors
+running on the same machine.
 
 ```
 $ cat /proc/cpuinfo | head | grep 'model name'
