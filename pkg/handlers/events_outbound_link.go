@@ -72,14 +72,10 @@ func ProvidePostEventsOutboundLink(
 		var ok bool
 		outboundLinkClickEv.Session, ok = sessionStorage.WaitSession(deviceId, outboundLinkClickEv.PageUri, hutils.ContextTimeout(ctx))
 		if !ok && isPing {
-			originUri, err := uri.ParseBytes(outboundLinkClickEv.PageUri.OriginBytes())
-			if err != nil {
-				panic(err)
-			}
-			// Try to find session using origin of URI because sometimes browser don't
-			// send path in referrer. This is needed to avoid "no session found" error
-			// when session exists.
-			outboundLinkClickEv.Session, ok = sessionStorage.WaitSession(deviceId, originUri, hutils.ContextTimeout(ctx))
+			// Fallback to root of referrer. This is needed as Ping-From contains entire url
+			// while referrer header may only contains origin depending on referrer policy.
+			outboundLinkClickEv.PageUri = outboundLinkClickEv.PageUri.RootUri()
+			outboundLinkClickEv.Session, ok = sessionStorage.WaitSession(deviceId, outboundLinkClickEv.PageUri, hutils.ContextTimeout(ctx))
 		}
 		if !ok {
 			return errSessionNotFound

@@ -68,11 +68,10 @@ func ProvidePostEventsFileDownload(
 		var ok bool
 		fileDownloadEv.Session, ok = sessionStorage.WaitSession(deviceId, fileDownloadEv.PageUri, hutils.ContextTimeout(ctx))
 		if !ok && isPing {
-			originUri, err := uri.ParseBytes(fileDownloadEv.PageUri.OriginBytes())
-			if err != nil {
-				panic(err)
-			}
-			fileDownloadEv.Session, ok = sessionStorage.WaitSession(deviceId, originUri, hutils.ContextTimeout(ctx))
+			// Fallback to root of referrer. This is needed as Ping-From contains entire url
+			// while referrer header may only contains origin depending on referrer policy.
+			fileDownloadEv.PageUri = fileDownloadEv.PageUri.RootUri()
+			fileDownloadEv.Session, ok = sessionStorage.WaitSession(deviceId, fileDownloadEv.PageUri, hutils.ContextTimeout(ctx))
 		}
 		if !ok {
 			return errSessionNotFound

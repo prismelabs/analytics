@@ -207,7 +207,7 @@ test('valid ping request', async () => {
     },
     event: {
       domain: 'mywebsite.localhost',
-      path: '/foo',
+      path: '/', // path of session and not path of Ping-From
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
       url: 'https://mywebsite.localhost/resource.tar.gz'

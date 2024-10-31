@@ -68,12 +68,19 @@ func TestUri(t *testing.T) {
 				require.Equal(t, tcase.scheme, uri.Scheme())
 				require.Equal(t, tcase.host, uri.Host())
 				require.Equal(t, tcase.hostname, uri.HostName())
-				require.Equal(t, tcase.origin, string(uri.OriginBytes()))
+				require.Equal(t, tcase.origin, uri.Origin())
 				require.Equal(t, tcase.path, uri.Path())
 				require.Equal(t, tcase.query, uri.QueryString())
 				require.Equal(t, tcase.hash, uri.Hash())
 			})
 		}
+
+		t.Run("RootUri", func(t *testing.T) {
+			uri, err := Parse("https://www.example.com/foo/bar?q=baz#qux")
+			require.NoError(t, err)
+			rootUri := uri.RootUri()
+			require.Equal(t, "https://www.example.com/", rootUri.String())
+		})
 
 		t.Run("ParsedUriIsCopied", func(t *testing.T) {
 			rawUri := []byte("https://www.example.com/")

@@ -87,6 +87,12 @@ func (u *Uri) HostName() string {
 	return host
 }
 
+// Origin returns origin part of Uri.
+func (u *Uri) Origin() string {
+	end := u.schemeLen + len("://") + u.hostLen
+	return utils.UnsafeString(u.data[:end])
+}
+
 // Path returns normalized path of URI: /foo/bar for
 // https://www.example.com:8080/foo/bar?q=baz#bang
 func (u *Uri) Path() string {
@@ -118,11 +124,17 @@ func (u *Uri) Hash() string {
 	return utils.UnsafeString(u.data[start : start+u.hashLen])
 }
 
-// OriginBytes returns URL without path and query params: https://www.example.com:8080
-// for https://www.example.com:8080/foo/bar?q=baz#bang
-func (u *Uri) OriginBytes() []byte {
-	end := u.schemeLen + len("://") + u.hostLen
-	return u.data[:end]
+// RootUri returns a new Uri with path stripped to / and query args and fragment
+// removed.
+func (u *Uri) RootUri() Uri {
+	return Uri{
+		data:      u.data[:u.schemeLen+len("://")+u.hostLen+1],
+		schemeLen: u.schemeLen,
+		hostLen:   u.hostLen,
+		pathLen:   1,
+		queryLen:  0,
+		hashLen:   0,
+	}
 }
 
 // String implements fmt.Stringer.
