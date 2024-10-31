@@ -12,6 +12,7 @@ func ProvideFiber(
 	eventsCorsMiddleware middlewares.EventsCors,
 	eventsRateLimiterMiddleware middlewares.EventsRateLimiter,
 	getNoscriptCustomEventHandler handlers.GetNoscriptEventsCustom,
+	getNoscriptOutboundLinkEventHandler handlers.GetNoscriptEventsOutboundLink,
 	getNoscriptPageViewEventHandler handlers.GetNoscriptEventsPageviews,
 	minimalFiber MinimalFiber,
 	nonRegisteredOriginFilterMiddleware middlewares.NonRegisteredOriginFilter,
@@ -20,6 +21,7 @@ func ProvideFiber(
 	postFileDownloadEventHandler handlers.PostEventsFileDownload,
 	postOutboundLinkEventHandler handlers.PostEventsOutboundLink,
 	postPageViewEventHandler handlers.PostEventsPageviews,
+	referrerAsDefaultOriginMiddleware middlewares.ReferrerAsDefaultOrigin,
 ) *fiber.App {
 	app := (*fiber.App)(minimalFiber)
 
@@ -34,6 +36,7 @@ func ProvideFiber(
 	app.Use("/api/v1/noscript/events/*",
 		fiber.Handler(eventsCorsMiddleware),
 		fiber.Handler(eventsRateLimiterMiddleware),
+		fiber.Handler(referrerAsDefaultOriginMiddleware),
 		fiber.Handler(nonRegisteredOriginFilterMiddleware),
 		fiber.Handler(apiEventsTimeoutMiddleware),
 		// Prevent caching of GET responses.
@@ -47,6 +50,7 @@ func ProvideFiber(
 	app.Get("/api/v1/noscript/events/custom/:name", fiber.Handler(getNoscriptCustomEventHandler))
 
 	app.Post("/api/v1/events/outbound-link", fiber.Handler(postOutboundLinkEventHandler))
+	app.Get("/api/v1/noscript/events/outbound-link", fiber.Handler(getNoscriptOutboundLinkEventHandler))
 
 	app.Post("/api/v1/events/file-download", fiber.Handler(postFileDownloadEventHandler))
 
