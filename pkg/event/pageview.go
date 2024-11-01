@@ -14,6 +14,7 @@ type PageView struct {
 	Session   Session
 	Timestamp time.Time
 	PageUri   uri.Uri
+	Status    uint16
 }
 
 // MarshalZerologObject implements zerolog.LogObjectMarshaler.
@@ -21,5 +22,6 @@ func (pv *PageView) MarshalZerologObject(e *zerolog.Event) {
 	e.
 		Object("session", &pv.Session).
 		Time("timestamp", pv.Timestamp).
-		Stringer("page_uri", pv.PageUri)
+		Stringer("page_uri", pv.PageUri).
+		Uint16("status", pv.Status)
 }

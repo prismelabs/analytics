@@ -202,6 +202,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 				ev.Session.Utm.Campaign,
 				ev.Session.Utm.Term,
 				ev.Session.Utm.Content,
+				ev.Status,
 				ev.Session.PageviewCount-1, // Cancel previous version.
 				-1,
 			)
@@ -227,6 +228,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 			ev.Session.Utm.Campaign,
 			ev.Session.Utm.Term,
 			ev.Session.Utm.Content,
+			ev.Status,
 			ev.Session.PageviewCount,
 			1,
 		)

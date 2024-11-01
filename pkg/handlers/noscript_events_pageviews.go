@@ -49,6 +49,7 @@ func ProvideGetNoscriptEventsPageviews(
 			utils.UnsafeBytes(c.Query("document-referrer")),
 			c.Context().UserAgent(),
 			utils.UnsafeBytes(c.IP()),
+			c.Query("status"),
 			c.Query("visitor-id"),
 		)
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -51,6 +52,7 @@ func ProvidePostEventsPageViews(
 			c.Request().Header.Peek("X-Prisme-Document-Referrer"),
 			c.Context().UserAgent(),
 			utils.UnsafeBytes(c.IP()),
+			utils.UnsafeString(c.Request().Header.Peek("X-Prisme-Status")),
 			utils.UnsafeString(c.Request().Header.Peek("X-Prisme-Visitor-Id")),
 		)
 	}
@@ -66,17 +68,27 @@ func eventsPageviewsHandler(
 	headers *fasthttp.RequestHeader,
 	requestReferrer uri.Uri,
 	documentReferrer, userAgent, ipAddr []byte,
-	visitorId string,
+	status, visitorId string,
 ) (err error) {
 	var referrerUri event.ReferrerUri
 	pageView := event.PageView{
 		PageUri: requestReferrer,
+		Status:  fiber.StatusOK,
+	}
+
+	// Retrive pageview status code.
+	if status != "" {
+		pvStatus, err := strconv.ParseUint(status, 10, 16)
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, "invalid pageview status")
+		}
+		pageView.Status = uint16(pvStatus)
 	}
 
 	// Parse referrer URI.
 	referrerUri, err = event.ParseReferrerUri(documentReferrer)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid X-Prisme-Document-Referrer")
+		return fiber.NewError(fiber.StatusBadRequest, "invalid document referrer")
 	}
 
 	// Compute device id.

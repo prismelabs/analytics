@@ -130,6 +130,53 @@ test('valid internal pageview traffic with no session associated', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'mywebsite.localhost',
       path: '/foo',
+      status: 200,
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX)
+    }
+  })
+})
+
+test('valid pageview with status 404', async () => {
+  const response = await fetch(PRISME_PAGEVIEWS_URL, {
+    method: 'POST',
+    headers: {
+      Origin: 'http://mywebsite.localhost',
+      'X-Forwarded-For': faker.internet.ip(),
+      Referer: 'https://mywebsite.localhost/foo?bar=baz#qux',
+      'X-Prisme-Status': '404'
+    }
+  })
+  expect(response.status).toBe(200)
+
+  const data = await getLatestPageview()
+
+  expect(data).toMatchObject({
+    session: {
+      domain: 'mywebsite.localhost',
+      entry_path: '/foo',
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: '/foo',
+      exit_status: 404,
+      operating_system: 'Other',
+      browser_family: 'Other',
+      device: 'Other',
+      referrer_domain: 'direct',
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      utm_content: '',
+      version: 1
+    },
+    pageview: {
+      timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      domain: 'mywebsite.localhost',
+      path: '/foo',
+      status: 404,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -173,6 +220,7 @@ test('registered domain in Origin header and valid referrer is accepted', async 
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'mywebsite.localhost',
       path: '/foo',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -217,6 +265,7 @@ test('registered domain in Origin header and valid X-Prisme-Referrer is accepted
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'mywebsite.localhost',
       path: '/foo',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -261,6 +310,7 @@ test('valid URL with registered domain in Origin header is accepted', async () =
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/another/foo',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -306,6 +356,7 @@ test('valid pageview with Windows + Chrome user agent', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/another/foo',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -349,6 +400,7 @@ test('valid pageview without X-Prisme-Document-Referrer', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/another/foo',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -394,6 +446,7 @@ test('valid pageview with different Referer and X-Prisme-Referrer headers define
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'bar.mywebsite.localhost',
       path: '/',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -437,6 +490,7 @@ test('valid pageview without trailing slash in referrer', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -480,6 +534,7 @@ test('valid pageview with US IP address', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/us/foo',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -524,6 +579,7 @@ test('valid pageview with dirty path', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/another/foo',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -568,6 +624,7 @@ test('valid pageview with UTM parameters', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -611,6 +668,7 @@ test('valid pageview with ref query parameter', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -655,6 +713,7 @@ test('valid consecutive pageviews', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -697,6 +756,7 @@ test('valid consecutive pageviews', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/foo',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -742,6 +802,7 @@ test('valid pageview with custom visitor id', async () => {
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/',
+      status: 200,
       visitor_id: visitorId,
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -786,6 +847,7 @@ test('valid pageview with empty visitor id fallback to auto generated visitor id
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -830,6 +892,7 @@ test('valid consecutive pageviews with visitor id defined on second event', asyn
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/',
+      status: 200,
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }
@@ -874,6 +937,7 @@ test('valid consecutive pageviews with visitor id defined on second event', asyn
       timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'foo.mywebsite.localhost',
       path: '/foo',
+      status: 200,
       visitor_id: visitorId,
       session_uuid: expect.stringMatching(UUID_V7_REGEX)
     }

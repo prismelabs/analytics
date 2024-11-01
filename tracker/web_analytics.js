@@ -31,6 +31,8 @@
   var trackOutboundLinks = currentScriptDataset.outboundLinks !== "false"
   // Track file downloads.
   var trackFileDownloads = currentScriptDataset.fileDownloads !== "false"
+  // Status code.
+  var statusCode = currentScriptDataset.status || "200"
 
   // State variables.
   var referrer = doc.referrer.replace(loc.host, domain);
@@ -45,6 +47,8 @@
       if (manual) options.domain = loc.host
       else options.domain = domain
     }
+
+    if (!options.status) options.status = statusCode
 
     if (!options.path) {
       // Ignore path variable when manual tracking is enabled or this isn't
@@ -95,6 +99,7 @@
     doFetch(prismeApiEventsUrl.concat("/pageviews"), fetchDefaultOptions({
       headers: configureHeaders(options, {
         "X-Prisme-Document-Referrer": referrer,
+        "X-Prisme-Status": options.status,
       }),
     }));
 
