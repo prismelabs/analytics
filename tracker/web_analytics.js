@@ -31,40 +31,11 @@
   var trackOutboundLinks = currentScriptDataset.outboundLinks !== "false"
   // Track file downloads.
   var trackFileDownloads = currentScriptDataset.fileDownloads !== "false"
-  var extraDownloadsFileTypes = (currentScriptDataset.extraDownloadsFileTypes || "").split(",")
 
   // State variables.
   var referrer = doc.referrer.replace(loc.host, domain);
   var pageviewCount = 1
   var supportsKeepAlive = 'Request' in global && 'keepalive' in new Request('')
-  var trackFileDownloadsTypes = [
-    '7z',
-    'avi',
-    'csv',
-    'dmg',
-    'docx',
-    'exe',
-    'gz',
-    'key',
-    'midi',
-    'mov',
-    'mp3',
-    'mp4',
-    'mpeg',
-    'pdf',
-    'pkg',
-    'pps',
-    'ppt',
-    'pptx',
-    'rar',
-    'rtf',
-    'txt',
-    'wav',
-    'wma',
-    'wmv',
-    'xlsx',
-    'zip',
-  ].concat(extraDownloadsFileTypes)
 
   function defaultOptions(options) {
     if (!options) options = {}
@@ -172,9 +143,7 @@
     }
 
     // File downloads.
-    if (trackFileDownloads &&
-      (trackFileDownloadsTypes.includes(url.pathname.split(".").pop()) ||
-        anchor.getAttribute("download") !== null)) {
+    if (trackFileDownloads && anchor.getAttribute("download") !== null) {
       return sendClickEvent("/file-download", url)
     }
   }
