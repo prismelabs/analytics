@@ -31,10 +31,16 @@ Once your done, run all tests to ensure nothing broke and fix it otherwise.
 
 ## Update IP database
 
-To generate a new IP database, clone
-[`negrel/geoacumen-country`](https://github.com/negrel/geoacumen-country)
-repository and run `make clean ip2asn-combined.mmdb`. Then copy
-`ip2asn-combined.mmdb` to `pkg/embedded/geodb` and commit changes.
+To update embedded IP database, simply run `scripts/update-geodb.sh` script from
+repository's root and commit changes.
+
+## Update User-Agent parser
+
+To update user-agent parser regexes, run `scripts/update-uap.sh` script from
+repository's root and commit changes.
+
+> **NOTE**: Update script downloads latest regex file and patches it. If an error
+occurred during the patch phase, fix it.
 
 ## Release a new version
 

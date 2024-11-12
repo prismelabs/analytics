@@ -14,6 +14,7 @@ $ tree -d --gitignore .
 ├── docs                          # Documentation.
 ├── mocks                         # Mocks holds mocks website used to test manually Prisme when developping.
 ├── pkg                           # Prisme Go packages.
+├── scripts                       # Maintainer scripts.
 ├── tests                         # End-to-end tests.
 │   ├── bun                       # E2E tests using bun.
 │   └── perf                      # E2E benchmarks.
