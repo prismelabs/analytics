@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -144,15 +143,28 @@ func ContextTimeout(ctx context.Context) time.Duration {
 	return time.Until(deadline)
 }
 
+var (
+	clientHintsPlatformMap = map[string]string{
+		`"Android"`:     "Android",
+		`"Chrome OS"`:   "Chrome OS",
+		`"Chromium OS"`: "Chrome OS",
+		`"Linux"`:       "Linux",
+		`"Windows"`:     "Windows",
+		`"iOS"`:         "iOS",
+		`"macOS"`:       "macOS",
+	}
+)
+
 // ExtractClientHints parses Sec-Ch-Ua-XXX headers and adds them to the given
 // *uaparser.Client.
 func ExtractClientHints(headers *fasthttp.RequestHeader, client *uaparser.Client) {
 	if model := string(headers.Peek("Sec-Ch-Ua-Model")); model != "" {
 		client.Device = model
 	}
-	if os := string(headers.Peek("Sec-Ch-Ua-Platform")); os != "" {
-		osBytes := bytes.TrimPrefix(utils.UnsafeBytes(os), []byte(`"`))
-		osBytes = bytes.TrimSuffix(osBytes, []byte(`"`))
-		client.OperatingSystem = utils.UnsafeString(osBytes)
+	if os := utils.UnsafeString(headers.Peek("Sec-Ch-Ua-Platform")); os != "" {
+		os, ok := clientHintsPlatformMap[os]
+		if ok {
+			client.OperatingSystem = os
+		}
 	}
 }
