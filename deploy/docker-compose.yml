@@ -1,6 +1,6 @@
 services:
   prisme:
-    image: "docker.io/prismelabs/analytics:latest"
+    image: "docker.io/prismelabs/analytics:v0.17.0"
     depends_on:
       clickhouse:
         condition: service_healthy
@@ -30,7 +30,7 @@ services:
       - 127.0.0.1:8123:8123 # HTTP interface (useful for debugging)
       - 127.0.0.1:9000:9000 # Native interface (used by Prisme instances)
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8123/ping || exit 1
     volumes:
       - "clickhouse_data:/var/lib/clickhouse"
     environment:
