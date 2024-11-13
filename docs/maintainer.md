@@ -48,3 +48,12 @@ Before releasing a new version, be sure to update dependencies, IP database
 and maybe Grafana and ClickHouse Docker images to ensure compatibility with
 latest versions.
 
+Run benchmarks `make -C tests perf` to ensure there is no performance regression
+in ClickHouse and Prisme.
+
+Check `docker compose` based deployment in `deploy/` directory using
+`prismelabs/analytics:dev` image.
+
+Once everything is works as expected, update version in
+`deploy/docker-compose.yml` and `flake.nix`.
+
