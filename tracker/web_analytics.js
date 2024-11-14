@@ -38,6 +38,7 @@
   var referrer = doc.referrer.replace(loc.host, domain);
   var pageviewCount = 1
   var supportsKeepAlive = 'Request' in global && 'keepalive' in new Request('')
+  var trackingDisabled = localStorage.getItem("prismeAnalytics.tracking.enable") === "false"
 
   function defaultOptions(options) {
     if (!options) options = {}
@@ -94,6 +95,7 @@
 
 
   function pageview(options) {
+    if (trackingDisabled) return;
     options = defaultOptions(options)
 
     doFetch(prismeApiEventsUrl.concat("/pageviews"), fetchDefaultOptions({
@@ -108,6 +110,7 @@
   }
 
   function sendClickEvent(kind, url, options) {
+    if (trackingDisabled) return Promise.resolve();
     options = defaultOptions(options)
 
     return doFetch(prismeApiEventsUrl.concat(kind), fetchDefaultOptions({
@@ -161,6 +164,7 @@
   var globalPrisme = {
     pageview: pageview,
     trigger(eventName, properties, options) {
+      if (trackingDisabled) return;
       options = defaultOptions(options)
 
       doFetch(prismeUrl.concat("/api/v1/events/custom/", eventName), fetchDefaultOptions({
