@@ -43,7 +43,7 @@ flexibility to measure what matters most, providing personalized insights to
 inform your business decisions.
 * **Privacy-focused**: Worry-free GDPR, PPCA, PECR and Shrems II compliance with
 cookie-less analytics that collect only anonymized data.
-* **Lightweight**: Prisme tracking script is around 1kB (~45x smaller than
+* **Lightweight**: Prisme tracking script is around 2kB (~22x smaller than
 Google Analytics) and single pixel image returned for javascript less tracking
 is 35 bytes.
 * **Humans only**: Bots, scrapers and spam traffic are automatically filtered.
