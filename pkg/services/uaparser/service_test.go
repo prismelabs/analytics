@@ -31,7 +31,7 @@ func TestService(t *testing.T) {
 		{
 			expectedClient: Client{
 				BrowserFamily:   "Safari",
-				OperatingSystem: "Mac OS",
+				OperatingSystem: "macOS",
 				Device:          "Mac",
 			},
 			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.1",
@@ -39,7 +39,7 @@ func TestService(t *testing.T) {
 		{
 			expectedClient: Client{
 				BrowserFamily:   "Chrome",
-				OperatingSystem: "Mac OS",
+				OperatingSystem: "macOS",
 				Device:          "Mac",
 			},
 			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.3",
