@@ -4,10 +4,12 @@ import (
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
+type privateUri = uri.Uri
+
 // ReferrerUri wraps an uri.Uri to represent referrer URIs (absolute URI with
 // no query args and fragment/hash). An empty referrer uri is considered as "direct".
 type ReferrerUri struct {
-	uri.Uri
+	privateUri
 }
 
 // ParseReferrerUri parses a referrer uri.
