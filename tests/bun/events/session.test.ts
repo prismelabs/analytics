@@ -323,12 +323,14 @@ test('session duplicate pageview on second pageview followed by fork on third pa
     const session = await getLatestSession()
 
     // There is two different sessions now.
-    if (i === 0) firstSession = session
+    if (i === 0) { firstSession = session;
+      expect(session.version).toEqual(3)
+    }
     else {
       expect(session).not.toEqual(firstSession)
+      expect(session.version).toEqual(1)
     }
 
-    expect(session.version).toEqual(3)
   }
 }, { timeout: 30_000 })
 
