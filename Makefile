@@ -87,7 +87,7 @@ $(GENENV_FILE):
 
 .PHONY: test/unit
 test/unit: codegen
-	go test -v -short -race -bench=./... -benchmem ./...
+	go test -v -tags assert -short -race -bench=./... -benchmem ./...
 
 .PHONY: test/integ
 test/integ: .env
