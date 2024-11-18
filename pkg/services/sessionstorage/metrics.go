@@ -3,7 +3,8 @@ package sessionstorage
 import "github.com/prometheus/client_golang/prometheus"
 
 type metrics struct {
-	activeSessions    prometheus.Gauge
+	gcCycle           prometheus.Counter
+	devicesCounter    *prometheus.CounterVec
 	sessionsWait      prometheus.Gauge
 	sessionsCounter   *prometheus.CounterVec
 	sessionsPageviews prometheus.Histogram
@@ -11,10 +12,14 @@ type metrics struct {
 
 func newMetrics(promRegistry *prometheus.Registry) metrics {
 	m := metrics{
-		activeSessions: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "sessionstorage_active_sessions",
-			Help: "Active sessions stored in memory",
+		gcCycle: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sessionstorage_gc_cycles_total",
+			Help: "Number of sessionstorage garbage collector cycles",
 		}),
+		devicesCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "sessionstorage_devices_total",
+			Help: "Number of inserted, overwritten and expired devices",
+		}, []string{"type"}),
 		sessionsWait: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "sessionstorage_sessions_wait",
 			Help: "Number of events waiting for a session",
@@ -31,7 +36,8 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 	}
 
 	promRegistry.MustRegister(
-		m.activeSessions,
+		m.gcCycle,
+		m.devicesCounter,
 		m.sessionsWait,
 		m.sessionsCounter,
 		m.sessionsPageviews,
