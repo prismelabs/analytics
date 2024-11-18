@@ -123,6 +123,7 @@ func eventsPageviewsHandler(
 						return fmt.Errorf("failed to generate session uuid: %w", err)
 					}
 
+					session.PageviewCount = 0
 					session.PageUri = pageView.PageUri
 					sessionStorage.InsertSession(deviceId, session)
 
