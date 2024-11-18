@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"math"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,8 +14,13 @@ type EventsRateLimiter fiber.Handler
 
 // ProvideEventsRateLimiter is a wire provider for events endpoints rate limiter.
 func ProvideEventsRateLimiter(cfg config.Server, storage storage.Storage) EventsRateLimiter {
+	max := 60
+	if cfg.Debug {
+		max = math.MaxInt
+	}
+
 	return limiter.New(limiter.Config{
-		Max: 60,
+		Max: max,
 		KeyGenerator: func(c *fiber.Ctx) string {
 			return c.IP()
 		},
