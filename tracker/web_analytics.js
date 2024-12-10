@@ -147,12 +147,12 @@
       }
 
       // Send event.
-      sendClickEvent("/outbound-link", url).finally(followLink)
+      sendClickEvent("/outbound-links", url).finally(followLink)
     }
 
     // File downloads.
     if (trackFileDownloads && anchor.getAttribute("download") !== null) {
-      return sendClickEvent("/file-download", url)
+      return sendClickEvent("/file-downloads", url)
     }
   }
 

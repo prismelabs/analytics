@@ -46,7 +46,5 @@ func ProvideFiber(
 	app.Post("/api/v1/events/custom/:name", fiber.Handler(postCustomEventHandler))
 	app.Get("/api/v1/noscript/events/custom/:name", fiber.Handler(getNoscriptCustomEventHandler))
 
-	app.Post("/api/v1/events/outbound-link", fiber.Handler(postOutboundLinkEventHandler))
-
 	return app
 }

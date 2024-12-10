@@ -17,7 +17,7 @@ import (
 type PostEventsFileDownload fiber.Handler
 
 // ProvidePostEventsFileDownload is a wire provider for POST
-// /api/v1/events/file-download handler.
+// /api/v1/events/file-downloads handler.
 func ProvidePostEventsFileDownload(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
