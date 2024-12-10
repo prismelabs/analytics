@@ -31,9 +31,10 @@ func TestRequestIdMiddleware(t *testing.T) {
 			})
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
-			_, err := app.Test(req)
+			res, err := app.Test(req)
 			require.NoError(t, err)
 			require.True(t, middlewareCalled)
+			require.Regexp(t, "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", res.Header.Get("X-Prisme-Request-Id"))
 		})
 
 		t.Run("WithRequestIdHeader", func(t *testing.T) {
@@ -57,9 +58,11 @@ func TestRequestIdMiddleware(t *testing.T) {
 				// Add request id.
 				req.Header.Add(fiber.HeaderXRequestID, reqRequestId.String())
 
-				_, err := app.Test(req)
+				res, err := app.Test(req)
 				require.NoError(t, err)
 				require.True(t, middlewareCalled)
+				require.Regexp(t, "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", res.Header.Get("X-Prisme-Request-Id"))
+				require.NotEqual(t, reqRequestId.String(), res.Header.Get("X-Prisme-Request-Id"))
 			})
 
 			t.Run("Custom", func(t *testing.T) {
@@ -85,9 +88,10 @@ func TestRequestIdMiddleware(t *testing.T) {
 				req.Header.Add(fiber.HeaderXRequestID, "bar")
 				req.Header.Add("X-Custom-Request-Id", "foo")
 
-				_, err := app.Test(req)
+				res, err := app.Test(req)
 				require.NoError(t, err)
 				require.True(t, middlewareCalled)
+				require.Regexp(t, "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", res.Header.Get("X-Prisme-Request-Id"))
 			})
 		})
 	})
@@ -113,9 +117,10 @@ func TestRequestIdMiddleware(t *testing.T) {
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-			_, err := app.Test(req)
+			res, err := app.Test(req)
 			require.NoError(t, err)
 			require.True(t, middlewareCalled)
+			require.Regexp(t, "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", res.Header.Get("X-Prisme-Request-Id"))
 		})
 
 		t.Run("WithRequestIdHeader", func(t *testing.T) {
@@ -139,9 +144,10 @@ func TestRequestIdMiddleware(t *testing.T) {
 				// Add request id.
 				req.Header.Add(fiber.HeaderXRequestID, expectedRequestId.String())
 
-				_, err := app.Test(req)
+				res, err := app.Test(req)
 				require.NoError(t, err)
 				require.True(t, middlewareCalled)
+				require.Equal(t, expectedRequestId.String(), res.Header.Get("X-Prisme-Request-Id"))
 			})
 
 			t.Run("Custom", func(t *testing.T) {
@@ -169,9 +175,10 @@ func TestRequestIdMiddleware(t *testing.T) {
 				req.Header.Add(fiber.HeaderXRequestID, "bar")
 				req.Header.Add("X-Custom-Request-Id", "foo")
 
-				_, err := app.Test(req)
+				res, err := app.Test(req)
 				require.NoError(t, err)
 				require.True(t, middlewareCalled)
+				require.Equal(t, "foo", res.Header.Get("X-Prisme-Request-Id"))
 			})
 		})
 	})

@@ -25,6 +25,8 @@ func ProvideRequestId(cfg config.Server) RequestId {
 
 		c.Locals(RequestIdKey{}, requestId)
 
+		c.Response().Header.Set("X-Prisme-Request-Id", requestId)
+
 		return c.Next()
 	}
 }
