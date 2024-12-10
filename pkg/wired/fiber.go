@@ -12,15 +12,15 @@ func ProvideFiber(
 	eventsCorsMiddleware middlewares.EventsCors,
 	eventsRateLimiterMiddleware middlewares.EventsRateLimiter,
 	getNoscriptCustomEventHandler handlers.GetNoscriptEventsCustom,
-	getNoscriptOutboundLinkEventHandler handlers.GetNoscriptEventsOutboundLink,
-	getNoscriptPageViewEventHandler handlers.GetNoscriptEventsPageviews,
+	getNoscriptOutboundLinksEventHandler handlers.GetNoscriptEventsOutboundLinks,
+	getNoscriptPageViewsEventHandler handlers.GetNoscriptEventsPageviews,
 	minimalFiber MinimalFiber,
 	nonRegisteredOriginFilterMiddleware middlewares.NonRegisteredOriginFilter,
 	noscriptHandlersCacheMiddleware middlewares.NoscriptHandlersCache,
 	postCustomEventHandler handlers.PostEventsCustom,
-	postFileDownloadEventHandler handlers.PostEventsFileDownload,
-	postOutboundLinkEventHandler handlers.PostEventsOutboundLink,
-	postPageViewEventHandler handlers.PostEventsPageviews,
+	postFileDownloadsEventHandler handlers.PostEventsFileDownloads,
+	postOutboundLinksEventHandler handlers.PostEventsOutboundLinks,
+	postPageViewsEventHandler handlers.PostEventsPageviews,
 	referrerAsDefaultOriginMiddleware middlewares.ReferrerAsDefaultOrigin,
 ) *fiber.App {
 	app := (*fiber.App)(minimalFiber)
@@ -43,16 +43,16 @@ func ProvideFiber(
 		fiber.Handler(noscriptHandlersCacheMiddleware),
 	)
 
-	app.Post("/api/v1/events/pageviews", fiber.Handler(postPageViewEventHandler))
-	app.Get("/api/v1/noscript/events/pageviews", fiber.Handler(getNoscriptPageViewEventHandler))
+	app.Post("/api/v1/events/pageviews", fiber.Handler(postPageViewsEventHandler))
+	app.Get("/api/v1/noscript/events/pageviews", fiber.Handler(getNoscriptPageViewsEventHandler))
 
 	app.Post("/api/v1/events/custom/:name", fiber.Handler(postCustomEventHandler))
 	app.Get("/api/v1/noscript/events/custom/:name", fiber.Handler(getNoscriptCustomEventHandler))
 
-	app.Post("/api/v1/events/outbound-link", fiber.Handler(postOutboundLinkEventHandler))
-	app.Get("/api/v1/noscript/events/outbound-link", fiber.Handler(getNoscriptOutboundLinkEventHandler))
+	app.Post("/api/v1/events/outbound-links", fiber.Handler(postOutboundLinksEventHandler))
+	app.Get("/api/v1/noscript/events/outbound-links", fiber.Handler(getNoscriptOutboundLinksEventHandler))
 
-	app.Post("/api/v1/events/file-download", fiber.Handler(postFileDownloadEventHandler))
+	app.Post("/api/v1/events/file-downloads", fiber.Handler(postFileDownloadsEventHandler))
 
 	return app
 }

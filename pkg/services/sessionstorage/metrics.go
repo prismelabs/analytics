@@ -18,7 +18,7 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 		}),
 		devicesCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "sessionstorage_devices_total",
-			Help: "Number of inserted, overwritten and expired devices",
+			Help: "Number of inserted and deleted devices",
 		}, []string{"type"}),
 		sessionsWait: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "sessionstorage_sessions_wait",
@@ -26,7 +26,7 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 		}),
 		sessionsCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "sessionstorage_sessions_total",
-			Help: "Number of inserted, overwritten and expired sessions",
+			Help: "Number of inserted and expired sessions",
 		}, []string{"type"}),
 		sessionsPageviews: prometheus.NewHistogram(prometheus.HistogramOpts{
 			Name:    "sessionstorage_sessions_pageviews",

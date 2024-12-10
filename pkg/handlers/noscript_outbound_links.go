@@ -14,48 +14,29 @@ import (
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
-type PostEventsOutboundLink fiber.Handler
+type GetNoscriptEventsOutboundLinks fiber.Handler
 
-// ProvidePostEventsOutboundLink is a wire provider for POST
-// /api/v1/events/outbound-link handler.
-func ProvidePostEventsOutboundLink(
+// ProvideGetNoscriptEventsOutboundLinks is a wire provider for
+// GET /api/v1/noscript/events/outbound-links handler.
+func ProvideGetNoscriptEventsOutboundLinks(
 	eventStore eventstore.Service,
-	saltManagerService saltmanager.Service,
 	sessionStorage sessionstorage.Service,
-) PostEventsOutboundLink {
+	saltManagerService saltmanager.Service,
+) GetNoscriptEventsOutboundLinks {
 	return func(c *fiber.Ctx) error {
 		var err error
 		outboundLinkClickEv := event.OutboundLinkClick{}
 
-		var outboundUri uri.Uri
-		isPing := utils.UnsafeString(c.Body()) == "PING"
-
-		// Ping attribute of HTML anchor element.
-		if isPing {
-			// Parse URI of visitor pages.
-			outboundLinkClickEv.PageUri, err = uri.ParseBytes(c.Request().Header.Peek(fiber.HeaderPingFrom))
-			if err != nil {
-				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf(`invalid "Ping-From" header: %v`, err.Error()))
-			}
-
-			// Parse outbound URI.
-			outboundUri, err = uri.ParseBytes(c.Request().Header.Peek(fiber.HeaderPingTo))
-			if err != nil {
-				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf(`invalid "Ping-To" header: %v`, err.Error()))
-			}
-		} else {
-			// Parse referrer header.
-			outboundLinkClickEv.PageUri, err = hutils.PeekAndParseReferrerHeader(c)
-			if err != nil {
-				return err
-			}
-
-			// Parse outbound URI.
-			outboundUri, err = uri.ParseBytes(c.Body())
-			if err != nil {
-				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid outbound link: %v", err.Error()))
-			}
+		outboundLinkClickEv.PageUri, err = hutils.PeekAndParseReferrerQueryHeader(c)
+		if err != nil {
+			return err
 		}
+
+		outboundUri, err := uri.Parse(c.Query("url"))
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid outbound link: %v", err.Error()))
+		}
+
 		// Check that link is external.
 		if outboundUri.Host() == outboundLinkClickEv.PageUri.Host() {
 			return fiber.NewError(fiber.StatusBadRequest, "internal link")
@@ -67,13 +48,12 @@ func ProvidePostEventsOutboundLink(
 			utils.UnsafeBytes(c.IP()), utils.UnsafeBytes(outboundLinkClickEv.PageUri.Host()),
 		)
 
-		// Retrieve visitor session.
 		ctx := c.UserContext()
 		var ok bool
 		outboundLinkClickEv.Session, ok = sessionStorage.WaitSession(deviceId, outboundLinkClickEv.PageUri, hutils.ContextTimeout(ctx))
-		if !ok && isPing {
-			// Fallback to root of referrer. This is needed as Ping-From contains entire url
-			// while referrer header may only contains origin depending on referrer policy.
+		if !ok {
+			// Fallback to root of referrer. This is needed if referrer query or header contained entire url
+			// while referrer pageview event contains only origin because of different referrer policy.
 			outboundLinkClickEv.PageUri = outboundLinkClickEv.PageUri.RootUri()
 			outboundLinkClickEv.Session, ok = sessionStorage.WaitSession(deviceId, outboundLinkClickEv.PageUri, hutils.ContextTimeout(ctx))
 		}
@@ -91,6 +71,6 @@ func ProvidePostEventsOutboundLink(
 			return fmt.Errorf("failed to store custom event: %w", err)
 		}
 
-		return nil
+		return c.Redirect(outboundUri.String(), fiber.StatusFound)
 	}
 }

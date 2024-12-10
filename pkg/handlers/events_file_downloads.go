@@ -14,15 +14,15 @@ import (
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
-type PostEventsFileDownload fiber.Handler
+type PostEventsFileDownloads fiber.Handler
 
-// ProvidePostEventsFileDownload is a wire provider for POST
-// /api/v1/events/file-download handler.
-func ProvidePostEventsFileDownload(
+// ProvidePostEventsFileDownloads is a wire provider for POST
+// /api/v1/events/file-downloads handler.
+func ProvidePostEventsFileDownloads(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstorage.Service,
-) PostEventsFileDownload {
+) PostEventsFileDownloads {
 	return func(c *fiber.Ctx) error {
 		var err error
 		fileDownloadEv := event.FileDownload{}

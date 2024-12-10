@@ -6,9 +6,9 @@ export const PRISME_PAGEVIEWS_URL = PRISME_API_URL + '/events/pageviews'
 export const PRISME_NOSCRIPT_PAGEVIEWS_URL = PRISME_API_URL + '/noscript/events/pageviews'
 export const PRISME_CUSTOM_EVENTS_URL = PRISME_API_URL + '/events/custom'
 export const PRISME_NOSCRIPT_CUSTOM_EVENTS_URL = PRISME_API_URL + '/noscript/events/custom'
-export const PRISME_OUTBOUND_LINK_EVENTS_URL = PRISME_API_URL + '/events/outbound-link'
-export const PRISME_NOSCRIPT_OUTBOUND_LINK_EVENTS_URL = PRISME_API_URL + '/noscript/events/outbound-link'
-export const PRISME_FILE_DOWNLOAD_EVENTS_URL = PRISME_API_URL + '/events/file-download'
+export const PRISME_OUTBOUND_LINK_EVENTS_URL = PRISME_API_URL + '/events/outbound-links'
+export const PRISME_NOSCRIPT_OUTBOUND_LINK_EVENTS_URL = PRISME_API_URL + '/noscript/events/outbound-links'
+export const PRISME_FILE_DOWNLOAD_EVENTS_URL = PRISME_API_URL + '/events/file-downloads'
 
 export const PRISME_METRICS_URL = PRISME_ADMIN_URL + '/metrics'
 
