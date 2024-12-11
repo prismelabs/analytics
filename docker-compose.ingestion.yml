@@ -1,6 +1,6 @@
 services:
   clickhouse:
-    image: "docker.io/clickhouse/clickhouse-server:24.9.1.3278-alpine"
+    image: "docker.io/clickhouse/clickhouse-server:24.11.1.2557-alpine"
     ports:
       - 8123:8123 # HTTP interface
       - 9000:9000 # Native interface
