@@ -35,7 +35,7 @@
               pname = "prisme";
               version = "0.18.0";
               vendorHash =
-                "sha256-yMkcZrkg7YywvwozBqdbNEFPM/6v4ClmNQdyuvnC3y4=";
+                "sha256-EQ46Bg/h+OgROP0xBrtMJBt9zf09dLNfkuj+UMOjNYk=";
 
               src = ./.;
               # Skip go test.
