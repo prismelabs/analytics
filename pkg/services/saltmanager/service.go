@@ -70,12 +70,13 @@ func (s *service) rotateSaltLoop() {
 		err := s.rotateSalt()
 		if err != nil {
 			s.logger.Err(err).Msg("failed to rotate salt")
+		} else {
+			s.logger.Info().Msg("salt rotated")
 		}
 	}
 }
 
 func (s *service) rotateSalt() error {
-	// No current salt in database. Generate a new one.
 	salt, err := randomSalt()
 	if err != nil {
 		return fmt.Errorf("failed to generate random salt: %w", err)
