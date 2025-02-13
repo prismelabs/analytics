@@ -10,6 +10,7 @@ import (
 var _ zerolog.LogObjectMarshaler = &PageView{}
 
 // PageView define a page view event.
+// See https://www.prismeanalytics.com/docs/references/http/#page-view-events
 type PageView struct {
 	Session   Session
 	Timestamp time.Time
