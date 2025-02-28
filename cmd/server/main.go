@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -43,6 +44,13 @@ func main() {
 
 	// Admin and profiling server.
 	go func() {
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			_, err := io.WriteString(w, "consult metrics at /metrics")
+			if err != nil {
+				app.Logger.Err(err).Msg("failed to write admin response body")
+			}
+		})
 		http.Handle("/metrics", promhttp.HandlerFor(app.PromRegistry, promhttp.HandlerOpts{
 			ErrorLog:            &app.Logger,
 			ErrorHandling:       promhttp.HTTPErrorOnError,
