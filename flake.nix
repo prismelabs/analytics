@@ -4,38 +4,48 @@
     gengeommdb.url = "github:negrel/gengeommdb";
   };
 
-  outputs = { self, nixpkgs, flake-utils, gengeommdb, ... }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      gengeommdb,
+      ...
+    }:
     let
       outputsWithoutSystem = { };
-      outputsWithSystem = flake-utils.lib.eachDefaultSystem (system:
+      outputsWithSystem = flake-utils.lib.eachDefaultSystem (
+        system:
         let
           pkgs = import nixpkgs { inherit system; };
-          # lib = pkgs.lib;
-        in {
+        in
+        # lib = pkgs.lib;
+        {
           devShells = {
             default = pkgs.mkShell {
-              buildInputs = (with pkgs; [
-                go
-                mockgen # Go mock generator
-                gopls # Go LSP
-                golangci-lint # Go linter
-                wire # Go dependency injection
-                go-migrate # Go SQL migration
-                bunyan-rs # Bunyan format pretty print
-                entr # FS watcher
-                bun # Bun JS runtime
-                minify # JS minifier
-                clickhouse # clickhouse client
-                hyperfine # binary benchmarks
-              ]) ++ (with gengeommdb.packages.${system}; [ default ]);
+              buildInputs =
+                (with pkgs; [
+                  go
+                  mockgen # Go mock generator
+                  gopls # Go LSP
+                  golangci-lint # Go linter
+                  wire # Go dependency injection
+                  go-migrate # Go SQL migration
+                  bunyan-rs # Bunyan format pretty print
+                  entr # FS watcher
+                  bun # Bun JS runtime
+                  minify # JS minifier
+                  clickhouse # clickhouse client
+                  hyperfine # binary benchmarks
+                ])
+                ++ (with gengeommdb.packages.${system}; [ default ]);
             };
           };
           packages = {
             default = pkgs.buildGoModule {
               pname = "prisme";
               version = "0.18.0";
-              vendorHash =
-                "sha256-EQ46Bg/h+OgROP0xBrtMJBt9zf09dLNfkuj+UMOjNYk=";
+              vendorHash = "sha256-Jl8KJF6lJEzFHZiWIVYl55vONmcYm/jSSnNEqjYIET4=";
 
               src = ./.;
               # Skip go test.
@@ -56,9 +66,7 @@
               runAsRoot = ''
                 #!${pkgs.runtimeShell}
                 mkdir -p /app
-                cp -r ${
-                  self.packages."${system}".prisme-healthcheck
-                }/bin/* /healthcheck
+                cp -r ${self.packages."${system}".prisme-healthcheck}/bin/* /healthcheck
               '';
 
               config = {
@@ -76,6 +84,8 @@
               '';
             };
           };
-        });
-    in outputsWithSystem // outputsWithoutSystem;
+        }
+      );
+    in
+    outputsWithSystem // outputsWithoutSystem;
 }
