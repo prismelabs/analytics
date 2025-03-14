@@ -25,7 +25,7 @@ services:
       PRISME_GRAFANA_PASSWORD: 'admin'
 
   clickhouse:
-    image: "docker.io/clickhouse/clickhouse-server:24.11.1.2557-alpine"
+    image: "docker.io/clickhouse/clickhouse-server:25.2.2.39.2557-alpine"
     ports:
       - 127.0.0.1:8123:8123 # HTTP interface (useful for debugging)
       - 127.0.0.1:9000:9000 # Native interface (used by Prisme instances)
