@@ -8,6 +8,7 @@ import (
 	"github.com/negrel/ringo"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/retry"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -91,10 +92,10 @@ func ProvideService(
 		metrics: newMetrics(promRegistry),
 	}
 
-	go service.batchPageViewLoop(batchDone)
-	go service.batchCustomEventLoop(batchDone)
-	go service.batchOutboundLinkClickEventLoop(batchDone)
-	go service.batchFileDownloadEventLoop(batchDone)
+	go service.batchPageViewLoop(ctx, batchDone)
+	go service.batchCustomEventLoop(ctx, batchDone)
+	go service.batchOutboundLinkClickEventLoop(ctx, batchDone)
+	go service.batchFileDownloadEventLoop(ctx, batchDone)
 
 	logger.Info().Msg("clickhouse based event store configured")
 
@@ -137,7 +138,7 @@ func (cs *clickhouseService) StoreCustom(_ context.Context, ev *event.Custom) er
 	return nil
 }
 
-func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
+func (cs *clickhouseService) batchPageViewLoop(ctx context.Context, batchDone chan<- struct{}) {
 	var batch driver.Batch
 	var err error
 	batchCreationDate := time.Now()
@@ -148,13 +149,19 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 
 	for {
 		if batch == nil {
-			batch, err = cs.conn.PrepareBatch(
-				context.Background(),
-				// pageviews table is a materialized view derived from sessions.
-				// sessions table engine is VersionedCollapsedMergeTree so we can
-				// keep appending row with the same Session UUID.
-				// See https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/versionedcollapsingmergetree
-				"INSERT INTO sessions",
+			err = retry.LinearRandomBackoff(5, time.Second,
+				func(n uint) error {
+					batch, err = cs.conn.PrepareBatch(
+						ctx,
+						// pageviews table is a materialized view derived from sessions.
+						// sessions table engine is VersionedCollapsedMergeTree so we can
+						// keep appending row with the same Session UUID.
+						// See https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/versionedcollapsingmergetree
+						"INSERT INTO sessions",
+					)
+					return err
+				},
+				retry.CancelOnContextError,
 			)
 			if err != nil {
 				cs.logger.Err(err).Msg("failed to prepare next pageviews batch")
@@ -243,7 +250,7 @@ func (cs *clickhouseService) batchPageViewLoop(batchDone chan<- struct{}) {
 	}
 }
 
-func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
+func (cs *clickhouseService) batchCustomEventLoop(ctx context.Context, batchDone chan<- struct{}) {
 	var batch driver.Batch
 	var err error
 	batchCreationDate := time.Now()
@@ -254,9 +261,15 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 
 	for {
 		if batch == nil {
-			batch, err = cs.conn.PrepareBatch(
-				context.Background(),
-				"INSERT INTO events_custom",
+			err = retry.LinearRandomBackoff(5, time.Second,
+				func(n uint) error {
+					batch, err = cs.conn.PrepareBatch(
+						ctx,
+						"INSERT INTO events_custom",
+					)
+					return err
+				},
+				retry.CancelOnContextError,
 			)
 			if err != nil {
 				cs.logger.Err(err).Msg("failed to prepare next custom events batch")
@@ -305,7 +318,7 @@ func (cs *clickhouseService) batchCustomEventLoop(batchDone chan<- struct{}) {
 	}
 }
 
-func (cs *clickhouseService) batchOutboundLinkClickEventLoop(batchDone chan<- struct{}) {
+func (cs *clickhouseService) batchOutboundLinkClickEventLoop(ctx context.Context, batchDone chan<- struct{}) {
 	var batch driver.Batch
 	var err error
 	batchCreationDate := time.Now()
@@ -316,9 +329,15 @@ func (cs *clickhouseService) batchOutboundLinkClickEventLoop(batchDone chan<- st
 
 	for {
 		if batch == nil {
-			batch, err = cs.conn.PrepareBatch(
-				context.Background(),
-				"INSERT INTO outbound_link_clicks",
+			err = retry.LinearRandomBackoff(5, time.Second,
+				func(_ uint) error {
+					batch, err = cs.conn.PrepareBatch(
+						ctx,
+						"INSERT INTO outbound_link_clicks",
+					)
+					return err
+				},
+				retry.CancelOnContextError,
 			)
 			if err != nil {
 				cs.logger.Err(err).Msg("failed to prepare next outbound link click events batch")
@@ -365,7 +384,7 @@ func (cs *clickhouseService) batchOutboundLinkClickEventLoop(batchDone chan<- st
 	}
 }
 
-func (cs *clickhouseService) batchFileDownloadEventLoop(batchDone chan<- struct{}) {
+func (cs *clickhouseService) batchFileDownloadEventLoop(ctx context.Context, batchDone chan<- struct{}) {
 	var batch driver.Batch
 	var err error
 	batchCreationDate := time.Now()
@@ -376,9 +395,15 @@ func (cs *clickhouseService) batchFileDownloadEventLoop(batchDone chan<- struct{
 
 	for {
 		if batch == nil {
-			batch, err = cs.conn.PrepareBatch(
-				context.Background(),
-				"INSERT INTO file_downloads",
+			err = retry.LinearRandomBackoff(5, time.Second,
+				func(_ uint) error {
+					batch, err = cs.conn.PrepareBatch(
+						ctx,
+						"INSERT INTO file_downloads",
+					)
+					return err
+				},
+				retry.CancelOnContextError,
 			)
 			if err != nil {
 				cs.logger.Err(err).Msg("failed to prepare next file download events batch")
