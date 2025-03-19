@@ -108,21 +108,26 @@ func (s service) SetupDatasourceAndDashboards(ctx context.Context, orgId grafana
 	{
 		folderName := "Prisme Analytics"
 
-		// Create folder.
-		folder, err := s.cli.CreateFolder(ctx, orgId, folderName)
+		folders, err := s.cli.SearchFolders(ctx, orgId, 1000, 0, folderName)
 		if err != nil {
-			if err == grafana.ErrGrafanaFolderAlreadyExists {
-				return nil
-			}
-			return fmt.Errorf("failed to create %q grafana folder: %w", folderName, err)
+			return fmt.Errorf("failed to search %q grafana folder: %w", folderName, err)
 		}
-		folderId = folder.Uid
+		if len(folders) == 0 {
+			// Create folder.
+			folder, err := s.cli.CreateFolder(ctx, orgId, folderName)
+			if err != nil {
+				return fmt.Errorf("failed to create %q grafana folder: %w", folderName, err)
+			}
+			folderId = folder.Uid
+		} else {
+			folderId = folders[0].Uid
+		}
 
 		// Remove default permissions.
 		err = s.cli.SetFolderPermissions(
 			ctx,
 			orgId,
-			folder.Uid,
+			folderId,
 			grafana.FolderPermission{
 				Permission: grafana.FolderPermissionLevelView,
 				Role:       grafana.RoleEditor,

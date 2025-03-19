@@ -5,15 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
+	"net/url"
 
 	"github.com/google/uuid"
 	"github.com/valyala/fasthttp"
 )
 
 var (
-	ErrGrafanaFolderAlreadyExists = errors.New("folder with same title already exists")
-	ErrGrafanaFolderNotFound      = errors.New("folder not found")
+	ErrGrafanaFolderNotFound = errors.New("folder not found")
 )
 
 type Folder struct {
@@ -28,6 +27,13 @@ type FolderPermission struct {
 	Role       Role                  `json:"role,omitempty"`
 	TeamId     int64                 `json:"teamId,omitempty"`
 	UserId     UserId                `json:"userId,omitempty"`
+}
+
+type SearchFolderResult struct {
+	Uid   Uid    `json:"uid"`
+	Title string `json:"title"`
+	// This is just dashboard path but we match schema of API response.
+	Url string `json:"url"`
 }
 
 // FolderPermissionLevel enumerate possible folder permission level.
@@ -83,9 +89,7 @@ func (c Client) CreateFolder(ctx context.Context, orgId OrgId, title string) (Fo
 		return Folder{}, fmt.Errorf("failed to query grafana to create folder: %w", err)
 	}
 
-	if resp.StatusCode() == 409 && strings.Contains(string(resp.Body()), "folder with the same name already exists") {
-		return Folder{}, ErrGrafanaFolderAlreadyExists
-	} else if resp.StatusCode() != 200 {
+	if resp.StatusCode() != 200 {
 		return Folder{}, fmt.Errorf("failed to create grafana folders: %v %v", resp.StatusCode(), string(resp.Body()))
 	}
 
@@ -230,4 +234,35 @@ func (c Client) DeleteFolder(ctx context.Context, orgId OrgId, folderId Uid) err
 	}
 
 	return nil
+}
+
+// SearchFolders searches folders within the given organization.
+func (c Client) SearchFolders(ctx context.Context, orgId OrgId, limit, page int, query string) ([]SearchFolderResult, error) {
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+
+	req.Header.SetMethod("GET")
+	req.SetRequestURI(fmt.Sprintf("%v/api/search?type=dash-folder&limit=%v&page=%v&query=%v", c.cfg.Url, limit, page, url.QueryEscape(query)))
+	c.addAuthorizationHeader(req)
+	req.Header.Set(GrafanaOrgIdHeader, fmt.Sprint(orgId))
+
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+
+	err := c.do(ctx, req, resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query grafana to search folders: %w", err)
+	}
+
+	if resp.StatusCode() != 200 {
+		return nil, fmt.Errorf("failed to search grafana folders: %v %v", resp.StatusCode(), string(resp.Body()))
+	}
+
+	var respBody []SearchFolderResult
+	err = json.Unmarshal(resp.Body(), &respBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse grafana response: %w", err)
+	}
+
+	return respBody, nil
 }
