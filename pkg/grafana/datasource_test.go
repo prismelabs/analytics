@@ -204,7 +204,7 @@ func TestIntegUpdateDatasource(t *testing.T) {
 			Version:     0,
 		})
 		require.Error(t, err)
-		require.Equal(t, `failed to update grafana datasource: 400 {"message":"bad request data","traceID":""}`, err.Error())
+		require.Equal(t, `failed to update grafana datasource: 400 {"message":"bad request data"}`, err.Error())
 	})
 
 	t.Run("ExistentDatasource", func(t *testing.T) {

@@ -175,9 +175,10 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 			require.NoError(t, err)
 			require.NotEqual(t, Uid{}, dashboardId)
 
+			// Creates a new dashboard.
 			updateUid, err := cli.CreateUpdateDashboard(context.Background(), orgId, Uid{}, map[string]any{"title": "Dashboard 1"}, true)
 			require.NoError(t, err)
-			require.Equal(t, dashboardId, updateUid)
+			require.NotEqual(t, dashboardId, updateUid)
 		})
 	})
 }

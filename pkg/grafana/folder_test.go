@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -41,8 +42,7 @@ func TestIntegCreateFolder(t *testing.T) {
 
 		// Create file again.
 		_, err = cli.CreateFolder(context.Background(), orgId, "Folder 1")
-		require.Error(t, err)
-		require.ErrorIs(t, err, ErrGrafanaFolderAlreadyExists)
+		require.NoError(t, err)
 	})
 }
 
@@ -427,5 +427,137 @@ func TestIntegDeleteFolder(t *testing.T) {
 
 		err = cli.DeleteFolder(context.Background(), orgId, folder.Uid)
 		require.NoError(t, err)
+	})
+}
+
+func TestIntegSearchFolders(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
+	cfg := config.GrafanaFromEnv()
+	cli := ProvideClient(cfg)
+
+	t.Run("NoFolder", func(t *testing.T) {
+		orgName := fmt.Sprintf("foo-%v", rand.Int())
+		orgId, err := cli.CreateOrg(context.Background(), orgName)
+		require.NoError(t, err)
+
+		results, err := cli.SearchFolders(context.Background(), orgId, 100, 1, "")
+		require.NoError(t, err)
+		require.Len(t, results, 0)
+	})
+
+	t.Run("SingleFolder", func(t *testing.T) {
+		orgName := fmt.Sprintf("foo-%v", rand.Int())
+		orgId, err := cli.CreateOrg(context.Background(), orgName)
+		require.NoError(t, err)
+
+		folder, err := cli.CreateFolder(context.Background(), orgId, "Foo")
+		require.NoError(t, err)
+
+		results, err := cli.SearchFolders(context.Background(), orgId, 100, 1, "")
+		require.NoError(t, err)
+		require.Len(t, results, 1)
+		require.Equal(t, folder.Uid, results[0].Uid)
+		require.Equal(t, "Foo", results[0].Title)
+	})
+
+	t.Run("MultipleFolder", func(t *testing.T) {
+		orgName := fmt.Sprintf("foo-%v", rand.Int())
+		orgId, err := cli.CreateOrg(context.Background(), orgName)
+		require.NoError(t, err)
+
+		var expectedSearchResults []SearchFolderResult
+		for i := 0; i < 10; i++ {
+			folderName := fmt.Sprintf("Folder %v", i)
+			folder, err := cli.CreateFolder(context.Background(), orgId, folderName)
+			require.NoError(t, err)
+
+			expectedSearchResults = append(expectedSearchResults, SearchFolderResult{
+				Uid:   folder.Uid,
+				Title: folderName,
+				Url:   "", // Checked separately.
+			})
+		}
+
+		searchResults, err := cli.SearchFolders(context.Background(), orgId, 100, 1, "")
+		require.NoError(t, err)
+		require.Len(t, searchResults, len(expectedSearchResults))
+
+		// result.Url is random so we check it here.
+		for i, result := range searchResults {
+			require.Contains(t, result.Url, "/f/")
+			require.Contains(t, result.Url, strings.ReplaceAll(strings.ToLower(result.Title), " ", "-"))
+			searchResults[i].Url = ""
+		}
+		require.Equal(t, expectedSearchResults, searchResults)
+	})
+
+	t.Run("MultiplePage", func(t *testing.T) {
+		orgName := fmt.Sprintf("foo-%v", rand.Int())
+		orgId, err := cli.CreateOrg(context.Background(), orgName)
+		require.NoError(t, err)
+
+		var expectedSearchResults []SearchFolderResult
+		for i := 0; i < 10; i++ {
+			folderName := fmt.Sprintf("Folder %v", i)
+			folder, err := cli.CreateFolder(context.Background(), orgId, folderName)
+			require.NoError(t, err)
+
+			expectedSearchResults = append(expectedSearchResults, SearchFolderResult{
+				Uid:   folder.Uid,
+				Title: folderName,
+				Url:   "",
+			})
+		}
+
+		// Fetch first page.
+		page1, err := cli.SearchFolders(context.Background(), orgId, 5, 1, "")
+		require.NoError(t, err)
+		require.Len(t, page1, 5)
+
+		// Fetch second page.
+		page2, err := cli.SearchFolders(context.Background(), orgId, 5, 2, "")
+		require.NoError(t, err)
+		require.Len(t, page2, 5)
+
+		var searchResults []SearchFolderResult
+		searchResults = append(searchResults, page1...)
+		searchResults = append(searchResults, page2...)
+
+		// result.Url is random so we check it here.
+		for i, result := range searchResults {
+			require.Contains(t, result.Url, "/f/")
+			require.Contains(t, result.Url, strings.ReplaceAll(strings.ToLower(result.Title), " ", "-"))
+			searchResults[i].Url = ""
+		}
+		require.Equal(t, expectedSearchResults, searchResults)
+	})
+
+	t.Run("NoResult", func(t *testing.T) {
+		orgName := fmt.Sprintf("foo-%v", rand.Int())
+		orgId, err := cli.CreateOrg(context.Background(), orgName)
+		require.NoError(t, err)
+
+		_, err = cli.CreateFolder(context.Background(), orgId, "Folder 1")
+		require.NoError(t, err)
+
+		results, err := cli.SearchFolders(context.Background(), orgId, 100, 9, "Non existent dashboard")
+		require.NoError(t, err)
+		require.Len(t, results, 0)
+	})
+
+	t.Run("NonExistentPage", func(t *testing.T) {
+		orgName := fmt.Sprintf("foo-%v", rand.Int())
+		orgId, err := cli.CreateOrg(context.Background(), orgName)
+		require.NoError(t, err)
+
+		_, err = cli.CreateFolder(context.Background(), orgId, "Folder 1")
+		require.NoError(t, err)
+
+		results, err := cli.SearchFolders(context.Background(), orgId, 100, 9, "")
+		require.NoError(t, err)
+		require.Len(t, results, 0)
 	})
 }

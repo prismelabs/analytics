@@ -201,7 +201,7 @@ func (c Client) SearchDashboards(ctx context.Context, orgId OrgId, limit, page i
 
 	err := c.do(ctx, req, resp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query grafana to delete dashboard by uid: %w", err)
+		return nil, fmt.Errorf("failed to query grafana to search dashboards: %w", err)
 	}
 
 	if resp.StatusCode() != 200 {
