@@ -1,6 +1,6 @@
 services:
   clickhouse:
-    image: "docker.io/clickhouse/clickhouse-server:25.2.2.39-alpine"
+    image: "prismelabs/clickhouse:latest"
     ulimits:
       nofile: 262144
     # ports:

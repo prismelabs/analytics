@@ -36,7 +36,6 @@
                   bun # Bun JS runtime
                   minify # JS minifier
                   clickhouse # clickhouse client
-                  hyperfine # binary benchmarks
                 ])
                 ++ (with gengeommdb.packages.${system}; [ default ]);
             };

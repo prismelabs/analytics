@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <postgresql_port remove="1" />
+</clickhouse>

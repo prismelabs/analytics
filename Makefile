@@ -117,9 +117,19 @@ nix/build:
 	nix build -L .#default
 
 .PHONY: docker/build
-docker/build:
+docker/build: docker/build/prisme
+	@true
+
+.PHONY: docker/build/prisme
+docker/build/prisme:
 	nix build -L .#docker
 	$(DOCKER) load < result
 	if [ "$${REMOVE_RESULT:=1}" = "1" ]; then rm -f result; fi
+
+.PHONY: docker/build/clickhouse
+docker/build/clickhouse:
+	$(DOCKER) build $(repository_root)/docker/clickhouse -t prismelabs/clickhouse
+	tag=$$(grep 'FROM' docker/clickhouse/Dockerfile | sed -E 's/.*[a-zA-Z]+:(.*)/\1/'); \
+		docker tag prismelabs/clickhouse prismelabs/clickhouse:$$tag
 
 FORCE:
