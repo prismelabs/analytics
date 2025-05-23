@@ -54,6 +54,7 @@ func (s *Session) Row() (record []any) {
 		s.utmCampaign,
 		s.utmTerm,
 		s.utmContent,
+		200,
 		s.pageviews,
 		s.sign,
 	)
