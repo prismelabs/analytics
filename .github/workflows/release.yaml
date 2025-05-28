@@ -4,7 +4,7 @@ on:
     types: ["published"]
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: cachix/install-nix-action@v24
       - name: Check out repository code
