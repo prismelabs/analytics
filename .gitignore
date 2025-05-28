@@ -9,3 +9,6 @@ node_modules/
 
 # gomock
 *_mock_test.go
+
+# Python virtual env
+streamlit/.venv/

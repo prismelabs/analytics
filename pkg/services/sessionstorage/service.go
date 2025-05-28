@@ -4,6 +4,7 @@ import (
 	"container/heap"
 	"slices"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/negrel/assert"
@@ -13,7 +14,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Service define an in memory session storage.
+// Service define an in-memory session storage.
 type Service interface {
 	// InsertSession stores given session in memory. If number of visitor session
 	// exceed configured max session per visitor, this function returns false and
@@ -26,7 +27,7 @@ type Service interface {
 	// IdentifySession updates stored session visitor id. Updated session and
 	// boolean found flag are returned.
 	IdentifySession(deviceId uint64, pageUri uri.Uri, visitorId string) (event.Session, bool)
-	// WaitForSession retrieves stored session and returns it. If session is not
+	// WaitSession retrieves stored session and returns it. If session is not
 	// found, it waits until it is created or timeout.
 	// Returned boolean flag is false if wait timed out and returned an empty
 	// session.
@@ -46,12 +47,12 @@ func (e *sessionEntry) hasWaiter() bool {
 	return e.wait != nil
 }
 
-func (e *sessionEntry) isExpired() bool {
-	return uint32(time.Now().Unix()) >= e.expiry
+func (e *sessionEntry) isExpired(now time.Time) bool {
+	return uint32(now.Unix()) >= e.expiry
 }
 
-func (e *sessionEntry) isValid() bool {
-	return !e.hasWaiter() && !e.isExpired()
+func (e *sessionEntry) isValid(now time.Time) bool {
+	return !e.hasWaiter() && !e.isExpired(now)
 }
 
 // deviceData holds sessions entries and gc metadata associated to a single
@@ -74,6 +75,9 @@ type service struct {
 
 	// GC priority queue.
 	gcQueue gcQueue
+
+	// Internal clock.
+	now atomic.Pointer[time.Time]
 }
 
 // ProvideService is a wire provider for in memory session storage.
@@ -98,6 +102,8 @@ func ProvideService(
 		devices: make(map[uint64]*deviceData),
 		gcQueue: gcQueue{},
 	}
+	now := time.Now()
+	service.now.Store(&now)
 	heap.Init(&service.gcQueue)
 
 	go service.gcLoop()
@@ -145,7 +151,7 @@ func (s *service) getSession(deviceId uint64, latestPath string) (*sessionEntry,
 func (s *service) getValidSessionEntry(deviceId uint64, latestPath string) *sessionEntry {
 	assert.Locked(&s.mu)
 	session, device, i := s.getSession(deviceId, latestPath)
-	if session == nil || !session.isValid() {
+	if session == nil || !session.isValid(*s.now.Load()) {
 		return nil
 	}
 
@@ -314,7 +320,7 @@ func (s *service) WaitSession(deviceId uint64, pageUri uri.Uri, timeout time.Dur
 	currentSession, deviceData, sessionIndex := s.getSession(deviceId, pageUri.Path())
 
 	// Valid session.
-	if currentSession != nil && currentSession.isValid() {
+	if currentSession != nil && currentSession.isValid(*s.now.Load()) {
 		s.mu.Unlock()
 		return currentSession.Session, true
 	} else if timeout == time.Duration(0) { // Entry not found and timeout is 0s.
@@ -377,18 +383,21 @@ func (s *service) WaitSession(deviceId uint64, pageUri uri.Uri, timeout time.Dur
 
 // session garbage collector loop.
 func (s *service) gcLoop() {
+	tick := time.NewTicker(s.cfg.gcInterval)
+
 	for {
+		now := <-tick.C
+
+		s.now.Store(&now)
 		s.metrics.gcCycle.Inc()
 
 		// Wait until there is job in gcQueue.
 		s.mu.Lock()
 		if len(s.gcQueue) == 0 {
 			s.mu.Unlock()
-			time.Sleep(s.cfg.gcInterval)
 			continue
 		}
 
-		now := time.Now()
 		nowTs := uint32(now.Unix())
 
 		// Peek job.
@@ -397,7 +406,6 @@ func (s *service) gcLoop() {
 		// Job hasn't expired yet.
 		if job.pExpiry > nowTs {
 			s.mu.Unlock()
-			time.Sleep(s.cfg.gcInterval)
 			continue
 		}
 
@@ -443,5 +451,5 @@ func (s *service) gcLoop() {
 }
 
 func (s *service) newExpiry() uint32 {
-	return uint32(time.Now().Add(s.cfg.sessionInactiveTtl).Unix())
+	return uint32(s.now.Load().Add(s.cfg.sessionInactiveTtl).Unix())
 }
