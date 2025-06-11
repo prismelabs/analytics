@@ -435,6 +435,9 @@ func (s *service) gcLoop() {
 		}
 		s.mu.Unlock()
 
+		// Record cycle duration.
+		s.metrics.gcDuration.Observe(float64(time.Since(now).Milliseconds()))
+
 		// Update metrics.
 		if deleteDevice {
 			s.metrics.devicesCounter.
