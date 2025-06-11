@@ -4,6 +4,7 @@ import "github.com/prometheus/client_golang/prometheus"
 
 type metrics struct {
 	gcCycle           prometheus.Counter
+	gcDuration        prometheus.Histogram
 	devicesCounter    *prometheus.CounterVec
 	sessionsWait      prometheus.Gauge
 	sessionsCounter   *prometheus.CounterVec
@@ -15,6 +16,11 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 		gcCycle: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sessionstorage_gc_cycles_total",
 			Help: "Number of sessionstorage garbage collector cycles",
+		}),
+		gcDuration: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name:    "sessionstorage_gc_cycles_duration_ms",
+			Help:    "Duration of garbage collector cycles",
+			Buckets: []float64{1, 2, 3, 5, 10, 15, 25, 30, 50, 100},
 		}),
 		devicesCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "sessionstorage_devices_total",
@@ -37,6 +43,7 @@ func newMetrics(promRegistry *prometheus.Registry) metrics {
 
 	promRegistry.MustRegister(
 		m.gcCycle,
+		m.gcDuration,
 		m.devicesCounter,
 		m.sessionsWait,
 		m.sessionsCounter,

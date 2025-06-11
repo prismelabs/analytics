@@ -475,6 +475,9 @@ func TestService(t *testing.T) {
 				require.GreaterOrEqual(t,
 					testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
 					float64(10))
+				require.GreaterOrEqual(t,
+					testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+					float64(0))
 				require.Equal(t, float64(1),
 					testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
 						prometheus.Labels{"type": "inserted"}))
@@ -542,6 +545,9 @@ func TestService(t *testing.T) {
 						require.GreaterOrEqual(t,
 							testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
 							float64(10))
+						require.GreaterOrEqual(t,
+							testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+							float64(0))
 						require.Equal(t, float64(1),
 							testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
 								prometheus.Labels{"type": "inserted"}))
@@ -613,6 +619,9 @@ func TestService(t *testing.T) {
 						require.GreaterOrEqual(t,
 							testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
 							float64(10))
+						require.GreaterOrEqual(t,
+							testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+							float64(0))
 						require.Equal(t, float64(1),
 							testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
 								prometheus.Labels{"type": "inserted"}))
@@ -635,6 +644,9 @@ func TestService(t *testing.T) {
 						require.GreaterOrEqual(t,
 							testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
 							float64(10))
+						require.GreaterOrEqual(t,
+							testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+							float64(0))
 						require.Equal(t, float64(1),
 							testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
 								prometheus.Labels{"type": "inserted"}))
@@ -693,6 +705,9 @@ func TestService(t *testing.T) {
 					require.GreaterOrEqual(t,
 						testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
 						float64(10))
+					require.GreaterOrEqual(t,
+						testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+						float64(0))
 					require.Equal(t, float64(1),
 						testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
 							prometheus.Labels{"type": "inserted"}))
@@ -740,6 +755,9 @@ func TestService(t *testing.T) {
 					require.GreaterOrEqual(t,
 						testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
 						float64(10))
+					require.GreaterOrEqual(t,
+						testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+						float64(0))
 					require.Equal(t, float64(1),
 						testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
 							prometheus.Labels{"type": "inserted"}))
