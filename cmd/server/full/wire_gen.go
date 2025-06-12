@@ -47,7 +47,7 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger, registry)
 	getNoscriptEventsPageviews := handlers.ProvideGetNoscriptEventsPageviews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, sessionstorageService)
 	accessLog := middlewares.ProvideAccessLog(server, zerologLogger)
-	errorHandler := middlewares.ProvideErrorHandler()
+	errorHandler := middlewares.ProvideErrorHandler(registry, zerologLogger)
 	fiberConfig := wired.ProvideMinimalFiberConfig(server)
 	healhCheck := handlers.ProvideHealthCheck()
 	requestId := middlewares.ProvideRequestId(server)

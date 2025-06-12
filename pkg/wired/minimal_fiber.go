@@ -34,10 +34,10 @@ func ProvideMinimalFiber(
 		return err
 	})
 
-	app.Use(fiber.Handler(metricsMiddleware))
-	app.Use(fiber.Handler(requestIdMiddleware))
-	app.Use(fiber.Handler(accessLogMiddleware))
-	app.Use(fiber.Handler(errorHandlerMiddleware))
+	app.Use(fiber.Handler(metricsMiddleware),
+		fiber.Handler(requestIdMiddleware),
+		fiber.Handler(accessLogMiddleware),
+		fiber.Handler(errorHandlerMiddleware))
 
 	app.Use("/static", fiber.Handler(staticMiddleware))
 
