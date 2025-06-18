@@ -356,6 +356,8 @@ func (s *service) WaitSession(deviceId uint64, pageUri uri.Uri, timeout time.Dur
 		currentSession = s.updateDeviceSessionExpiry(deviceData, *currentSession, sessionIndex)
 		wait = currentSession.wait
 		s.mu.Unlock()
+	} else {
+		s.mu.Unlock()
 	}
 
 	s.metrics.sessionsWait.Inc()
