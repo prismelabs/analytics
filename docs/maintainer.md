@@ -39,32 +39,9 @@ repository's root and commit changes.
 To update user-agent parser regexes, run `scripts/update-uap.sh` script from
 repository's root and commit changes.
 
-> **NOTE**: Update script downloads latest regex file and patches it. If an error
-occurred during the patch phase, fix it.
-
-## Update User-Agent regexes patch
-
-To update user-agent patch, start with a clean git working tree by stashing,
-committing or discarding all your changes. Then, reverse apply the patch as follow:
-
-```sh
-$ git apply -R --reject --whitespace=fix pkg/embedded/uap/regexes.patch
-```
-
-Add these changes without committing them and then reapply the patch:
-
-```sh
-$ git add .
-$ git apply pkg/embedded/uap/regexes.patch
-```
-
-Edit the regexes file and generate a new patch:
-
-```sh
-$ git diff pkg/embedded/uap/regexes.yml > pkg/embedded/uap/regexes.patch
-```
-
-That's it, you can commit your changes.
+Update script downloads latest regex file and patches it. If an error occurred
+(e.g. a hunk is rejected), fix it then manually call `scripts/update-uapatch.sh`
+before committing changes.
 
 ## Release a new version
 
