@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/valyala/fasthttp"
 )
 
@@ -22,11 +21,11 @@ var (
 
 // Client define an API client for grafana.
 type Client struct {
-	cfg config.Grafana
+	cfg Config
 }
 
 // Provide is a wire provider for Client.
-func ProvideClient(cfg config.Grafana) Client {
+func ProvideClient(cfg Config) Client {
 	return Client{
 		cfg: cfg,
 	}

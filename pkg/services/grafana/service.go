@@ -10,7 +10,7 @@ import (
 	"net"
 	"text/template"
 
-	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/embedded"
 	"github.com/prismelabs/analytics/pkg/grafana"
 )
@@ -21,7 +21,7 @@ type Service interface {
 }
 
 // ProvideService is a wire provider for grafana service.
-func ProvideService(cli grafana.Client, cfg config.Clickhouse) Service {
+func ProvideService(cli grafana.Client, cfg clickhouse.Config) Service {
 	tmpl, err := template.ParseFS(embedded.GrafanaDashboards, "grafana_dashboards/*")
 	if err != nil {
 		panic(fmt.Errorf("failed to parse grafana dashboards template: %w", err))
@@ -39,7 +39,7 @@ type service struct {
 	staticDashboards fs.FS
 	tmpl             *template.Template
 	cli              grafana.Client
-	chCfg            config.Clickhouse
+	chCfg            clickhouse.Config
 }
 
 // SetupDatasourceAndDashboards implements Service.

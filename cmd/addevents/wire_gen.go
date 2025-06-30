@@ -8,6 +8,7 @@ package main
 
 import (
 	"github.com/prismelabs/analytics/pkg/clickhouse"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prismelabs/analytics/pkg/wired"
 )
 
@@ -20,9 +21,8 @@ import (
 func Initialize(logger wired.BootstrapLogger) App {
 	zerologLogger := ProvideLogger()
 	config := ProvideConfig()
-	configClickhouse := wired.ProvideClickhouseConfig(logger)
 	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
-	ch := clickhouse.ProvideCh(zerologLogger, configClickhouse, driver)
-	app := ProvideApp(zerologLogger, config, ch)
+	service := teardown.ProvideService()
+	app := ProvideApp(zerologLogger, config, driver, service)
 	return app
 }

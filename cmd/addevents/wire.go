@@ -6,6 +6,7 @@ package main
 import (
 	"github.com/google/wire"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prismelabs/analytics/pkg/wired"
 )
 
@@ -14,9 +15,8 @@ func Initialize(logger wired.BootstrapLogger) App {
 		ProvideApp,
 		ProvideConfig,
 		ProvideLogger,
-		wired.ProvideClickhouseConfig,
-		clickhouse.ProvideCh,
 		clickhouse.ProvideEmbeddedSourceDriver,
+		teardown.ProvideService,
 	)
 
 	return App{}

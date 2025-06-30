@@ -20,7 +20,6 @@ import (
 
 func Initialize(logger wired.BootstrapLogger) wired.App {
 	wire.Build(
-		clickhouse.ProvideCh,
 		clickhouse.ProvideEmbeddedSourceDriver,
 		eventstore.ProvideConfig,
 		eventstore.ProvideService,
@@ -51,7 +50,6 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 		teardown.ProvideService,
 		uaparser.ProvideService,
 		wired.ProvideApp,
-		wired.ProvideClickhouseConfig,
 		wired.ProvideFiber,
 		wired.ProvideFiberStorage,
 		wired.ProvideLogger,

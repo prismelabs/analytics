@@ -8,16 +8,18 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/rs/zerolog"
 )
 
 // ProvideApp is a wire provider for App.
-func ProvideApp(logger zerolog.Logger, cfg Config, ch clickhouse.Ch) App {
+func ProvideApp(logger zerolog.Logger, cfg Config, source source.Driver, teardown teardown.Service) App {
 	return App{
 		logger: logger,
 		cfg:    cfg,
-		ch:     ch,
+		ch:     clickhouse.ProvideCh(logger, clickhouse.ProvideConfig(logger), source, teardown),
 	}
 }
 

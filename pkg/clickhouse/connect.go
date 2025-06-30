@@ -9,13 +9,12 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/rs/zerolog"
 )
 
 // Connect connects to clickhouse and returns a driver.Conn.
 // This function panics if `maxRetry` Connect attempt fails.
-func Connect(logger zerolog.Logger, cfg config.Clickhouse, maxRetry int) (conn driver.Conn) {
+func Connect(logger zerolog.Logger, cfg Config, maxRetry int) (conn driver.Conn) {
 	// Build clickhouse options.
 	var clickHouseTls *tls.Config = nil
 	if cfg.TlsEnabled {
@@ -79,7 +78,7 @@ func Connect(logger zerolog.Logger, cfg config.Clickhouse, maxRetry int) (conn d
 
 // Connect connects to clickhouse and returns a sql.DB.
 // This function panics if `maxRetry` connect attempt fails.
-func connectSql(logger zerolog.Logger, cfg config.Clickhouse, maxRetry int) *sql.DB {
+func connectSql(logger zerolog.Logger, cfg Config, maxRetry int) *sql.DB {
 	var db *sql.DB
 	var err error
 
