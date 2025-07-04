@@ -15,7 +15,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
-	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
+	"github.com/prismelabs/analytics/pkg/services/sessionstore"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/rs/zerolog"
@@ -31,7 +31,7 @@ func ProvidePostEventsPageViews(
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
-	sessionStorage sessionstorage.Service,
+	sessionStorage sessionstore.Service,
 ) PostEventsPageviews {
 	return func(c *fiber.Ctx) error {
 		// Referrer of the POST request, that is the viewed page.
@@ -64,7 +64,7 @@ func eventsPageviewsHandler(
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
-	sessionStorage sessionstorage.Service,
+	sessionStorage sessionstore.Service,
 	headers *fasthttp.RequestHeader,
 	requestReferrer uri.Uri,
 	documentReferrer, userAgent, ipAddr []byte,

@@ -10,7 +10,7 @@ import (
 	hutils "github.com/prismelabs/analytics/pkg/handlers/utils"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
-	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
+	"github.com/prismelabs/analytics/pkg/services/sessionstore"
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
@@ -20,7 +20,7 @@ type GetNoscriptEventsOutboundLinks fiber.Handler
 // GET /api/v1/noscript/events/outbound-links handler.
 func ProvideGetNoscriptEventsOutboundLinks(
 	eventStore eventstore.Service,
-	sessionStorage sessionstorage.Service,
+	sessionStorage sessionstore.Service,
 	saltManagerService saltmanager.Service,
 ) GetNoscriptEventsOutboundLinks {
 	return func(c *fiber.Ctx) error {

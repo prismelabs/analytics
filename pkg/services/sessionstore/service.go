@@ -1,4 +1,4 @@
-package sessionstorage
+package sessionstore
 
 import (
 	"container/heap"

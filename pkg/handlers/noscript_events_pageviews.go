@@ -8,7 +8,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
-	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
+	"github.com/prismelabs/analytics/pkg/services/sessionstore"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/rs/zerolog"
 )
@@ -23,7 +23,7 @@ func ProvideGetNoscriptEventsPageviews(
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
-	sessionStorage sessionstorage.Service,
+	sessionStorage sessionstore.Service,
 ) GetNoscriptEventsPageviews {
 	return func(c *fiber.Ctx) error {
 		err := c.Send(embedded.NoscriptGif)
