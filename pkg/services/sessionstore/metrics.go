@@ -1,4 +1,4 @@
-package sessionstorage
+package sessionstore
 
 import "github.com/prometheus/client_golang/prometheus"
 
@@ -14,28 +14,28 @@ type metrics struct {
 func newMetrics(promRegistry *prometheus.Registry) metrics {
 	m := metrics{
 		gcCycle: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "sessionstorage_gc_cycles_total",
-			Help: "Number of sessionstorage garbage collector cycles",
+			Name: "sessionstore_gc_cycles_total",
+			Help: "Number of sessionstore garbage collector cycles",
 		}),
 		gcDuration: prometheus.NewHistogram(prometheus.HistogramOpts{
-			Name:    "sessionstorage_gc_cycles_duration_ms",
+			Name:    "sessionstore_gc_cycles_duration_ms",
 			Help:    "Duration of garbage collector cycles",
 			Buckets: []float64{1, 2, 3, 5, 10, 15, 25, 30, 50, 100},
 		}),
 		devicesCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
-			Name: "sessionstorage_devices_total",
+			Name: "sessionstore_devices_total",
 			Help: "Number of inserted and deleted devices",
 		}, []string{"type"}),
 		sessionsWait: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "sessionstorage_sessions_wait",
+			Name: "sessionstore_sessions_wait",
 			Help: "Number of events waiting for a session",
 		}),
 		sessionsCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
-			Name: "sessionstorage_sessions_total",
+			Name: "sessionstore_sessions_total",
 			Help: "Number of inserted and expired sessions",
 		}, []string{"type"}),
 		sessionsPageviews: prometheus.NewHistogram(prometheus.HistogramOpts{
-			Name:    "sessionstorage_sessions_pageviews",
+			Name:    "sessionstore_sessions_pageviews",
 			Help:    "Number of pageviews per sessions",
 			Buckets: []float64{1, 2, 3, 5, 10, 15, 25, 30, 50, 100},
 		}),

@@ -10,7 +10,7 @@ import (
 	hutils "github.com/prismelabs/analytics/pkg/handlers/utils"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
-	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
+	"github.com/prismelabs/analytics/pkg/services/sessionstore"
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
@@ -21,7 +21,7 @@ type PostEventsOutboundLinks fiber.Handler
 func ProvidePostEventsOutboundLinks(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
-	sessionStorage sessionstorage.Service,
+	sessionStorage sessionstore.Service,
 ) PostEventsOutboundLinks {
 	return func(c *fiber.Ctx) error {
 		var err error

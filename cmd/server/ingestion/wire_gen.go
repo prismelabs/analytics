@@ -14,7 +14,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/originregistry"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
-	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
+	"github.com/prismelabs/analytics/pkg/services/sessionstore"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/wired"
@@ -35,13 +35,13 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
 	eventstoreService := eventstore.ProvideService(config, zerologLogger, registry, service, driver)
 	saltmanagerService := saltmanager.ProvideService(zerologLogger)
-	sessionstorageConfig := sessionstorage.ProvideConfig()
-	sessionstorageService := sessionstorage.ProvideService(zerologLogger, sessionstorageConfig, registry)
-	getNoscriptEventsCustom := handlers.ProvideGetNoscriptEventsCustom(eventstoreService, saltmanagerService, sessionstorageService)
-	getNoscriptEventsOutboundLinks := handlers.ProvideGetNoscriptEventsOutboundLinks(eventstoreService, sessionstorageService, saltmanagerService)
+	sessionstoreConfig := sessionstore.ProvideConfig()
+	sessionstoreService := sessionstore.ProvideService(zerologLogger, sessionstoreConfig, registry)
+	getNoscriptEventsCustom := handlers.ProvideGetNoscriptEventsCustom(eventstoreService, saltmanagerService, sessionstoreService)
+	getNoscriptEventsOutboundLinks := handlers.ProvideGetNoscriptEventsOutboundLinks(eventstoreService, sessionstoreService, saltmanagerService)
 	uaparserService := uaparser.ProvideService(zerologLogger, registry)
 	ipgeolocatorService := ipgeolocator.ProvideMmdbService(zerologLogger, registry)
-	getNoscriptEventsPageviews := handlers.ProvideGetNoscriptEventsPageviews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, sessionstorageService)
+	getNoscriptEventsPageviews := handlers.ProvideGetNoscriptEventsPageviews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, sessionstoreService)
 	accessLog := middlewares.ProvideAccessLog(server, zerologLogger)
 	errorHandler := middlewares.ProvideErrorHandler(registry, zerologLogger)
 	fiberConfig := wired.ProvideMinimalFiberConfig(server)
@@ -53,10 +53,10 @@ func Initialize(logger wired.BootstrapLogger) wired.App {
 	originregistryService := originregistry.ProvideEnvVarService(zerologLogger)
 	nonRegisteredOriginFilter := middlewares.ProvideNonRegisteredOriginFilter(originregistryService)
 	noscriptHandlersCache := middlewares.ProvideNoscriptHandlersCache()
-	postEventsCustom := handlers.ProvidePostEventsCustom(eventstoreService, saltmanagerService, sessionstorageService)
-	postEventsFileDownloads := handlers.ProvidePostEventsFileDownloads(eventstoreService, saltmanagerService, sessionstorageService)
-	postEventsOutboundLinks := handlers.ProvidePostEventsOutboundLinks(eventstoreService, saltmanagerService, sessionstorageService)
-	postEventsPageviews := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, sessionstorageService)
+	postEventsCustom := handlers.ProvidePostEventsCustom(eventstoreService, saltmanagerService, sessionstoreService)
+	postEventsFileDownloads := handlers.ProvidePostEventsFileDownloads(eventstoreService, saltmanagerService, sessionstoreService)
+	postEventsOutboundLinks := handlers.ProvidePostEventsOutboundLinks(eventstoreService, saltmanagerService, sessionstoreService)
+	postEventsPageviews := handlers.ProvidePostEventsPageViews(zerologLogger, eventstoreService, uaparserService, ipgeolocatorService, saltmanagerService, sessionstoreService)
 	referrerAsDefaultOrigin := middlewares.ProvideReferrerAsDefaultOrigin()
 	app := wired.ProvideFiber(apiEventsTimeout, eventsCors, eventsRateLimiter, getNoscriptEventsCustom, getNoscriptEventsOutboundLinks, getNoscriptEventsPageviews, minimalFiber, nonRegisteredOriginFilter, noscriptHandlersCache, postEventsCustom, postEventsFileDownloads, postEventsOutboundLinks, postEventsPageviews, referrerAsDefaultOrigin)
 	promhttpLogger := wired.ProvidePromHttpLogger(server, zerologLogger)

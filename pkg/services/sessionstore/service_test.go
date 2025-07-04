@@ -1,4 +1,4 @@
-package sessionstorage
+package sessionstore
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ import (
 )
 
 func TestService(t *testing.T) {
-	logger := log.NewLogger("sessionstorage_test", io.Discard, true)
+	logger := log.NewLogger("sessionstore_test", io.Discard, true)
 	cfg := Config{
 		gcInterval:             10 * time.Second,
 		sessionInactiveTtl:     24 * time.Hour,
@@ -58,15 +58,15 @@ func TestService(t *testing.T) {
 			require.Equal(t, entry.Session, session)
 
 			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+				testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(0),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+				testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 		})
 
 		t.Run("Existent", func(t *testing.T) {
@@ -97,15 +97,15 @@ func TestService(t *testing.T) {
 			require.Equal(t, entry.Session, sessionA)
 
 			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+				testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(2),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(0),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+				testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 		})
 
 		t.Run("TooManySession", func(t *testing.T) {
@@ -159,15 +159,15 @@ func TestService(t *testing.T) {
 			require.NotEqual(t, sessionV1.VisitorId, sessionV2.VisitorId)
 
 			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+				testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(0),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+				testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 		})
 
 		t.Run("RightPath", func(t *testing.T) {
@@ -194,15 +194,15 @@ func TestService(t *testing.T) {
 			require.Equal(t, sessionV1.PageviewCount+1, sessionV2.PageviewCount)
 
 			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+				testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(0),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+				testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 		})
 	})
 
@@ -260,7 +260,7 @@ func TestService(t *testing.T) {
 
 			// No session wait.
 			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+				testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 
 			// Check session wait metric in parallel.
 			go func() {
@@ -268,7 +268,7 @@ func TestService(t *testing.T) {
 
 				// A single session wait.
 				require.Equal(t, float64(1),
-					testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+					testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 			}()
 
 			// Wait for session.
@@ -279,15 +279,15 @@ func TestService(t *testing.T) {
 			require.WithinDuration(t, now.Add(10*time.Millisecond), time.Now(), 3*time.Millisecond)
 
 			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+				testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(0),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+				testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 		})
 
 		t.Run("Created", func(t *testing.T) {
@@ -305,26 +305,26 @@ func TestService(t *testing.T) {
 
 				// No session wait.
 				require.Equal(t, float64(0),
-					testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+					testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 
 				// Insert session in parallel.
 				go func() {
 					require.Equal(t, float64(1),
-						testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+						testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 					require.Equal(t, float64(1),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 							prometheus.Labels{"type": "inserted"}))
 					require.Equal(t, float64(1),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 							prometheus.Labels{"type": "inserted"}))
 					require.Equal(t, float64(0),
-						testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+						testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 
 					time.Sleep(5 * time.Millisecond)
 
 					// A single session wait.
 					require.Equal(t, float64(1),
-						testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+						testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 
 					ok := service.InsertSession(deviceId, session)
 					require.True(t, ok)
@@ -338,15 +338,15 @@ func TestService(t *testing.T) {
 				require.WithinDuration(t, now.Add(5*time.Millisecond), time.Now(), 3*time.Millisecond)
 
 				require.Equal(t, float64(0),
-					testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+					testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 				require.Equal(t, float64(1),
-					testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+					testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 						prometheus.Labels{"type": "inserted"}))
 				require.Equal(t, float64(1),
-					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+					testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 						prometheus.Labels{"type": "inserted"}))
 				require.Equal(t, float64(0),
-					testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+					testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 			})
 
 			t.Run("WrongPath", func(t *testing.T) {
@@ -362,20 +362,20 @@ func TestService(t *testing.T) {
 
 				// No session wait.
 				require.Equal(t, float64(0),
-					testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+					testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 
 				// Insert session in parallel.
 				go func() {
 					require.Equal(t, float64(1),
-						testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+						testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 					require.Equal(t, float64(1),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 							prometheus.Labels{"type": "inserted"}))
 					require.Equal(t, float64(1),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 							prometheus.Labels{"type": "inserted"}))
 					require.Equal(t, float64(0),
-						testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+						testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 
 					time.Sleep(5 * time.Millisecond)
 
@@ -391,15 +391,15 @@ func TestService(t *testing.T) {
 				require.WithinDuration(t, now.Add(10*time.Millisecond), time.Now(), 3*time.Millisecond)
 
 				require.Equal(t, float64(0),
-					testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+					testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 				require.Equal(t, float64(1),
-					testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+					testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 						prometheus.Labels{"type": "inserted"}))
 				require.Equal(t, float64(2),
-					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+					testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 						prometheus.Labels{"type": "inserted"}))
 				require.Equal(t, float64(0),
-					testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+					testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 			})
 		})
 
@@ -426,15 +426,15 @@ func TestService(t *testing.T) {
 			require.WithinDuration(t, now, time.Now(), 3*time.Millisecond)
 
 			require.Equal(t, float64(0),
-				testutils.GaugeValue(t, promRegistry, "sessionstorage_sessions_wait", nil))
+				testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(1),
-				testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+				testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 					prometheus.Labels{"type": "inserted"}))
 			require.Equal(t, float64(0),
-				testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+				testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 		})
 	})
 
@@ -467,31 +467,31 @@ func TestService(t *testing.T) {
 				require.Equal(t, entry.Session, session)
 
 				require.Equal(t, float64(0),
-					testutils.GaugeValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil))
+					testutils.GaugeValue(t, promRegistry, "sessionstore_gc_cycles_total", nil))
 
 				// Wait for GC.
 				time.Sleep(cfg.sessionInactiveTtl + cfg.gcInterval)
 
 				require.GreaterOrEqual(t,
-					testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
+					testutils.CounterValue(t, promRegistry, "sessionstore_gc_cycles_total", nil),
 					float64(10))
 				require.GreaterOrEqual(t,
-					testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+					testutils.HistogramSumValue(t, promRegistry, "sessionstore_gc_cycles_duration_ms", nil),
 					float64(0))
 				require.Equal(t, float64(1),
-					testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+					testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 						prometheus.Labels{"type": "inserted"}))
 				require.Equal(t, float64(1),
-					testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+					testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 						prometheus.Labels{"type": "deleted"}))
 				require.Equal(t, float64(1),
-					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+					testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 						prometheus.Labels{"type": "inserted"}))
 				require.Equal(t, float64(1),
-					testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+					testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 						prometheus.Labels{"type": "expired"}))
 				require.Equal(t, float64(1),
-					testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+					testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 
 				service.mu.Lock()
 				_, ok = service.devices[deviceId]
@@ -543,25 +543,25 @@ func TestService(t *testing.T) {
 
 						// Metrics.
 						require.GreaterOrEqual(t,
-							testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
+							testutils.CounterValue(t, promRegistry, "sessionstore_gc_cycles_total", nil),
 							float64(10))
 						require.GreaterOrEqual(t,
-							testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+							testutils.HistogramSumValue(t, promRegistry, "sessionstore_gc_cycles_duration_ms", nil),
 							float64(0))
 						require.Equal(t, float64(1),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 								prometheus.Labels{"type": "inserted"}))
 						require.Equal(t, float64(0),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 								prometheus.Labels{"type": "deleted"}))
 						require.Equal(t, float64(10),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 								prometheus.Labels{"type": "inserted"}))
 						require.Equal(t, float64(1),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 								prometheus.Labels{"type": "expired"}))
 						require.Equal(t, float64(5),
-							testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+							testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 
 						service.mu.Lock()
 						device := service.devices[deviceId]
@@ -617,50 +617,50 @@ func TestService(t *testing.T) {
 						// Metrics.
 						// No session has been collected has device sessions are collected all at once.
 						require.GreaterOrEqual(t,
-							testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
+							testutils.CounterValue(t, promRegistry, "sessionstore_gc_cycles_total", nil),
 							float64(10))
 						require.GreaterOrEqual(t,
-							testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+							testutils.HistogramSumValue(t, promRegistry, "sessionstore_gc_cycles_duration_ms", nil),
 							float64(0))
 						require.Equal(t, float64(1),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 								prometheus.Labels{"type": "inserted"}))
 						require.Equal(t, float64(0),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 								prometheus.Labels{"type": "deleted"}))
 						require.Equal(t, float64(10),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 								prometheus.Labels{"type": "inserted"}))
 						require.Equal(t, float64(0),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 								prometheus.Labels{"type": "expired"}))
 						require.Equal(t, float64(0),
-							testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+							testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 
 						// Wait for GC.
 						time.Sleep(cfg.sessionInactiveTtl + cfg.gcInterval)
 
 						// All device's sessions has been collected.
 						require.GreaterOrEqual(t,
-							testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
+							testutils.CounterValue(t, promRegistry, "sessionstore_gc_cycles_total", nil),
 							float64(10))
 						require.GreaterOrEqual(t,
-							testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+							testutils.HistogramSumValue(t, promRegistry, "sessionstore_gc_cycles_duration_ms", nil),
 							float64(0))
 						require.Equal(t, float64(1),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 								prometheus.Labels{"type": "inserted"}))
 						require.Equal(t, float64(1),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 								prometheus.Labels{"type": "deleted"}))
 						require.Equal(t, float64(10),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 								prometheus.Labels{"type": "inserted"}))
 						require.Equal(t, float64(10),
-							testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+							testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 								prometheus.Labels{"type": "expired"}))
 						require.Equal(t, float64(10+1),
-							testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+							testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 					})
 				})
 
@@ -703,25 +703,25 @@ func TestService(t *testing.T) {
 					time.Sleep(cfg.sessionInactiveTtl + cfg.gcInterval)
 
 					require.GreaterOrEqual(t,
-						testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
+						testutils.CounterValue(t, promRegistry, "sessionstore_gc_cycles_total", nil),
 						float64(10))
 					require.GreaterOrEqual(t,
-						testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+						testutils.HistogramSumValue(t, promRegistry, "sessionstore_gc_cycles_duration_ms", nil),
 						float64(0))
 					require.Equal(t, float64(1),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 							prometheus.Labels{"type": "inserted"}))
 					require.Equal(t, float64(0),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 							prometheus.Labels{"type": "deleted"}))
 					require.Equal(t, float64(10),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 							prometheus.Labels{"type": "inserted"}))
 					require.Equal(t, float64(2),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 							prometheus.Labels{"type": "expired"}))
 					require.Equal(t, float64(5+6),
-						testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+						testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 				})
 
 				t.Run("AllExpired", func(t *testing.T) {
@@ -753,25 +753,25 @@ func TestService(t *testing.T) {
 
 					// Metrics.
 					require.GreaterOrEqual(t,
-						testutils.CounterValue(t, promRegistry, "sessionstorage_gc_cycles_total", nil),
+						testutils.CounterValue(t, promRegistry, "sessionstore_gc_cycles_total", nil),
 						float64(10))
 					require.GreaterOrEqual(t,
-						testutils.HistogramSumValue(t, promRegistry, "sessionstorage_gc_cycles_duration_ms", nil),
+						testutils.HistogramSumValue(t, promRegistry, "sessionstore_gc_cycles_duration_ms", nil),
 						float64(0))
 					require.Equal(t, float64(1),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 							prometheus.Labels{"type": "inserted"}))
 					require.Equal(t, float64(1),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_devices_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_devices_total",
 							prometheus.Labels{"type": "deleted"}))
 					require.Equal(t, float64(10),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 							prometheus.Labels{"type": "inserted"}))
 					require.Equal(t, float64(10),
-						testutils.CounterValue(t, promRegistry, "sessionstorage_sessions_total",
+						testutils.CounterValue(t, promRegistry, "sessionstore_sessions_total",
 							prometheus.Labels{"type": "expired"}))
 					require.Equal(t, float64(10+9+8+7+6+5+4+3+2+1),
-						testutils.HistogramSumValue(t, promRegistry, "sessionstorage_sessions_pageviews", nil))
+						testutils.HistogramSumValue(t, promRegistry, "sessionstore_sessions_pageviews", nil))
 
 					service.mu.Lock()
 					_, ok := service.devices[deviceId]

@@ -1,4 +1,4 @@
-package sessionstorage
+package sessionstore
 
 type gcJob struct {
 	jobIndex int

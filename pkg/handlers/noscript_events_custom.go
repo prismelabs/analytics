@@ -8,7 +8,7 @@ import (
 	hutils "github.com/prismelabs/analytics/pkg/handlers/utils"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
-	"github.com/prismelabs/analytics/pkg/services/sessionstorage"
+	"github.com/prismelabs/analytics/pkg/services/sessionstore"
 )
 
 type GetNoscriptEventsCustom fiber.Handler
@@ -18,7 +18,7 @@ type GetNoscriptEventsCustom fiber.Handler
 func ProvideGetNoscriptEventsCustom(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
-	sessionStorage sessionstorage.Service,
+	sessionStorage sessionstore.Service,
 ) GetNoscriptEventsCustom {
 	return func(c *fiber.Ctx) error {
 		err := c.Send(embedded.NoscriptGif)
