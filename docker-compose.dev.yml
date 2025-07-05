@@ -8,6 +8,7 @@ services:
     command: "/app/prisme ${ARGS:-}"
     volumes:
       - "./:/app:ro"
+      - "./chdb:/tmp/prisme:rw"
     ports:
       - "8000:8000"
       - "9090:9090"
