@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +12,7 @@ func TestIntegClientHealthCheck(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := config.GrafanaFromEnv()
+	cfg := configFromEnv()
 	t.Run("Healthy", func(t *testing.T) {
 		cli := ProvideClient(cfg)
 

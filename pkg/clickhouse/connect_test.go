@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/negrel/secrecy"
-	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +14,7 @@ func TestClickhouseConnect(t *testing.T) {
 	logger := log.NewLogger("test_clickhouse_connect", io.Discard, false)
 
 	t.Run("NonExistentInstance", func(t *testing.T) {
-		cfg := config.Clickhouse{
+		cfg := Config{
 			TlsEnabled: false,
 			HostPort:   "down.localhost",
 			Database:   "analytics",
@@ -36,7 +35,7 @@ func TestClickhouseConnectSql(t *testing.T) {
 	logger := log.NewLogger("test_clickhouse_connect_sql", io.Discard, false)
 
 	t.Run("NonExistentInstance", func(t *testing.T) {
-		cfg := config.Clickhouse{
+		cfg := Config{
 			TlsEnabled: false,
 			HostPort:   "down.localhost",
 			Database:   "analytics",
