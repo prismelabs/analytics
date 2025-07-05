@@ -32,7 +32,7 @@ func Connect(logger zerolog.Logger, cfg Config, maxRetry int) (conn driver.Conn)
 				Name    string
 				Version string
 			}{
-				{Name: "prismeanalytics.com", Version: "0.1"},
+				{Name: "prismeanalytics"},
 			},
 		},
 		MaxIdleConns: 16,
