@@ -13,6 +13,10 @@ setenv PRISME_DEBUG "true"
 setenv PRISME_PORT "8000"
 setenv PRISME_TRUST_PROXY "false"
 
+# CHDB eventstore backend
+# setenv PRISME_EVENTSTORE_BACKEND "chdb"
+setenv PRISME_CHDB_PATH "/tmp/prisme/chdb"
+
 # Clickhouse related options.
 setenv PRISME_CLICKHOUSE_TLS "false"
 setenv PRISME_CLICKHOUSE_HOSTPORT "clickhouse.localhost:9000"

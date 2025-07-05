@@ -94,7 +94,8 @@ test/integ: .env
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.default.yml \
 		up --wait
-	source ./.env && go test -race -v -p 1 -run TestInteg ./...
+	source ./.env && go test -v -race -p 1 -run TestInteg ./...
+	source ./.env && go test -v -p 1 -run TestIntegNoRaceDetector ./...
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.default.yml \
 		down --volumes --remove-orphans

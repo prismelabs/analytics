@@ -7,6 +7,7 @@ toolchain go1.23.4
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.37.2
 	github.com/cespare/xxhash/v2 v2.3.0
+	github.com/chdb-io/chdb-go v1.9.0
 	github.com/gofiber/fiber/v2 v2.52.8
 	github.com/gofiber/storage v1.3.3
 	github.com/gofiber/storage/memory v1.3.4
@@ -28,10 +29,15 @@ require (
 require (
 	github.com/ClickHouse/ch-go v0.66.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/ebitengine/purego v0.8.2 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
+	github.com/huandu/go-sqlbuilder v1.27.3 // indirect
+	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	github.com/parquet-go/parquet-go v0.23.0 // indirect
 	github.com/paulmach/orb v0.11.1 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
@@ -39,6 +45,7 @@ require (
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
+	github.com/segmentio/encoding v0.4.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect

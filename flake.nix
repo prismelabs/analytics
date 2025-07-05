@@ -18,11 +18,13 @@
         system:
         let
           pkgs = import nixpkgs { inherit system; };
+          lib = pkgs.lib;
         in
-        # lib = pkgs.lib;
         {
+          pkgs = pkgs;
+          lib = lib;
           devShells = {
-            default = pkgs.mkShell {
+            default = pkgs.mkShell rec {
               buildInputs =
                 (with pkgs; [
                   go
@@ -37,14 +39,17 @@
                   minify # JS minifier
                   clickhouse # clickhouse client
                 ])
-                ++ (with gengeommdb.packages.${system}; [ default ]);
+                ++ (with gengeommdb.packages.${system}; [ default ])
+                ++ (with self.packages.${system}; [ libchdb ]);
+
+              LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
             };
           };
           packages = {
             default = pkgs.buildGoModule {
               pname = "prisme";
               version = "0.18.0";
-              vendorHash = "sha256-/lBh2gO+Uyd7zQqp1q2+vcxxDym8lmbKOtsximBEPPg=";
+              vendorHash = "sha256-OthYgGX4w1YxmBoM01R8j+OehCOo00fWa8AyB2C0OGU=";
 
               src = ./.;
               # Skip go test.
@@ -71,7 +76,10 @@
               config = {
                 Cmd = [ "${self.packages.${system}.default}/bin/prisme" ];
                 WorkingDir = "/app";
-                Env = [ "PRISME_ADMIN_HOSTPORT=0.0.0.0:9090" ];
+                Env = [
+                  "PRISME_ADMIN_HOSTPORT=0.0.0.0:9090"
+                  "CHDB_LIB_PATH=${self.packages.${system}.libchdb}/lib/libchdb.so"
+                ];
               };
             };
 
@@ -82,6 +90,8 @@
                 wget --no-verbose --tries=1 --spider "http://localhost:''${PRISME_PORT:-80}/api/v1/healthcheck" || exit 1
               '';
             };
+
+            libchdb = pkgs.callPackage ./nix/libchdb.nix { };
           };
         }
       );
