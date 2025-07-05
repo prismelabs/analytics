@@ -3,11 +3,13 @@ package grafana
 import (
 	"context"
 	"fmt"
+	"io"
 	"math/rand"
 	"testing"
 
-	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/grafana"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,8 +18,9 @@ func TestIntegService(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cli := grafana.ProvideClient(config.GrafanaFromEnv())
-	service := ProvideService(cli, config.ClickhouseFromEnv())
+	logger := zerolog.New(io.Discard)
+	cli := grafana.ProvideClient(grafana.ProvideConfig(logger))
+	service := ProvideService(cli, clickhouse.ProvideConfig(logger))
 	ctx := context.Background()
 
 	t.Run("SetupDatasourceAndDashboards", func(t *testing.T) {
