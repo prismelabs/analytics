@@ -2,7 +2,7 @@ package grafana
 
 import (
 	"flag"
-	"os"
+	"io"
 	"testing"
 
 	"github.com/prismelabs/analytics/pkg/grafana"
@@ -16,7 +16,7 @@ func init() {
 		return
 	}
 
-	logger := log.NewLogger("test_grafana_logger", os.Stderr, false)
+	logger := log.NewLogger("test_grafana_logger", io.Discard, false)
 
 	client := grafana.ProvideClient(grafana.ProvideConfig(logger))
 	grafana.WaitHealthy(logger, client, 10)
