@@ -33,7 +33,8 @@ func (s *service) RegisterProcedure(proc Procedure) {
 func (s *service) Teardown() error {
 	var finalErr error
 
-	for _, proc := range s.procedures {
+	for i := 0; i < len(s.procedures); i++ {
+		proc := s.procedures[len(s.procedures)-1-i]
 		err := proc()
 		if err != nil {
 			finalErr = errors.Join(err)
