@@ -11,15 +11,13 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/sessionstore"
 )
 
-type GetNoscriptEventsCustom fiber.Handler
-
-// ProvideGetNoscriptEventsCustom is a wire provider for
-// GET /api/v1/noscript/events/custom/:name handler.
-func ProvideGetNoscriptEventsCustom(
+// GetNoscriptEventsCustom returns a GET /api/v1/noscript/events/custom/:name
+// handler.
+func GetNoscriptEventsCustom(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstore.Service,
-) GetNoscriptEventsCustom {
+) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		err := c.Send(embedded.NoscriptGif)
 		if err != nil {

@@ -22,17 +22,15 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type PostEventsPageviews fiber.Handler
-
-// ProvidePostEventsPageViews is a wire provider for POST /api/v1/events/pageviews handler.
-func ProvidePostEventsPageViews(
+// PostEventsPageViews returns a POST /api/v1/events/pageviews handler.
+func PostEventsPageViews(
 	logger zerolog.Logger,
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstore.Service,
-) PostEventsPageviews {
+) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Referrer of the POST request, that is the viewed page.
 		requestReferrer, err := hutils.PeekAndParseReferrerHeader(c)

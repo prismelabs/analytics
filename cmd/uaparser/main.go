@@ -24,7 +24,7 @@ func main() {
 
 	logger := log.NewLogger("uaparser", os.Stderr, false)
 	registry := prometheus.NewRegistry()
-	uaParser := uaparser.ProvideService(logger, registry)
+	uaParser := uaparser.NewService(logger, registry)
 
 	userAgents, err := os.ReadFile(os.Args[1])
 	if err != nil {

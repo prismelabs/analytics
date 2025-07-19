@@ -17,7 +17,7 @@ func TestIntegCreateDatasource(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("ExistentDatasourceType", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -114,7 +114,7 @@ func TestIntegListDatasourcesForCurrentOrg(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NoDatasources", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -180,7 +180,7 @@ func TestIntegUpdateDatasource(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NonExistentDatasource", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -281,7 +281,7 @@ func TestIntegDeleteDatasource(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NonExistentDatasource", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -317,7 +317,7 @@ func TestIntegGetDatasourceByName(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NonExistentDatasource", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())

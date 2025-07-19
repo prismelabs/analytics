@@ -9,13 +9,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type EnvVarService struct {
+type service struct {
 	zerolog.Logger
 	origins map[string]struct{}
 }
 
-// ProvideEnvVarService is a wire provider for origin registry Service.
-func ProvideEnvVarService(cfg Config, logger zerolog.Logger) Service {
+// NewService returns a new origin registry Service.
+func NewService(cfg Config, logger zerolog.Logger) Service {
 	logger = logger.With().
 		Str("service", "originregistry").
 		Str("service_impl", "envvar").
@@ -28,11 +28,11 @@ func ProvideEnvVarService(cfg Config, logger zerolog.Logger) Service {
 
 	logger.Info().Any("origins", origins).Msg("env var based origin registry configured")
 
-	return EnvVarService{logger, origins}
+	return service{logger, origins}
 }
 
 // IsOriginRegistered implements Service.
-func (evs EnvVarService) IsOriginRegistered(_ context.Context, origin string) (bool, error) {
+func (evs service) IsOriginRegistered(_ context.Context, origin string) (bool, error) {
 	_, ok := evs.origins[origin]
 	evs.Logger.Debug().
 		Str("origin", origin).

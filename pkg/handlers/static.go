@@ -1,4 +1,4 @@
-package middlewares
+package handlers
 
 import (
 	"net/http"
@@ -9,9 +9,8 @@ import (
 	"github.com/prismelabs/analytics/pkg/prisme"
 )
 
-type Static fiber.Handler
-
-func ProvideStatic(cfg prisme.Config) Static {
+// Static returns a static HTTP middleware.
+func Static(cfg prisme.Config) fiber.Handler {
 	fsCfg := filesystem.Config{
 		Root:       http.FS(embedded.Static),
 		PathPrefix: "static",

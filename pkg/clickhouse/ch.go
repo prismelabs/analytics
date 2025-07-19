@@ -14,8 +14,8 @@ type Ch struct {
 	driver.Conn
 }
 
-// ProvideCh define a wire provider for Ch.
-func ProvideCh(
+// NewCh returns a new Ch object.
+func NewCh(
 	logger zerolog.Logger,
 	cfg Config,
 	source source.Driver,

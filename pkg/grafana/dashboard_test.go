@@ -20,7 +20,7 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
 
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("EmptyTitle", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -192,7 +192,7 @@ func TestIntegGetDashboardByUID(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NonExistentDashboard", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -285,7 +285,7 @@ func TestIntegDeleteDashboard(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NonExistentDashboard", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -318,7 +318,7 @@ func TestIntegSearchDashboards(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NoDashboard", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -351,7 +351,7 @@ func TestIntegSearchDashboards(t *testing.T) {
 		require.NoError(t, err)
 
 		var expectedSearchResults []SearchDashboardResult
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			dashboardTitle := fmt.Sprintf("Dashboard %v", i)
 			dashboardId, err := cli.CreateUpdateDashboard(context.Background(), orgId, Uid{}, map[string]any{"title": dashboardTitle}, true)
 			require.NoError(t, err)

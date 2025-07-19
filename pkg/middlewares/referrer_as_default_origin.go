@@ -5,11 +5,9 @@ import (
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
-type ReferrerAsDefaultOrigin fiber.Handler
-
-// ProvideReferrerAsDefaultOrigin is a wire provider for a middleware that sets
-// request origin to referrer header if undefined.
-func ProvideReferrerAsDefaultOrigin() ReferrerAsDefaultOrigin {
+// ReferrerAsDefaultOrigin returns a middleware that sets request origin to
+// referrer header if undefined.
+func ReferrerAsDefaultOrigin() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		headers := &c.Request().Header
 

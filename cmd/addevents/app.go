@@ -15,8 +15,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ProvideApp is a wire provider for App.
-func ProvideApp(logger zerolog.Logger, cfg Config, source source.Driver, teardown teardown.Service) App {
+// NewApp returns a new App.
+func NewApp(logger zerolog.Logger, cfg Config, source source.Driver, teardown teardown.Service) App {
 	f := configue.New("", configue.ContinueOnError, configue.NewEnv("PRISME"), configue.NewFlag())
 
 	var clickhouseCfg clickhouse.Config
@@ -30,7 +30,7 @@ func ProvideApp(logger zerolog.Logger, cfg Config, source source.Driver, teardow
 	return App{
 		logger: logger,
 		cfg:    cfg,
-		ch:     clickhouse.ProvideCh(logger, clickhouseCfg, source, teardown),
+		ch:     clickhouse.NewCh(logger, clickhouseCfg, source, teardown),
 	}
 }
 

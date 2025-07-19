@@ -9,11 +9,9 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/originregistry"
 )
 
-type NonRegisteredOriginFilter fiber.Handler
-
-// ProvideNonRegisteredOriginFilter is wire provider for middleware that filter
-// request with non registered origins.
-func ProvideNonRegisteredOriginFilter(originRegistry originregistry.Service) NonRegisteredOriginFilter {
+// NonRegisteredOriginFilter returns a middleware that filter request with non
+// registered origins.
+func NonRegisteredOriginFilter(originRegistry originregistry.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		origin := utils.UnsafeString(c.Request().Header.Peek(fiber.HeaderOrigin))
 		origin, found := strings.CutPrefix(origin, "https://")

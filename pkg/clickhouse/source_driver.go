@@ -7,8 +7,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ProvideEmbeddedSourceDriver is a wire provider for golang-migrate source driver.
-func ProvideEmbeddedSourceDriver(logger zerolog.Logger) source.Driver {
+// EmbeddedSourceDriver returns golang-migrate source driver from embedded file
+// system.
+func EmbeddedSourceDriver(logger zerolog.Logger) source.Driver {
 	source, err := iofs.New(embedded.ChMigrations, "ch_migrations")
 	if err != nil {
 		logger.Panic().Msgf("failed to retrieve clickhouse migration source: %v", err.Error())

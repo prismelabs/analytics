@@ -27,6 +27,6 @@ func init() {
 	cfg.RegisterOptions(figue)
 	_ = figue.Parse()
 
-	client := ProvideClient(cfg)
+	client := NewClient(cfg)
 	WaitHealthy(logger, client, 10)
 }

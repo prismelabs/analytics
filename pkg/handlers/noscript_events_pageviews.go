@@ -13,18 +13,16 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type GetNoscriptEventsPageviews fiber.Handler
-
-// ProvideGetNoscriptEventsPageview is a wire provider for
-// GET /api/v1/noscript/events/pageview handler.
-func ProvideGetNoscriptEventsPageviews(
+// GetNoscriptEventsPageview returns a GET /api/v1/noscript/events/pageview
+// handler.
+func GetNoscriptEventsPageviews(
 	logger zerolog.Logger,
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstore.Service,
-) GetNoscriptEventsPageviews {
+) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		err := c.Send(embedded.NoscriptGif)
 		if err != nil {

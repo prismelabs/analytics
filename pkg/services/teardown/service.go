@@ -13,8 +13,8 @@ type Service interface {
 	Teardown() error
 }
 
-// ProvideService is a wire provider for a teardown procedure registry service.
-func ProvideService() Service {
+// NewService returns a new teardown procedure registry service.
+func NewService() Service {
 	return &service{
 		procedures: []Procedure{},
 	}

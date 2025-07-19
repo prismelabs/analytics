@@ -7,8 +7,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ProvideLogger is a wire provider for StandardLogger.
-func ProvideLogger() zerolog.Logger {
+// NewLogger returns a new configured logger.
+func NewLogger() zerolog.Logger {
 	logger := log.NewLogger("app", os.Stderr, true)
 	log.TestLoggers(logger)
 

@@ -21,7 +21,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 			middlewareCalled := false
 
 			app := fiber.New()
-			app.Use(fiber.Handler(ProvideRequestId(cfg)))
+			app.Use(RequestId(cfg))
 			app.Use(func(c *fiber.Ctx) error {
 				middlewareCalled = true
 
@@ -43,7 +43,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 				reqRequestId := uuid.New()
 
 				app := fiber.New()
-				app.Use(fiber.Handler(ProvideRequestId(cfg)))
+				app.Use(RequestId(cfg))
 				app.Use(func(c *fiber.Ctx) error {
 					middlewareCalled = true
 
@@ -73,7 +73,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 				middlewareCalled := false
 
 				app := fiber.New()
-				app.Use(fiber.Handler(ProvideRequestId(cfg)))
+				app.Use(RequestId(cfg))
 				app.Use(func(c *fiber.Ctx) error {
 					middlewareCalled = true
 
@@ -106,7 +106,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 			middlewareCalled := false
 
 			app := fiber.New()
-			app.Use(fiber.Handler(ProvideRequestId(cfg)))
+			app.Use(RequestId(cfg))
 			app.Use(func(c *fiber.Ctx) error {
 				middlewareCalled = true
 
@@ -129,7 +129,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 				expectedRequestId := uuid.New()
 
 				app := fiber.New()
-				app.Use(fiber.Handler(ProvideRequestId(cfg)))
+				app.Use(RequestId(cfg))
 				app.Use(func(c *fiber.Ctx) error {
 					middlewareCalled = true
 
@@ -159,7 +159,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 				middlewareCalled := false
 
 				app := fiber.New()
-				app.Use(fiber.Handler(ProvideRequestId(cfg)))
+				app.Use(RequestId(cfg))
 				app.Use(func(c *fiber.Ctx) error {
 					middlewareCalled = true
 

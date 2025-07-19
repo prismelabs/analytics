@@ -14,15 +14,12 @@ import (
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
-type PostEventsFileDownloads fiber.Handler
-
-// ProvidePostEventsFileDownloads is a wire provider for POST
-// /api/v1/events/file-downloads handler.
-func ProvidePostEventsFileDownloads(
+// PostEventsFileDownloads returns a POST /api/v1/events/file-downloads handler.
+func PostEventsFileDownloads(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstore.Service,
-) PostEventsFileDownloads {
+) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var err error
 		fileDownloadEv := event.FileDownload{}
@@ -53,7 +50,7 @@ func ProvidePostEventsFileDownloads(
 			// Parse URI of downloaded file.
 			fileUri, err = uri.ParseBytes(c.Body())
 			if err != nil {
-				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid outbound link: %v", err.Error()))
+				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid file uri: %v", err.Error()))
 			}
 		}
 

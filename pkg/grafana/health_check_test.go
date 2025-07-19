@@ -16,7 +16,7 @@ func TestIntegClientHealthCheck(t *testing.T) {
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
 	t.Run("Healthy", func(t *testing.T) {
-		cli := ProvideClient(cfg)
+		cli := NewClient(cfg)
 
 		err := cli.HealthCheck(context.Background())
 		require.NoError(t, err)
@@ -25,7 +25,7 @@ func TestIntegClientHealthCheck(t *testing.T) {
 	t.Run("NonExistentInstance", func(t *testing.T) {
 		cfg := cfg
 		cfg.Url = "http://down.localhost"
-		cli := ProvideClient(cfg)
+		cli := NewClient(cfg)
 
 		err := cli.HealthCheck(context.Background())
 		require.Error(t, err)

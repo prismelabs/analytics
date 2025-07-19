@@ -28,6 +28,6 @@ func init() {
 	grafanaCfg.RegisterOptions(figue)
 	_ = figue.Parse()
 
-	client := grafana.ProvideClient(grafanaCfg)
+	client := grafana.NewClient(grafanaCfg)
 	grafana.WaitHealthy(logger, client, 10)
 }

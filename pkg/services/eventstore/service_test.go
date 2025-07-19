@@ -30,8 +30,8 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 	for _, backend := range []string{"chdb", "clickhouse"} {
 		t.Run(backend, func(t *testing.T) {
 			logger := log.NewLogger("eventstore_service_test", io.Discard, true)
-			teardownService := teardown.ProvideService()
-			source := clickhouse.ProvideEmbeddedSourceDriver(logger)
+			teardownService := teardown.NewService()
+			source := clickhouse.EmbeddedSourceDriver(logger)
 
 			var backendConfig any
 			switch backend {
@@ -55,7 +55,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 			t.Run("SinglePageView", func(t *testing.T) {
 				promRegistry := prometheus.NewRegistry()
-				service := ProvideService(cfg, logger, promRegistry, teardownService, source)
+				service := NewService(cfg, logger, promRegistry, teardownService, source)
 
 				// Add event to batch.
 				eventTime := time.Now().UTC().Round(time.Second)
@@ -117,7 +117,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 			t.Run("MultipleEvents/Pageviews/Custom/OutboundLinkClick", func(t *testing.T) {
 				promRegistry := prometheus.NewRegistry()
-				service := ProvideService(cfg, logger, promRegistry, teardownService, source)
+				service := NewService(cfg, logger, promRegistry, teardownService, source)
 
 				testStartTime := time.Now().UTC()
 				// Store events.
@@ -243,7 +243,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 					RingBuffersFactor: 1,
 				}
 
-				service := ProvideService(cfg, logger, promRegistry, teardownService, source)
+				service := NewService(cfg, logger, promRegistry, teardownService, source)
 
 				// Send hundreds of event without pause.
 				for i := 0; i < 10_000; i++ {

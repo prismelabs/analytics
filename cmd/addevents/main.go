@@ -14,11 +14,11 @@ func main() {
 	logger := log.NewLogger("bootstrap", os.Stderr, true)
 	log.TestLoggers(logger)
 
-	zerologLogger := ProvideLogger()
-	config := ProvideConfig()
-	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
-	service := teardown.ProvideService()
-	app := ProvideApp(zerologLogger, config, driver, service)
+	zerologLogger := NewLogger()
+	config := NewConfig()
+	driver := clickhouse.EmbeddedSourceDriver(zerologLogger)
+	service := teardown.NewService()
+	app := NewApp(zerologLogger, config, driver, service)
 
 	app.logger.Info().Any("config", app.cfg).Msg("initialization done.")
 

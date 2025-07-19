@@ -20,8 +20,8 @@ type Service interface {
 	SetupDatasourceAndDashboards(context.Context, grafana.OrgId) error
 }
 
-// ProvideService is a wire provider for grafana service.
-func ProvideService(cli grafana.Client, cfg clickhouse.Config) Service {
+// NewService returns a new Grafana service.
+func NewService(cli grafana.Client, cfg clickhouse.Config) Service {
 	tmpl, err := template.ParseFS(embedded.GrafanaDashboards, "grafana_dashboards/*")
 	if err != nil {
 		panic(fmt.Errorf("failed to parse grafana dashboards template: %w", err))

@@ -10,10 +10,8 @@ import (
 	"github.com/prismelabs/analytics/pkg/prisme"
 )
 
-type EventsRateLimiter fiber.Handler
-
-// ProvideEventsRateLimiter is a wire provider for events endpoints rate limiter.
-func ProvideEventsRateLimiter(cfg prisme.Config, storage storage.Storage) EventsRateLimiter {
+// EventsRateLimiter returns a rate limiter middleware for /api/*/events/* handlers.
+func EventsRateLimiter(cfg prisme.Config, storage storage.Storage) fiber.Handler {
 	max := 60
 	if cfg.Debug {
 		max = math.MaxInt

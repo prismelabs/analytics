@@ -24,8 +24,8 @@ type Client struct {
 	cfg Config
 }
 
-// Provide is a wire provider for Client.
-func ProvideClient(cfg Config) Client {
+// NewClient returns a new grafana Client.
+func NewClient(cfg Config) Client {
 	return Client{
 		cfg: cfg,
 	}

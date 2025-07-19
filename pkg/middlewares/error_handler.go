@@ -10,10 +10,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type ErrorHandler fiber.Handler
-
-// ProvideErrorHandler is a wire provider for a simple error handler middleware.
-func ProvideErrorHandler(promRegistry *prometheus.Registry, logger zerolog.Logger) ErrorHandler {
+// ErrorHandler returns a simple error handler middleware.
+func ErrorHandler(promRegistry *prometheus.Registry, logger zerolog.Logger) fiber.Handler {
 	reqsPanics := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "http_requests_panics_total",
 		Help: "Total number of HTTP request that lead to a panic",

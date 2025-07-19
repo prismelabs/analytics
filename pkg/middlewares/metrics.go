@@ -9,10 +9,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type Metrics fiber.Handler
-
-// ProvideMetrics is a wire provider for HTTP metrics middleware.
-func ProvideMetrics(promRegistry *prometheus.Registry) Metrics {
+// Metrics returns an HTTP metrics middleware.
+func Metrics(promRegistry *prometheus.Registry) fiber.Handler {
 	activeReqs := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        "http_active_requests",
 		Help:        "Active HTTP requests",

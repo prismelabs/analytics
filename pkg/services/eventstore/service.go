@@ -31,8 +31,8 @@ type Service interface {
 	Query(ctx context.Context, query string, args ...any) (QueryResult, error)
 }
 
-// ProvideService is a wire provider for event storage service.
-func ProvideService(
+// NewService returns a new event store service.
+func NewService(
 	cfg Config,
 	logger zerolog.Logger,
 	promRegistry *prometheus.Registry,
@@ -40,11 +40,11 @@ func ProvideService(
 	source source.Driver,
 ) Service {
 	if cfg.Backend == "clickhouse" {
-		ch := clickhouse.ProvideCh(logger, cfg.BackendConfig.(clickhouse.Config), source, teardown)
+		ch := clickhouse.NewCh(logger, cfg.BackendConfig.(clickhouse.Config), source, teardown)
 		backend := newClickhouseBackend(ch)
 		return newService(cfg, backend, logger, promRegistry, teardown)
 	} else {
-		chdb := chdb.ProvideChDb(logger, cfg.BackendConfig.(chdb.Config), source, teardown)
+		chdb := chdb.NewChDb(logger, cfg.BackendConfig.(chdb.Config), source, teardown)
 		backend := newChDbBackend(chdb)
 		return newService(cfg, backend, logger, promRegistry, teardown)
 	}

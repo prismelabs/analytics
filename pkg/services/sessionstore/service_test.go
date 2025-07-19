@@ -40,7 +40,7 @@ func TestService(t *testing.T) {
 	t.Run("InsertSession", func(t *testing.T) {
 		t.Run("NonExistent", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry).(*service)
+			service := NewService(logger, cfg, promRegistry).(*service)
 
 			deviceId := rand.Uint64()
 			pageUri := mustParseUri("https://example.com")
@@ -71,7 +71,7 @@ func TestService(t *testing.T) {
 
 		t.Run("Existent", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry).(*service)
+			service := NewService(logger, cfg, promRegistry).(*service)
 
 			deviceId := rand.Uint64()
 			pageUri := mustParseUri("https://example.com")
@@ -113,7 +113,7 @@ func TestService(t *testing.T) {
 			cfg.maxSessionsPerVisitor = 1
 
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry).(*service)
+			service := NewService(logger, cfg, promRegistry).(*service)
 
 			deviceId := rand.Uint64()
 			pageUri := mustParseUri("https://example.com")
@@ -137,7 +137,7 @@ func TestService(t *testing.T) {
 	t.Run("AddPageview", func(t *testing.T) {
 		t.Run("WrongPath", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
+			service := NewService(logger, cfg, promRegistry)
 
 			deviceId := rand.Uint64()
 			pageUri := mustParseUri("https://example.com")
@@ -172,7 +172,7 @@ func TestService(t *testing.T) {
 
 		t.Run("RightPath", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
+			service := NewService(logger, cfg, promRegistry)
 
 			deviceId := rand.Uint64()
 			pageUri := mustParseUri("https://example.com")
@@ -209,7 +209,7 @@ func TestService(t *testing.T) {
 	t.Run("IdentifySession", func(t *testing.T) {
 		t.Run("RightPath", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
+			service := NewService(logger, cfg, promRegistry)
 
 			deviceId := rand.Uint64()
 			pageUri := mustParseUri("https://example.com")
@@ -230,7 +230,7 @@ func TestService(t *testing.T) {
 
 		t.Run("WrongPath", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
+			service := NewService(logger, cfg, promRegistry)
 
 			deviceId := rand.Uint64()
 			pageUri := mustParseUri("https://example.com")
@@ -253,7 +253,7 @@ func TestService(t *testing.T) {
 	t.Run("WaitSession", func(t *testing.T) {
 		t.Run("Timeout", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
+			service := NewService(logger, cfg, promRegistry)
 
 			deviceId := rand.Uint64()
 			pageUri := mustParseUri("https://example.com")
@@ -293,7 +293,7 @@ func TestService(t *testing.T) {
 		t.Run("Created", func(t *testing.T) {
 			t.Run("RightPath", func(t *testing.T) {
 				promRegistry := prometheus.NewRegistry()
-				service := ProvideService(logger, cfg, promRegistry)
+				service := NewService(logger, cfg, promRegistry)
 
 				deviceId := rand.Uint64()
 				pageUri := mustParseUri("https://example.com")
@@ -351,7 +351,7 @@ func TestService(t *testing.T) {
 
 			t.Run("WrongPath", func(t *testing.T) {
 				promRegistry := prometheus.NewRegistry()
-				service := ProvideService(logger, cfg, promRegistry)
+				service := NewService(logger, cfg, promRegistry)
 
 				deviceId := rand.Uint64()
 				session := event.Session{
@@ -405,7 +405,7 @@ func TestService(t *testing.T) {
 
 		t.Run("AlreadyExists", func(t *testing.T) {
 			promRegistry := prometheus.NewRegistry()
-			service := ProvideService(logger, cfg, promRegistry)
+			service := NewService(logger, cfg, promRegistry)
 
 			deviceId := rand.Uint64()
 			pageUri := mustParseUri("https://example.com")
@@ -449,7 +449,7 @@ func TestService(t *testing.T) {
 		t.Run("SingleDevice", func(t *testing.T) {
 			t.Run("SingleSession", func(t *testing.T) {
 				promRegistry := prometheus.NewRegistry()
-				service := ProvideService(logger, cfg, promRegistry).(*service)
+				service := NewService(logger, cfg, promRegistry).(*service)
 
 				deviceId := rand.Uint64()
 				pageUri := mustParseUri("https://example.com")
@@ -503,7 +503,7 @@ func TestService(t *testing.T) {
 				t.Run("SingleExpired", func(t *testing.T) {
 					t.Run("p(0)", func(t *testing.T) {
 						promRegistry := prometheus.NewRegistry()
-						service := ProvideService(logger, cfg, promRegistry).(*service)
+						service := NewService(logger, cfg, promRegistry).(*service)
 
 						deviceId := rand.Uint64()
 						activeSessions := sync.Map{}
@@ -578,7 +578,7 @@ func TestService(t *testing.T) {
 						cfg.deviceExpiryPercentile = 100
 
 						promRegistry := prometheus.NewRegistry()
-						service := ProvideService(logger, cfg, promRegistry).(*service)
+						service := NewService(logger, cfg, promRegistry).(*service)
 
 						deviceId := rand.Uint64()
 
@@ -666,7 +666,7 @@ func TestService(t *testing.T) {
 
 				t.Run("MultipleExpired", func(t *testing.T) {
 					promRegistry := prometheus.NewRegistry()
-					service := ProvideService(logger, cfg, promRegistry).(*service)
+					service := NewService(logger, cfg, promRegistry).(*service)
 
 					deviceId := rand.Uint64()
 
@@ -726,7 +726,7 @@ func TestService(t *testing.T) {
 
 				t.Run("AllExpired", func(t *testing.T) {
 					promRegistry := prometheus.NewRegistry()
-					service := ProvideService(logger, cfg, promRegistry).(*service)
+					service := NewService(logger, cfg, promRegistry).(*service)
 
 					deviceId := rand.Uint64()
 

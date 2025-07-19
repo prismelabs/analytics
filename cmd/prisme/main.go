@@ -150,21 +150,21 @@ func main() {
 	promRegistry.MustRegister(collectors.NewGoCollector())
 
 	// Create teardown service.
-	teardownService := teardown.ProvideService()
+	teardownService := teardown.NewService()
 
 	// Setup some services.
-	eventStore := eventstore.ProvideService(
+	eventStore := eventstore.NewService(
 		eventStoreCfg,
 		logger,
 		promRegistry,
 		teardownService,
-		clickhouse.ProvideEmbeddedSourceDriver(logger),
+		clickhouse.EmbeddedSourceDriver(logger),
 	)
-	uaParser := uaparser.ProvideService(logger, promRegistry)
-	ipGeolocator := ipgeolocator.ProvideMmdbService(logger, promRegistry)
-	saltManager := saltmanager.ProvideService(logger)
-	sessionStore := sessionstore.ProvideService(logger, sessionstoreCfg, promRegistry)
-	originRegistry := originregistry.ProvideEnvVarService(originRegistryCfg, logger)
+	uaParser := uaparser.NewService(logger, promRegistry)
+	ipGeolocator := ipgeolocator.NewMmdbService(logger, promRegistry)
+	saltManager := saltmanager.NewService(logger)
+	sessionStore := sessionstore.NewService(logger, sessionstoreCfg, promRegistry)
+	originRegistry := originregistry.NewService(originRegistryCfg, logger)
 
 	// Create fiber app.
 	app := fiber.New(fiberCfg)
@@ -177,46 +177,46 @@ func main() {
 		return err
 	})
 
-	app.Use(fiber.Handler(middlewares.ProvideMetrics(promRegistry)),
-		fiber.Handler(middlewares.ProvideRequestId(prismeCfg)),
-		fiber.Handler(middlewares.ProvideAccessLog(prismeCfg, accessLogger)),
-		fiber.Handler(middlewares.ProvideErrorHandler(promRegistry, logger)))
+	app.Use(middlewares.Metrics(promRegistry),
+		middlewares.RequestId(prismeCfg),
+		middlewares.AccessLog(prismeCfg, accessLogger),
+		middlewares.ErrorHandler(promRegistry, logger))
 
 	// Register handlers.
 	{
 		// Public endpoints.
-		app.Use("/static", fiber.Handler(middlewares.ProvideStatic(prismeCfg)))
+		app.Use("/static", handlers.Static(prismeCfg))
 
-		app.Use("/api/v1/healthcheck", fiber.Handler(handlers.ProvideHealthCheck()))
+		app.Use("/api/v1/healthcheck", handlers.HealthCheck())
 
-		eventCors := middlewares.ProvideEventsCors()
-		eventRateLimit := middlewares.ProvideEventsRateLimiter(
+		eventCors := middlewares.EventsCors()
+		eventRateLimit := middlewares.EventsRateLimiter(
 			prismeCfg,
 			memory.New(memory.Config{
 				GCInterval: 10 * time.Second,
 			}),
 		)
-		nonRegisteredOriginFilter := middlewares.ProvideNonRegisteredOriginFilter(originRegistry)
-		eventTimeout := middlewares.ProvideApiEventsTimeout(prismeCfg)
+		nonRegisteredOriginFilter := middlewares.NonRegisteredOriginFilter(originRegistry)
+		eventTimeout := middlewares.ApiEventsTimeout(prismeCfg)
 
 		app.Use("/api/v1/events/*",
-			fiber.Handler(eventCors),
-			fiber.Handler(eventRateLimit),
-			fiber.Handler(nonRegisteredOriginFilter),
-			fiber.Handler(eventTimeout),
+			eventCors,
+			eventRateLimit,
+			nonRegisteredOriginFilter,
+			eventTimeout,
 		)
 
 		app.Use("/api/v1/noscript/events/*",
-			fiber.Handler(eventCors),
-			fiber.Handler(eventRateLimit),
-			fiber.Handler(nonRegisteredOriginFilter),
-			fiber.Handler(eventTimeout),
+			eventCors,
+			eventRateLimit,
+			nonRegisteredOriginFilter,
+			eventTimeout,
 			// Prevent caching of GET responses.
-			fiber.Handler(middlewares.ProvideNoscriptHandlersCache()),
+			middlewares.NoscriptHandlersCache(),
 		)
 
 		app.Post("/api/v1/events/pageviews",
-			fiber.Handler(handlers.ProvidePostEventsPageViews(
+			fiber.Handler(handlers.PostEventsPageViews(
 				logger,
 				eventStore,
 				uaParser,
@@ -226,7 +226,7 @@ func main() {
 			)),
 		)
 		app.Get("/api/v1/noscript/events/pageviews",
-			fiber.Handler(handlers.ProvideGetNoscriptEventsPageviews(
+			fiber.Handler(handlers.GetNoscriptEventsPageviews(
 				logger,
 				eventStore,
 				uaParser,
@@ -237,36 +237,36 @@ func main() {
 		)
 
 		app.Post("/api/v1/events/custom/:name",
-			fiber.Handler(handlers.ProvidePostEventsCustom(
+			fiber.Handler(handlers.PostEventsCustom(
 				eventStore,
 				saltManager,
 				sessionStore,
 			)),
 		)
 		app.Get("/api/v1/noscript/events/custom/:name",
-			fiber.Handler(handlers.ProvideGetNoscriptEventsCustom(eventStore,
+			fiber.Handler(handlers.GetNoscriptEventsCustom(eventStore,
 				saltManager,
 				sessionStore,
 			)),
 		)
 
 		app.Post("/api/v1/events/outbound-links",
-			fiber.Handler(handlers.ProvidePostEventsOutboundLinks(
+			fiber.Handler(handlers.PostEventsOutboundLinks(
 				eventStore,
 				saltManager,
 				sessionStore,
 			)),
 		)
 		app.Get("/api/v1/noscript/events/outbound-links",
-			fiber.Handler(handlers.ProvidePostEventsOutboundLinks(
+			fiber.Handler(handlers.GetNoscriptEventsOutboundLinks(
 				eventStore,
-				saltManager,
 				sessionStore,
+				saltManager,
 			)),
 		)
 
 		app.Post("/api/v1/events/file-downloads",
-			fiber.Handler(handlers.ProvidePostEventsFileDownloads(
+			fiber.Handler(handlers.PostEventsFileDownloads(
 				eventStore,
 				saltManager,
 				sessionStore,

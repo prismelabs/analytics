@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ProvideMmdbService is a wire provider for mmdb based ip geolocator service.
-func ProvideMmdbService(
+// NewMmdbService returns a new mmdb based ip geolocator service.
+func NewMmdbService(
 	logger zerolog.Logger,
 	promRegistry *prometheus.Registry,
 ) Service {

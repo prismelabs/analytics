@@ -16,14 +16,12 @@ import (
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
-type PostEventsCustom fiber.Handler
-
-// ProvidePostEventsCustom is a wire provider for POST /api/v1/events/custom/:name handler.
-func ProvidePostEventsCustom(
+// PostEventsCustom returns a POST /api/v1/events/custom/:name handler.
+func PostEventsCustom(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstore.Service,
-) PostEventsCustom {
+) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
 		// ContentType must be json if request has a body.

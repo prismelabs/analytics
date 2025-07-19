@@ -17,8 +17,8 @@ type Service interface {
 	StaticSalt() Salt
 }
 
-// ProvideService is a wire provider for hashing salt manager service.
-func ProvideService(logger zerolog.Logger) Service {
+// NewService returns a new hashing salt manager service.
+func NewService(logger zerolog.Logger) Service {
 	logger = logger.With().
 		Str("service", "saltmanager").
 		Logger()

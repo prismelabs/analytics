@@ -31,7 +31,6 @@
                   mockgen # Go mock generator
                   gopls # Go LSP
                   golangci-lint # Go linter
-                  wire # Go dependency injection
                   go-migrate # Go SQL migration
                   bunyan-rs # Bunyan format pretty print
                   entr # FS watcher

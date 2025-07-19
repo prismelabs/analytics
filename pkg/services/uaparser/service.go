@@ -14,8 +14,8 @@ type Service interface {
 	ParseUserAgent(string) Client
 }
 
-// ProvideService is a wire provider for User Agent parser service.
-func ProvideService(
+// NewService returns a new User Agent parser service.
+func NewService(
 	logger zerolog.Logger,
 	promRegistry *prometheus.Registry,
 ) Service {

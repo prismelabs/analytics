@@ -14,15 +14,12 @@ import (
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
-type PostEventsOutboundLinks fiber.Handler
-
-// ProvidePostEventsOutboundLinks is a wire provider for POST
-// /api/v1/events/outbound-links handler.
-func ProvidePostEventsOutboundLinks(
+// PostEventsOutboundLinks returns a POST /api/v1/events/outbound-links handler.
+func PostEventsOutboundLinks(
 	eventStore eventstore.Service,
 	saltManagerService saltmanager.Service,
 	sessionStorage sessionstore.Service,
-) PostEventsOutboundLinks {
+) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var err error
 		outboundLinkClickEv := event.OutboundLinkClick{}
@@ -53,7 +50,11 @@ func ProvidePostEventsOutboundLinks(
 			// Parse outbound URI.
 			outboundUri, err = uri.ParseBytes(c.Body())
 			if err != nil {
-				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid outbound link: %v", err.Error()))
+				return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf(
+					"invalid outbound link (%v): %v",
+					string(c.Body()),
+					err.Error(),
+				))
 			}
 		}
 		// Check that link is external.

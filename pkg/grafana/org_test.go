@@ -17,7 +17,7 @@ func TestIntegCreateOrganization(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NonExistentOrganization", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())

@@ -70,8 +70,7 @@ lint/fix:
 
 .PHONY: codegen
 codegen: ./pkg/embedded/static/wa.js
-	wire ./...
-	go generate -skip="wire" ./...
+	go generate ./...
 
 ./pkg/embedded/static/wa.js: ./tracker/web_analytics.js
 	minify --js-version 2019 $^ > $@

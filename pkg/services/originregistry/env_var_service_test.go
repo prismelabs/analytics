@@ -15,7 +15,7 @@ func TestEnvVarService(t *testing.T) {
 		logger := log.NewLogger("env_var_service_test", io.Discard, false)
 
 		t.Run("NonRegistered", func(t *testing.T) {
-			service := ProvideEnvVarService(Config{Origins: "notexample.com"}, logger)
+			service := NewService(Config{Origins: "notexample.com"}, logger)
 
 			isRegistered, err := service.IsOriginRegistered(ctx, "example.com")
 			require.NoError(t, err)
@@ -23,7 +23,7 @@ func TestEnvVarService(t *testing.T) {
 		})
 
 		t.Run("Registered", func(t *testing.T) {
-			service := ProvideEnvVarService(Config{Origins: "example.org,example.com"}, logger)
+			service := NewService(Config{Origins: "example.org,example.com"}, logger)
 
 			isRegistered, err := service.IsOriginRegistered(ctx, "example.com")
 			require.NoError(t, err)

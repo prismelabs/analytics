@@ -67,7 +67,7 @@ func TestAccessLog(t *testing.T) {
 				app := fiber.New(fiber.Config{
 					ProxyHeader: tcase.proxyHeader,
 				})
-				app.Use(fiber.Handler(ProvideRequestId(prisme.Config{})))
+				app.Use(RequestId(prisme.Config{}))
 				app.Use(accessLog(accessLogger))
 				app.Use(func(c *fiber.Ctx) error {
 					return nil

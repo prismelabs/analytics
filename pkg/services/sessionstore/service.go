@@ -80,8 +80,8 @@ type service struct {
 	now atomic.Pointer[time.Time]
 }
 
-// ProvideService is a wire provider for in memory session storage.
-func ProvideService(
+// NewService returns a new in memory session storage.
+func NewService(
 	logger zerolog.Logger,
 	cfg Config,
 	promRegistry *prometheus.Registry,

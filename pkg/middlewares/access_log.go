@@ -10,10 +10,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type AccessLog fiber.Handler
-
-// ProvideAccessLog define a wire provider for AccessLog middleware.
-func ProvideAccessLog(cfg prisme.Config, logger zerolog.Logger) AccessLog {
+// AccessLog returns an access log middleware.
+func AccessLog(cfg prisme.Config, logger zerolog.Logger) fiber.Handler {
 	// Open access log file.
 	accessLogFile, err := os.OpenFile(cfg.AccessLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {

@@ -20,8 +20,8 @@ type Config struct {
 	DirectTrafficRate float64
 }
 
-// ProvideConfig is a wire provider for Config.
-func ProvideConfig() Config {
+// NewConfig returns a Config parsed from command line.
+func NewConfig() Config {
 	cfg := Config{}
 
 	domains := "localhost,mywebsite.localhost,foo.mywebsite.localhost"

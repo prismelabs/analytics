@@ -19,7 +19,7 @@ func TestIntegCreateFolder(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NonExistentTitle", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -54,7 +54,7 @@ func TestIntegListFolders(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NoFolder", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -167,7 +167,7 @@ func TestIntegListFolderPermissins(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NonExistentFolder", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -267,7 +267,7 @@ func TestIntegSetFolderPermissions(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	type testCase struct {
 		name             string
@@ -410,7 +410,7 @@ func TestIntegDeleteFolder(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NonExistentFolder", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())
@@ -442,7 +442,7 @@ func TestIntegSearchFolders(t *testing.T) {
 
 	var cfg Config
 	testutils.ConfigueLoad(t, &cfg)
-	cli := ProvideClient(cfg)
+	cli := NewClient(cfg)
 
 	t.Run("NoFolder", func(t *testing.T) {
 		orgName := fmt.Sprintf("foo-%v", rand.Int())

@@ -5,11 +5,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-// Cors middleware for /events handlers.
-type EventsCors fiber.Handler
-
-// ProvideEventsCors is a wire provider for /events cors middleware.
-func ProvideEventsCors() EventsCors {
+// EventsCors returns a cors middleware for /api/*/events/* handlers.
+func EventsCors() fiber.Handler {
 	return cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowMethods: "POST",

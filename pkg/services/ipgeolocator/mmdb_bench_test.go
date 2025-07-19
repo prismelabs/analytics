@@ -23,7 +23,7 @@ func BenchmarkFindCountryCodeForIp(b *testing.B) {
 	b.Run("IPv4", func(b *testing.B) {
 		logger := log.NewLogger("ipgeolocator_mmdb_service", io.Discard, false)
 		promRegistry := prometheus.NewRegistry()
-		service := ProvideMmdbService(logger, promRegistry)
+		service := NewMmdbService(logger, promRegistry)
 
 		for i := 0; i < b.N; i++ {
 			_ = service.FindCountryCodeForIP(randIpv4Str())

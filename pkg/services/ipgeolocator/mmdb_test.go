@@ -65,7 +65,7 @@ func TestMmdbService(t *testing.T) {
 
 			for _, tcase := range testCases {
 				t.Run(tcase.ip+"/"+tcase.countryCode, func(t *testing.T) {
-					service := ProvideMmdbService(logger, prometheus.NewRegistry())
+					service := NewMmdbService(logger, prometheus.NewRegistry())
 
 					countryCode := service.FindCountryCodeForIP(tcase.ip)
 					require.Equal(t, tcase.countryCode, countryCode.String())
@@ -88,7 +88,7 @@ func TestMmdbService(t *testing.T) {
 
 			for _, tcase := range testCases {
 				t.Run(tcase.ip, func(t *testing.T) {
-					service := ProvideMmdbService(logger, prometheus.NewRegistry())
+					service := NewMmdbService(logger, prometheus.NewRegistry())
 
 					countryCode := service.FindCountryCodeForIP(tcase.ip)
 					require.Equal(t, CountryCode{"XX"}, countryCode)
@@ -105,7 +105,7 @@ func TestIntegMmdbServiceMetrics(t *testing.T) {
 
 	logger := log.NewLogger("ipgeolocator_mmdb_service", io.Discard, false)
 	promRegistry := prometheus.NewRegistry()
-	service := ProvideMmdbService(logger, promRegistry)
+	service := NewMmdbService(logger, promRegistry)
 
 	countryCode := service.FindCountryCodeForIP("127.0.0.1")
 

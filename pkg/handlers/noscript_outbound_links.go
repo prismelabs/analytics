@@ -14,15 +14,13 @@ import (
 	"github.com/prismelabs/analytics/pkg/uri"
 )
 
-type GetNoscriptEventsOutboundLinks fiber.Handler
-
-// ProvideGetNoscriptEventsOutboundLinks is a wire provider for
-// GET /api/v1/noscript/events/outbound-links handler.
-func ProvideGetNoscriptEventsOutboundLinks(
+// GetNoscriptEventsOutboundLinks returns a GET
+// /api/v1/noscript/events/outbound-links handler.
+func GetNoscriptEventsOutboundLinks(
 	eventStore eventstore.Service,
 	sessionStorage sessionstore.Service,
 	saltManagerService saltmanager.Service,
-) GetNoscriptEventsOutboundLinks {
+) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var err error
 		outboundLinkClickEv := event.OutboundLinkClick{}
@@ -34,7 +32,11 @@ func ProvideGetNoscriptEventsOutboundLinks(
 
 		outboundUri, err := uri.Parse(c.Query("url"))
 		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid outbound link: %v", err.Error()))
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf(
+				"invalid outbound link (%v): %v",
+				c.Query("url"),
+				err.Error(),
+			))
 		}
 
 		// Check that link is external.

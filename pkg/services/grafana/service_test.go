@@ -23,8 +23,8 @@ func TestIntegService(t *testing.T) {
 	)
 	testutils.ConfigueLoad(t, &grafanaCfg, &clickhouseCfg)
 
-	cli := grafana.ProvideClient(grafanaCfg)
-	service := ProvideService(cli, clickhouseCfg)
+	cli := grafana.NewClient(grafanaCfg)
+	service := NewService(cli, clickhouseCfg)
 	ctx := context.Background()
 
 	t.Run("SetupDatasourceAndDashboards", func(t *testing.T) {

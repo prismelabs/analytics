@@ -13,8 +13,8 @@ type ChDb struct {
 	*sql.DB
 }
 
-// ProvideChDb is a wire provider for a chdb session.
-func ProvideChDb(
+// NewChDb returns a new chdb session.
+func NewChDb(
 	logger zerolog.Logger,
 	cfg Config,
 	source source.Driver,
