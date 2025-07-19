@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/prismelabs/analytics/pkg/testutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +17,8 @@ func TestIntegCreateFolder(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NonExistentTitle", func(t *testing.T) {
@@ -50,7 +52,8 @@ func TestIntegListFolders(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NoFolder", func(t *testing.T) {
@@ -162,7 +165,8 @@ func TestIntegListFolderPermissins(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NonExistentFolder", func(t *testing.T) {
@@ -261,7 +265,8 @@ func TestIntegSetFolderPermissions(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	type testCase struct {
@@ -403,7 +408,8 @@ func TestIntegDeleteFolder(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NonExistentFolder", func(t *testing.T) {
@@ -434,7 +440,8 @@ func TestIntegSearchFolders(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NoFolder", func(t *testing.T) {

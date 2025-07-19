@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/prismelabs/analytics/pkg/testutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,7 +15,8 @@ func TestIntegCreateOrganization(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NonExistentOrganization", func(t *testing.T) {

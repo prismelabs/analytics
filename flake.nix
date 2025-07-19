@@ -49,17 +49,13 @@
             default = pkgs.buildGoModule {
               pname = "prisme";
               version = "0.18.0";
-              vendorHash = "sha256-OthYgGX4w1YxmBoM01R8j+OehCOo00fWa8AyB2C0OGU=";
+              vendorHash = "sha256-m4uBcU4byBPz4oDUGMneBjW+dCBlIByQoTHRHYYubp4=";
 
               src = ./.;
               # Skip go test.
               doCheck = false;
 
-              postBuild = ''
-                mv "$GOPATH/bin/server" "$GOPATH/bin/prisme"
-              '';
-
-              subPackages = "./cmd/server";
+              subPackages = "./cmd/prisme";
             };
 
             docker = pkgs.dockerTools.buildImage {

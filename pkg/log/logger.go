@@ -85,5 +85,5 @@ type goMigrateLogger struct {
 
 // Verbose implements migrate.Logger.
 func (gml *goMigrateLogger) Verbose() bool {
-	return gml.Logger.GetLevel() <= zerolog.DebugLevel
+	return gml.GetLevel() <= zerolog.DebugLevel
 }

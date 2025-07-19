@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/prismelabs/analytics/pkg/testutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,7 +15,8 @@ func TestIntegCreateDatasource(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("ExistentDatasourceType", func(t *testing.T) {
@@ -110,7 +112,8 @@ func TestIntegListDatasourcesForCurrentOrg(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NoDatasources", func(t *testing.T) {
@@ -175,7 +178,8 @@ func TestIntegUpdateDatasource(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NonExistentDatasource", func(t *testing.T) {
@@ -275,7 +279,8 @@ func TestIntegDeleteDatasource(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NonExistentDatasource", func(t *testing.T) {
@@ -310,7 +315,8 @@ func TestIntegGetDatasourceByName(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NonExistentDatasource", func(t *testing.T) {

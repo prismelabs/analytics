@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-migrate/migrate/v4/source"
+	"github.com/negrel/configue"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/rs/zerolog"
@@ -16,10 +17,20 @@ import (
 
 // ProvideApp is a wire provider for App.
 func ProvideApp(logger zerolog.Logger, cfg Config, source source.Driver, teardown teardown.Service) App {
+	f := configue.New("", configue.ContinueOnError, configue.NewEnv("PRISME"), configue.NewFlag())
+
+	var clickhouseCfg clickhouse.Config
+	clickhouseCfg.RegisterOptions(f)
+
+	err := f.Parse()
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to parse options")
+	}
+
 	return App{
 		logger: logger,
 		cfg:    cfg,
-		ch:     clickhouse.ProvideCh(logger, clickhouse.ProvideConfig(logger), source, teardown),
+		ch:     clickhouse.ProvideCh(logger, clickhouseCfg, source, teardown),
 	}
 }
 
@@ -36,10 +47,7 @@ func (a App) executeScenario(worker func(time.Time, Config, chan<- any) uint64) 
 
 	rowsChan := make(chan any)
 
-	goPoolSize := runtime.NumCPU()
-	if goPoolSize < 4 {
-		goPoolSize = 4
-	}
+	goPoolSize := max(runtime.NumCPU(), 4)
 	goPoolCh := goPool(goPoolSize)
 
 	// Create workers.

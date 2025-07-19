@@ -7,7 +7,7 @@ import (
 
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
-	"github.com/prismelabs/analytics/pkg/wired"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/tidwall/gjson"
 )
 
@@ -23,7 +23,7 @@ func main() {
 	}
 
 	logger := log.NewLogger("uaparser", os.Stderr, false)
-	registry := wired.ProvidePrometheusRegistry()
+	registry := prometheus.NewRegistry()
 	uaParser := uaparser.ProvideService(logger, registry)
 
 	userAgents, err := os.ReadFile(os.Args[1])

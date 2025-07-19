@@ -5,13 +5,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
-	"github.com/prismelabs/analytics/pkg/config"
 	"github.com/prismelabs/analytics/pkg/embedded"
+	"github.com/prismelabs/analytics/pkg/prisme"
 )
 
 type Static fiber.Handler
 
-func ProvideStatic(cfg config.Server) Static {
+func ProvideStatic(cfg prisme.Config) Static {
 	fsCfg := filesystem.Config{
 		Root:       http.FS(embedded.Static),
 		PathPrefix: "static",

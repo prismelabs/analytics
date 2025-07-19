@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/prismelabs/analytics/pkg/testutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +17,9 @@ func TestIntegCreateUpdateDashboard(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
+
 	cli := ProvideClient(cfg)
 
 	t.Run("EmptyTitle", func(t *testing.T) {
@@ -187,7 +190,8 @@ func TestIntegGetDashboardByUID(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NonExistentDashboard", func(t *testing.T) {
@@ -279,7 +283,8 @@ func TestIntegDeleteDashboard(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NonExistentDashboard", func(t *testing.T) {
@@ -311,7 +316,8 @@ func TestIntegSearchDashboards(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	cli := ProvideClient(cfg)
 
 	t.Run("NoDashboard", func(t *testing.T) {
