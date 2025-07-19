@@ -42,8 +42,8 @@ down:
 		down
 
 .PHONY: clean
-clean:
-	@touch .env
+clean: .env
+	source ./.env && rm -rf $$PRISME_CHDB_PATH
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.dev.yml \
 		-f ./docker-compose.default.yml \
