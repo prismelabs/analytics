@@ -16,7 +16,7 @@ type Service interface {
 // NewService returns a new teardown procedure registry service.
 func NewService() Service {
 	return &service{
-		procedures: []Procedure{},
+		procedures: nil,
 	}
 }
 
@@ -40,6 +40,8 @@ func (s *service) Teardown() error {
 			finalErr = errors.Join(err)
 		}
 	}
+
+	s.procedures = nil
 
 	return finalErr
 }

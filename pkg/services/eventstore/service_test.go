@@ -27,11 +27,12 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 		t.SkipNow()
 	}
 
-	for _, backend := range []string{"chdb", "clickhouse"} {
+	for _, backend := range []string{"clickhouse", "chdb"} {
 		t.Run(backend, func(t *testing.T) {
 			logger := log.New("eventstore_service_test", io.Discard, true)
 			teardownService := teardown.NewService()
 			source := clickhouse.EmbeddedSourceDriver(logger)
+			defer func() { require.NoError(t, teardownService.Teardown()) }()
 
 			var backendConfig any
 			switch backend {
@@ -56,6 +57,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 			t.Run("SinglePageView", func(t *testing.T) {
 				promRegistry := prometheus.NewRegistry()
 				service := NewService(cfg, logger, promRegistry, teardownService, source)
+				defer func() { require.NoError(t, teardownService.Teardown()) }()
 
 				// Add event to batch.
 				eventTime := time.Now().UTC().Round(time.Second)
@@ -118,6 +120,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 			t.Run("MultipleEvents/Pageviews/Custom/OutboundLinkClick", func(t *testing.T) {
 				promRegistry := prometheus.NewRegistry()
 				service := NewService(cfg, logger, promRegistry, teardownService, source)
+				defer func() { require.NoError(t, teardownService.Teardown()) }()
 
 				testStartTime := time.Now().UTC()
 				// Store events.
@@ -244,6 +247,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 				}
 
 				service := NewService(cfg, logger, promRegistry, teardownService, source)
+				defer func() { require.NoError(t, teardownService.Teardown()) }()
 
 				// Send hundreds of event without pause.
 				for i := 0; i < 10_000; i++ {
