@@ -29,7 +29,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 	for _, backend := range []string{"chdb", "clickhouse"} {
 		t.Run(backend, func(t *testing.T) {
-			logger := log.NewLogger("eventstore_service_test", io.Discard, true)
+			logger := log.New("eventstore_service_test", io.Discard, true)
 			teardownService := teardown.NewService()
 			source := clickhouse.EmbeddedSourceDriver(logger)
 

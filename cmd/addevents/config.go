@@ -8,16 +8,16 @@ import (
 )
 
 type Config struct {
-	TotalEvents       uint64
-	BatchSize         uint64
-	Domains           []string
-	FromDate          time.Time
-	CustomEventsRate  float64
-	BounceRate        float64
-	ExitRate          float64
-	MobileRate        float64
-	VisitorIdsRange   uint64
-	DirectTrafficRate float64
+	TotalEvents       uint64    `json:"total_events"`
+	BatchSize         uint64    `json:"batch_size"`
+	Domains           []string  `json:"domains"`
+	FromDate          time.Time `json:"from_date"`
+	CustomEventsRate  float64   `json:"custom_events_rate"`
+	BounceRate        float64   `json:"bounce_rate"`
+	ExitRate          float64   `json:"exit_rate"`
+	MobileRate        float64   `json:"mobile_rate"`
+	VisitorIdsRange   uint64    `json:"visitor_ids_range"`
+	DirectTrafficRate float64   `json:"direct_traffic_rate"`
 }
 
 // NewConfig returns a Config parsed from command line.

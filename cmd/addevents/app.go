@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -11,12 +12,12 @@ import (
 	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/negrel/configue"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
-	"github.com/rs/zerolog"
 )
 
 // NewApp returns a new App.
-func NewApp(logger zerolog.Logger, cfg Config, source source.Driver, teardown teardown.Service) App {
+func NewApp(logger log.Logger, cfg Config, source source.Driver, teardown teardown.Service) App {
 	f := configue.New("", configue.ContinueOnError, configue.NewEnv("PRISME"), configue.NewFlag())
 
 	var clickhouseCfg clickhouse.Config
@@ -24,7 +25,7 @@ func NewApp(logger zerolog.Logger, cfg Config, source source.Driver, teardown te
 
 	err := f.Parse()
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to parse options")
+		logger.Fatal("failed to parse options", err)
 	}
 
 	return App{
@@ -36,7 +37,7 @@ func NewApp(logger zerolog.Logger, cfg Config, source source.Driver, teardown te
 
 // App contains application variables.
 type App struct {
-	logger zerolog.Logger
+	logger log.Logger
 	cfg    Config
 	ch     clickhouse.Ch
 }
@@ -78,12 +79,12 @@ func (a App) executeScenario(worker func(time.Time, Config, chan<- any) uint64) 
 			for totalEvents.Load() < a.cfg.TotalEvents {
 				sessionsBatch, err := a.ch.PrepareBatch(context.Background(), "INSERT INTO prisme.sessions")
 				if err != nil {
-					a.logger.Panic().Err(err).Msg("failed to prepare sessions batch")
+					a.logger.Fatal("failed to prepare sessions batch", err)
 				}
 
 				customEventsBatch, err := a.ch.PrepareBatch(context.Background(), "INSERT INTO prisme.events_custom")
 				if err != nil {
-					a.logger.Panic().Err(err).Msg("failed to prepare custom events batch")
+					a.logger.Fatal("failed to prepare custom events batch", err)
 				}
 
 				for i := uint64(0); i < a.cfg.BatchSize && totalEvents.Load() < a.cfg.TotalEvents; i++ {
@@ -102,26 +103,27 @@ func (a App) executeScenario(worker func(time.Time, Config, chan<- any) uint64) 
 					}
 
 					if err != nil {
-						a.logger.Panic().Err(err).Type("record_type", record).Msg("failed to append event to batch")
+						a.logger.Fatal("failed to append event to batch", err, reflect.TypeOf(record).Name())
 					}
 				}
 
 				err = sessionsBatch.Send()
 				if err != nil {
-					a.logger.Panic().Err(err).Msg("failed to send sessions batch")
+					a.logger.Fatal("failed to send sessions batch", err)
 				}
 
 				err = customEventsBatch.Send()
 				if err != nil {
-					a.logger.Panic().Err(err).Msg("failed to send custom events batch")
+					a.logger.Fatal("failed to send custom events batch", err)
 				}
 
 				currentTotalEvent := totalEvents.Load()
-				a.logger.Info().
-					Uint64("events", currentTotalEvent).
-					Uint64("total_events", a.cfg.TotalEvents).
-					Str("progress", fmt.Sprintf("%.2f%%", (float64(currentTotalEvent)/float64(a.cfg.TotalEvents))*100)).
-					Msg("batch done")
+				a.logger.Info(
+					"batch done",
+					"events", currentTotalEvent,
+					"total_events", a.cfg.TotalEvents,
+					"progress", fmt.Sprintf("%.2f%%", (float64(currentTotalEvent)/float64(a.cfg.TotalEvents))*100),
+				)
 			}
 
 			wg.Done()

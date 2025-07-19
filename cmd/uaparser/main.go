@@ -22,7 +22,7 @@ func main() {
 		path = os.Args[2]
 	}
 
-	logger := log.NewLogger("uaparser", os.Stderr, false)
+	logger := log.New("uaparser", os.Stderr, false)
 	registry := prometheus.NewRegistry()
 	uaParser := uaparser.NewService(logger, registry)
 
@@ -32,7 +32,7 @@ func main() {
 	}
 
 	if !gjson.ValidBytes(userAgents) {
-		logger.Warn().Msg("json is invalid, results may be incoherent")
+		logger.Warn("json is invalid, results may be incoherent")
 	}
 
 	userAgentsList := gjson.Parse(string(userAgents)).Array()

@@ -15,7 +15,7 @@ import (
 
 func TestAccessLog(t *testing.T) {
 	t.Run("WithoutRequestIdMiddleware/Panics", func(t *testing.T) {
-		accessLogger := log.NewLogger("access_log", io.Discard, false)
+		accessLogger := log.New("access_log", io.Discard, false)
 
 		app := fiber.New()
 		app.Use(func(c *fiber.Ctx) error {
@@ -62,7 +62,7 @@ func TestAccessLog(t *testing.T) {
 		for _, tcase := range testCases {
 			t.Run(tcase.name, func(t *testing.T) {
 				accessLoggerOutput := bytes.Buffer{}
-				accessLogger := log.NewLogger("access_log", &accessLoggerOutput, false)
+				accessLogger := log.New("access_log", &accessLoggerOutput, false)
 
 				app := fiber.New(fiber.Config{
 					ProxyHeader: tcase.proxyHeader,
@@ -81,7 +81,10 @@ func TestAccessLog(t *testing.T) {
 
 				actual := accessLoggerOutput.String()
 				require.Regexp(t,
-					`{"v":0,`+
+					`{"time":"((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)",`+
+						`"level":30,`+
+						`"msg":"",`+
+						`"v":0,`+
 						`"pid":\d+,`+
 						`"hostname":"[^"]+",`+
 						`"name":"access_log",`+
@@ -91,9 +94,7 @@ func TestAccessLog(t *testing.T) {
 						`"method":"GET",`+
 						`"path":"/hello",`+
 						`"status_code":200,`+
-						`"level":30,`+
-						`"time":"((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)",`+
-						`"msg":"request handled"}`,
+						`"error":null}`,
 					actual,
 				)
 			})

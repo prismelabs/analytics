@@ -10,13 +10,11 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/sessionstore"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
-	"github.com/rs/zerolog"
 )
 
 // GetNoscriptEventsPageview returns a GET /api/v1/noscript/events/pageview
 // handler.
 func GetNoscriptEventsPageviews(
-	logger zerolog.Logger,
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,

@@ -11,7 +11,7 @@ import (
 )
 
 func TestMmdbService(t *testing.T) {
-	logger := log.NewLogger("ipgeolocator_mmdb_service", io.Discard, false)
+	logger := log.New("ipgeolocator_mmdb_service", io.Discard, false)
 
 	t.Run("FindCountryCodeForIP", func(t *testing.T) {
 		t.Run("Valid", func(t *testing.T) {
@@ -103,7 +103,7 @@ func TestIntegMmdbServiceMetrics(t *testing.T) {
 		t.SkipNow()
 	}
 
-	logger := log.NewLogger("ipgeolocator_mmdb_service", io.Discard, false)
+	logger := log.New("ipgeolocator_mmdb_service", io.Discard, false)
 	promRegistry := prometheus.NewRegistry()
 	service := NewMmdbService(logger, promRegistry)
 

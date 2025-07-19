@@ -5,8 +5,8 @@ import (
 
 	_ "github.com/chdb-io/chdb-go/chdb/driver"
 	"github.com/golang-migrate/migrate/v4/source"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
-	"github.com/rs/zerolog"
 )
 
 type ChDb struct {
@@ -15,17 +15,17 @@ type ChDb struct {
 
 // NewChDb returns a new chdb session.
 func NewChDb(
-	logger zerolog.Logger,
+	logger log.Logger,
 	cfg Config,
 	source source.Driver,
 	teardown teardown.Service,
 ) ChDb {
-	sqlLogger := logger.With().
-		Str("service", "chdb_provider").
-		Logger()
+	sqlLogger := logger.With(
+		"service", "chdb_provider",
+	)
 	db, err := sql.Open("chdb", "session="+cfg.Path)
 	if err != nil {
-		logger.Panic().Err(err).Msg("failed to open chdb based *sql.DB")
+		logger.Fatal("failed to open chdb based *sql.DB", err)
 	}
 	migrate(sqlLogger, db, source)
 

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rs/zerolog"
+	"github.com/prismelabs/analytics/pkg/log"
 )
 
 // Service define a hashing salt manager.
@@ -18,14 +18,12 @@ type Service interface {
 }
 
 // NewService returns a new hashing salt manager service.
-func NewService(logger zerolog.Logger) Service {
-	logger = logger.With().
-		Str("service", "saltmanager").
-		Logger()
+func NewService(logger log.Logger) Service {
+	logger = logger.With("service", "saltmanager")
 
 	staticSalt, err := uuid.NewRandom()
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to generate static salt")
+		logger.Fatal("failed to generate static salt", err)
 	}
 
 	srv := &service{
@@ -35,7 +33,7 @@ func NewService(logger zerolog.Logger) Service {
 
 	err = srv.rotateSalt()
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to rotate initial salt")
+		logger.Fatal("failed to rotate initial salt", err)
 	}
 
 	go srv.rotateSaltLoop()
@@ -44,7 +42,7 @@ func NewService(logger zerolog.Logger) Service {
 }
 
 type service struct {
-	logger      zerolog.Logger
+	logger      log.Logger
 	currentSalt atomic.Pointer[Salt]
 	staticSalt  Salt
 }
@@ -69,9 +67,9 @@ func (s *service) rotateSaltLoop() {
 
 		err := s.rotateSalt()
 		if err != nil {
-			s.logger.Err(err).Msg("failed to rotate salt")
+			s.logger.Err("failed to rotate salt", err)
 		} else {
-			s.logger.Info().Msg("salt rotated")
+			s.logger.Info("salt rotated")
 		}
 	}
 }

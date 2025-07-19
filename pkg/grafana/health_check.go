@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rs/zerolog"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/valyala/fasthttp"
 )
 
@@ -34,13 +34,14 @@ func (c Client) HealthCheck(ctx context.Context) error {
 
 // WaitHealthy checks grafana instance health status using the given config.
 // This function panics if `maxRetry` attempt fails or are not healthy.
-func WaitHealthy(logger zerolog.Logger, c Client, maxRetry int) {
+func WaitHealthy(logger log.Logger, c Client, maxRetry int) {
 	var err error
 	for retry := 0; retry < maxRetry; retry++ {
-		logger.Info().
-			Int("retry", retry).
-			Int("max_retry", maxRetry).
-			Msg("trying to connect to grafana")
+		logger.Info(
+			"trying to connect to grafana",
+			"retry", retry,
+			"max_retry", maxRetry,
+		)
 
 		time.Sleep(time.Duration(retry) * time.Second)
 
@@ -51,11 +52,11 @@ func WaitHealthy(logger zerolog.Logger, c Client, maxRetry int) {
 			continue
 		}
 
-		logger.Info().Msg("grafana connection established, service is healthy")
+		logger.Info("grafana connection established, service is healthy")
 		break
 	}
 
 	if err != nil {
-		logger.Panic().Msgf("failed to wait for healthy grafana: %v", err.Error())
+		logger.Fatal("failed to wait for healthy grafana", err)
 	}
 }

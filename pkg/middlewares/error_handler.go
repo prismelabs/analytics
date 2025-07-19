@@ -6,12 +6,12 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 )
 
 // ErrorHandler returns a simple error handler middleware.
-func ErrorHandler(promRegistry *prometheus.Registry, logger zerolog.Logger) fiber.Handler {
+func ErrorHandler(promRegistry *prometheus.Registry, logger log.Logger) fiber.Handler {
 	reqsPanics := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "http_requests_panics_total",
 		Help: "Total number of HTTP request that lead to a panic",
@@ -31,7 +31,7 @@ func ErrorHandler(promRegistry *prometheus.Registry, logger zerolog.Logger) fibe
 					"status": strconv.Itoa(c.Response().StatusCode()),
 				}
 				reqsPanics.With(labels).Inc()
-				logger.Error().Any("error", err).Msg("http request handler panicked")
+				logger.Error("http request handler panicked", "error", err)
 			}
 		}()
 

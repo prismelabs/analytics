@@ -14,30 +14,39 @@ import (
 func TestLogger(t *testing.T) {
 	t.Run("WithoutDebug", func(t *testing.T) {
 		buf := &bytes.Buffer{}
-		logger := NewLogger("test_logger_1", buf, false)
+		logger := New("test_logger_1", buf, false)
 
-		logger.Debug().Msg("debug log")
-		logger.Trace().Msg("trace log")
+		logger.Debug("debug log")
+		logger.Trace("trace log")
 		require.Len(t, buf.String(), 0)
 	})
 
 	t.Run("WithDebug", func(t *testing.T) {
 		buf := &bytes.Buffer{}
-		logger := NewLogger("test_logger_1", buf, true)
+		logger := New("test_logger_1", buf, true)
 
-		logger.Debug().Msg("debug log")
-		logger.Trace().Msg("trace log")
+		logger.Debug("debug log")
+		logger.Trace("trace log")
 		require.Len(t, strings.Split(buf.String(), "\n"), 2)
 	})
 
 	t.Run("Format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
-		logger := NewLogger("test_logger_1", buf, true)
+		logger := New("test_logger_1", buf, true)
 
-		logger.Info().Str("foo", "bar").Msg("info log")
+		logger.Info("info log", "foo", "bar")
 
 		require.Regexp(t,
-			regexp.MustCompile(`^{"v":0,"pid":\d+,"hostname":".+","name":"test_logger_1","foo":"bar","level":30,"time":"20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z","msg":"info log"}\n$`),
+			regexp.MustCompile(
+				`{"time":"((?:(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2}(?:\.\d+)?))(Z|[\+-]\d{2}:\d{2})?)",`+
+					`"level":30,`+
+					`"msg":"info log",`+
+					`"v":0,`+
+					`"pid":\d+,`+
+					`"hostname":".+",`+
+					`"name":"test_logger_1",`+
+					`"foo":"bar"`+
+					`}\n$`),
 			buf.String(),
 		)
 	})
@@ -53,39 +62,14 @@ func (ew errWriter) Write(data []byte) (int, error) {
 
 func TestTestLoggers(t *testing.T) {
 	t.Run("SingleLogger/WithError/Panics", func(t *testing.T) {
-		logger := NewLogger("test_logger_1", errWriter{errors.New("unexpected error")}, false)
-
-		require.Panics(t, func() {
-			TestLoggers(logger)
-		})
+		logger := New("test_logger_1", errWriter{errors.New("unexpected error")}, false)
+		err := logger.TestOutput()
+		require.Error(t, err)
 	})
 	t.Run("SingleLogger/NoError/Panics", func(t *testing.T) {
-		logger := NewLogger("test_logger_1", io.Discard, false)
+		logger := New("test_logger_1", io.Discard, false)
 
-		TestLoggers(logger)
+		err := logger.TestOutput()
+		require.NoError(t, err)
 	})
-
-	t.Run("MultipleLogger/NoError/Panics", func(t *testing.T) {
-		logger1 := NewLogger("test_logger_1", io.Discard, false)
-		logger2 := NewLogger("test_logger_2", io.Discard, false)
-
-		TestLoggers(logger1, logger2)
-	})
-	t.Run("MultipleLogger/SingleError/Panics", func(t *testing.T) {
-		logger1 := NewLogger("test_logger_1", io.Discard, false)
-		logger2 := NewLogger("test_logger_2", errWriter{errors.New("unexpected error 2")}, false)
-
-		require.Panics(t, func() {
-			TestLoggers(logger1, logger2)
-		})
-	})
-	t.Run("MultipleLogger/WithErrors/Panics", func(t *testing.T) {
-		logger1 := NewLogger("test_logger_1", errWriter{errors.New("unexpected error 1")}, false)
-		logger2 := NewLogger("test_logger_2", errWriter{errors.New("unexpected error 2")}, false)
-
-		require.Panics(t, func() {
-			TestLoggers(logger1, logger2)
-		})
-	})
-
 }

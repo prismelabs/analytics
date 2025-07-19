@@ -21,7 +21,7 @@ func CancelOnContextError(err error) bool {
 func LinearBackoff(maxRetry uint, base time.Duration, fn func(uint) error, cancel func(error) bool) error {
 	var fnErrors []error
 
-	for retry := uint(0); retry < maxRetry; retry++ {
+	for retry := range maxRetry {
 		err := fn(retry)
 		if err != nil {
 
@@ -44,7 +44,7 @@ func LinearBackoff(maxRetry uint, base time.Duration, fn func(uint) error, cance
 func LinearRandomBackoff(maxRetry uint, base time.Duration, fn func(uint) error, cancel func(error) bool) error {
 	var fnErrors []error
 
-	for retry := uint(0); retry < maxRetry; retry++ {
+	for retry := range maxRetry {
 		err := fn(retry)
 		if err != nil {
 
@@ -71,7 +71,7 @@ func ExponentialRandomBackoff(maxRetry uint, base time.Duration, fn func(uint) e
 		panic("invalid max retry argument")
 	}
 
-	for retry := uint(1); retry < maxRetry; retry++ {
+	for retry := range maxRetry {
 		err := fn(retry)
 		if err != nil {
 

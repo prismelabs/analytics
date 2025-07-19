@@ -96,7 +96,7 @@ func TestService(t *testing.T) {
 		},
 	}
 
-	logger := log.NewLogger("test_logger_1", io.Discard, false)
+	logger := log.New("test_logger_1", io.Discard, false)
 	service := NewService(logger, prometheus.NewRegistry())
 	for _, tcase := range testCases {
 		testName := fmt.Sprintf("%v/%v/%v", tcase.expectedClient.BrowserFamily, tcase.expectedClient.OperatingSystem, tcase.expectedClient.Device)
@@ -113,7 +113,7 @@ func TestIntegServiceMetrics(t *testing.T) {
 		t.SkipNow()
 	}
 
-	logger := log.NewLogger("test_logger_1", io.Discard, false)
+	logger := log.New("test_logger_1", io.Discard, false)
 	promRegistry := prometheus.NewRegistry()
 	service := NewService(logger, promRegistry)
 

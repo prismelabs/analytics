@@ -17,7 +17,7 @@ func init() {
 		return
 	}
 
-	logger := log.NewLogger("test_grafana_logger", io.Discard, false)
+	logger := log.New("test_grafana_logger", io.Discard, false)
 
 	figue := configue.New(
 		"",

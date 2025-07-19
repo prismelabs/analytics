@@ -120,28 +120,11 @@ func main() {
 	}
 
 	// Create application logger.
-	logger := log.NewLogger("app", os.Stderr, prismeCfg.Debug)
-	log.TestLoggers(logger)
-
-	// Create access logger.
-	var accessLogWriter io.Writer
-	switch prismeCfg.AccessLog {
-	case "/dev/stdout":
-		accessLogWriter = os.Stdout
-	case "/dev/stderr":
-		accessLogWriter = os.Stderr
-	default:
-		f, err := os.OpenFile(
-			prismeCfg.AccessLog,
-			os.O_CREATE|os.O_WRONLY|os.O_APPEND,
-			os.ModePerm,
-		)
-		if err != nil {
-			logger.Fatal().Err(err).Msg("failed to open access log file")
-		}
-		accessLogWriter = f
+	logger := log.New("app", os.Stderr, prismeCfg.Debug)
+	err = logger.TestOutput()
+	if err != nil {
+		panic(err)
 	}
-	accessLogger := log.NewLogger("access_log", accessLogWriter, false)
 
 	// Setup prometheus registry.
 	promRegistry := prometheus.NewRegistry()
@@ -170,16 +153,20 @@ func main() {
 	app := fiber.New(fiberCfg)
 
 	teardownService.RegisterProcedure(func() error {
-		logger.Info().Msg("shutting down fiber server...")
+		logger.Info("shutting down fiber server...")
 		err := app.Shutdown()
-		logger.Info().Err(err).Msg("fiber server shutdown.")
+		if err != nil {
+			logger.Err("failed to shutdown fiber server", err)
+		} else {
+			logger.Info("fiber server shutdown")
+		}
 
 		return err
 	})
 
 	app.Use(middlewares.Metrics(promRegistry),
 		middlewares.RequestId(prismeCfg),
-		middlewares.AccessLog(prismeCfg, accessLogger),
+		middlewares.AccessLog(prismeCfg, logger),
 		middlewares.ErrorHandler(promRegistry, logger))
 
 	// Register handlers.
@@ -217,7 +204,6 @@ func main() {
 
 		app.Post("/api/v1/events/pageviews",
 			fiber.Handler(handlers.PostEventsPageViews(
-				logger,
 				eventStore,
 				uaParser,
 				ipGeolocator,
@@ -227,7 +213,6 @@ func main() {
 		)
 		app.Get("/api/v1/noscript/events/pageviews",
 			fiber.Handler(handlers.GetNoscriptEventsPageviews(
-				logger,
 				eventStore,
 				uaParser,
 				ipGeolocator,
@@ -280,11 +265,11 @@ func main() {
 			w.WriteHeader(http.StatusOK)
 			_, err := io.WriteString(w, "consult metrics at /metrics")
 			if err != nil {
-				logger.Err(err).Msg("failed to write admin response body")
+				logger.Err("failed to write admin response body", err)
 			}
 		})
 		http.Handle("/metrics", promhttp.HandlerFor(promRegistry, promhttp.HandlerOpts{
-			ErrorLog:            &logger,
+			ErrorLog:            log.PrometheusLogger(logger),
 			ErrorHandling:       promhttp.HTTPErrorOnError,
 			Registry:            promRegistry,
 			DisableCompression:  false,
@@ -293,25 +278,24 @@ func main() {
 			EnableOpenMetrics:   false,
 			ProcessStartTime:    time.Now(),
 		}))
-		logger.Info().Msgf("admin server listening for incoming request on http://%v", prismeCfg.AdminHostPort)
+		logger.Info("admin server listening for incoming request", "host_port", prismeCfg.AdminHostPort)
 		err := http.ListenAndServe(prismeCfg.AdminHostPort, nil)
-		logger.Panic().Err(err).Msg("failed to start admin server")
+		logger.Fatal("failed to start admin server", err)
 	}()
 
 	go func() {
 		socket := "0.0.0.0:" + fmt.Sprint(prismeCfg.Port)
-		logger.Info().Msgf("start listening for incoming requests on http://%v", socket)
+		logger.Info("start listening for incoming requests", "host_port", socket)
 		err := app.Listen(socket)
-		if err != nil {
-			logger.Panic().Err(err).Send()
-		}
+		logger.Fatal("failed to listen for incoming requests", err)
 	}()
 
 	ch := make(chan os.Signal, 16)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
 	<-ch
 
-	logger.Info().Msg("starting tearing down procedures...")
+	logger.Info("starting tearing down procedures...")
 	err = teardownService.Teardown()
-	logger.Err(err).Msg("tearing down procedures done.")
+	logger.Fatal("tearing down procedures done.", err)
+	logger.Info("tearing down successful, exiting...")
 }

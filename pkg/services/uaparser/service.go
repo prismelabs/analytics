@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/prismelabs/analytics/pkg/embedded"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"github.com/ua-parser/uap-go/uaparser"
 )
 
@@ -16,16 +16,16 @@ type Service interface {
 
 // NewService returns a new User Agent parser service.
 func NewService(
-	logger zerolog.Logger,
+	logger log.Logger,
 	promRegistry *prometheus.Registry,
 ) Service {
-	logger = logger.With().
-		Str("service", "uaparser").
-		Logger()
+	logger = logger.With(
+		"service", "uaparser",
+	)
 
 	parser, err := uaparser.NewFromBytes(embedded.UapRegexes)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to load user agent parser regexes")
+		logger.Fatal("failed to load user agent parser regexes", err)
 	}
 
 	counter := prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -38,7 +38,7 @@ func NewService(
 }
 
 type service struct {
-	zerolog.Logger
+	logger  log.Logger
 	parser  *uaparser.Parser
 	counter *prometheus.CounterVec
 }
@@ -68,10 +68,11 @@ func (s service) ParseUserAgent(userAgent string) Client {
 		"is_bot":           strconv.FormatBool(result.IsBot),
 	}).Inc()
 
-	s.Logger.Debug().
-		Str("user_agent", userAgent).
-		Object("client", result).
-		Msg("user agent parsed")
+	s.logger.Debug(
+		"user agent parsed",
+		"user_agent", userAgent,
+		"client", result,
+	)
 
 	return result
 }

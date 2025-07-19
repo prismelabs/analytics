@@ -1,31 +1,24 @@
 package main
 
 import (
-	"os"
 	"time"
 
 	"github.com/prismelabs/analytics/pkg/clickhouse"
-	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 )
 
 func main() {
-	// Bootstrap logger.
-	logger := log.NewLogger("bootstrap", os.Stderr, true)
-	log.TestLoggers(logger)
-
-	zerologLogger := NewLogger()
+	logger := NewLogger()
 	config := NewConfig()
-	driver := clickhouse.EmbeddedSourceDriver(zerologLogger)
+	driver := clickhouse.EmbeddedSourceDriver(logger)
 	service := teardown.NewService()
-	app := NewApp(zerologLogger, config, driver, service)
+	app := NewApp(logger, config, driver, service)
 
-	app.logger.Info().Any("config", app.cfg).Msg("initialization done.")
+	app.logger.Info("initialization done", "config", app.cfg)
 
 	start := time.Now()
 
 	app.executeScenario(emulateSession)
 
-	app.logger.Info().
-		Stringer("duration", time.Since(start)).Msg("scenario done")
+	app.logger.Info("scenario done", "duration", time.Since(start))
 }

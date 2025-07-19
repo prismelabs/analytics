@@ -1,19 +1,9 @@
 package uaparser
 
-import "github.com/rs/zerolog"
-
 // Client define client information derived from user agent.
 type Client struct {
-	BrowserFamily   string
-	OperatingSystem string
-	Device          string
-	IsBot           bool
-}
-
-// MarshalZerologObject implements zerolog.LogObjectMarshaler.
-func (c Client) MarshalZerologObject(e *zerolog.Event) {
-	e.Str("browser_family", c.BrowserFamily).
-		Str("operating_system", c.OperatingSystem).
-		Str("device", c.Device).
-		Bool("is_bot", c.IsBot)
+	BrowserFamily   string `json:"browser_family"`
+	OperatingSystem string `json:"operating_system"`
+	Device          string `json:"device"`
+	IsBot           bool   `json:"is_bot"`
 }

@@ -18,13 +18,11 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/sessionstore"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/uri"
-	"github.com/rs/zerolog"
 	"github.com/valyala/fasthttp"
 )
 
 // PostEventsPageViews returns a POST /api/v1/events/pageviews handler.
 func PostEventsPageViews(
-	logger zerolog.Logger,
 	eventStore eventstore.Service,
 	uaParserService uaparser.Service,
 	ipGeolocatorService ipgeolocator.Service,

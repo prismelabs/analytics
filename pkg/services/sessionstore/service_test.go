@@ -18,7 +18,7 @@ import (
 )
 
 func TestService(t *testing.T) {
-	logger := log.NewLogger("sessionstore_test", io.Discard, true)
+	logger := log.New("sessionstore_test", io.Discard, true)
 	cfg := Config{
 		gcInterval:             10 * time.Second,
 		sessionInactiveTtl:     24 * time.Hour,

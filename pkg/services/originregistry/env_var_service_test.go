@@ -12,7 +12,7 @@ import (
 func TestEnvVarService(t *testing.T) {
 	t.Run("IsOriginRegistered", func(t *testing.T) {
 		ctx := context.Background()
-		logger := log.NewLogger("env_var_service_test", io.Discard, false)
+		logger := log.New("env_var_service_test", io.Discard, false)
 
 		t.Run("NonRegistered", func(t *testing.T) {
 			service := NewService(Config{Origins: "notexample.com"}, logger)

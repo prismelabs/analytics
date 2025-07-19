@@ -9,9 +9,9 @@ import (
 
 	"github.com/negrel/assert"
 	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 )
 
 // Service define an in-memory session storage.
@@ -67,7 +67,7 @@ type deviceData struct {
 }
 
 type service struct {
-	logger  zerolog.Logger
+	logger  log.Logger
 	cfg     Config
 	metrics metrics
 	mu      sync.Mutex
@@ -82,17 +82,17 @@ type service struct {
 
 // NewService returns a new in memory session storage.
 func NewService(
-	logger zerolog.Logger,
+	logger log.Logger,
 	cfg Config,
 	promRegistry *prometheus.Registry,
 ) Service {
-	logger = logger.With().
-		Str("service", "sessionstorage").
-		Dur("gc_interval", cfg.gcInterval).
-		Uint64("max_sessions_per_visitor", cfg.maxSessionsPerVisitor).
-		Int("device_expiry_percentile", cfg.deviceExpiryPercentile).
-		Dur("session_inactive_ttl", cfg.sessionInactiveTtl).
-		Logger()
+	logger = logger.With(
+		"service", "sessionstorage",
+		"gc_interval", cfg.gcInterval,
+		"max_sessions_per_visitor", cfg.maxSessionsPerVisitor,
+		"device_expiry_percentile", cfg.deviceExpiryPercentile,
+		"session_inactive_ttl", cfg.sessionInactiveTtl,
+	)
 
 	service := &service{
 		logger:  logger,
@@ -108,7 +108,7 @@ func NewService(
 
 	go service.gcLoop()
 
-	logger.Info().Msg("in memory session storage configured")
+	logger.Info("in memory session storage configured")
 
 	return service
 }

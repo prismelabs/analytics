@@ -11,7 +11,7 @@ import (
 )
 
 func TestClickhouseConnect(t *testing.T) {
-	logger := log.NewLogger("test_clickhouse_connect", io.Discard, false)
+	logger := log.New("test_clickhouse_connect", io.Discard, false)
 
 	t.Run("NonExistentInstance", func(t *testing.T) {
 		cfg := Config{
@@ -32,7 +32,7 @@ func TestClickhouseConnect(t *testing.T) {
 }
 
 func TestClickhouseConnectSql(t *testing.T) {
-	logger := log.NewLogger("test_clickhouse_connect_sql", io.Discard, false)
+	logger := log.New("test_clickhouse_connect_sql", io.Discard, false)
 
 	t.Run("NonExistentInstance", func(t *testing.T) {
 		cfg := Config{

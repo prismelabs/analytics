@@ -21,7 +21,7 @@ func randIpv4Str() string {
 
 func BenchmarkFindCountryCodeForIp(b *testing.B) {
 	b.Run("IPv4", func(b *testing.B) {
-		logger := log.NewLogger("ipgeolocator_mmdb_service", io.Discard, false)
+		logger := log.New("ipgeolocator_mmdb_service", io.Discard, false)
 		promRegistry := prometheus.NewRegistry()
 		service := NewMmdbService(logger, promRegistry)
 

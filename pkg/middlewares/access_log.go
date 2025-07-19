@@ -1,52 +1,70 @@
 package middlewares
 
 import (
+	"context"
+	"io"
 	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/prisme"
-	"github.com/rs/zerolog"
 )
 
 // AccessLog returns an access log middleware.
-func AccessLog(cfg prisme.Config, logger zerolog.Logger) fiber.Handler {
-	// Open access log file.
-	accessLogFile, err := os.OpenFile(cfg.AccessLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
-	if err != nil {
-		logger.Panic().Err(err).Msgf("failed to open access log file: %v", cfg.AccessLog)
+func AccessLog(cfg prisme.Config, logger log.Logger) fiber.Handler {
+	// Create access logger.
+	var accessLogWriter io.Writer
+	switch cfg.AccessLog {
+	case "/dev/stdout":
+		accessLogWriter = os.Stdout
+	case "/dev/stderr":
+		accessLogWriter = os.Stderr
+	default:
+		f, err := os.OpenFile(
+			cfg.AccessLog,
+			os.O_CREATE|os.O_WRONLY|os.O_APPEND,
+			os.ModePerm,
+		)
+		if err != nil {
+			logger.Fatal("failed to open access log file", err, "file", cfg.AccessLog)
+		}
+		accessLogWriter = f
 	}
-
-	accessLogger := log.NewLogger("access_log", accessLogFile, cfg.Debug)
-	log.TestLoggers(accessLogger)
+	accessLogger := log.New("access_log", accessLogWriter, false)
+	err := accessLogger.TestOutput()
+	if err != nil {
+		logger.Fatal("failed to write to access log file", err)
+	}
 
 	return accessLog(accessLogger)
 }
 
-func accessLog(logger zerolog.Logger) fiber.Handler {
+func accessLog(accessLogger log.Logger) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		start := time.Now()
 
 		err := c.Next()
 
 		statusCode := c.Response().StatusCode()
-		level := zerolog.InfoLevel
+		level := log.LevelInfo
 		if err != nil {
-			level = zerolog.ErrorLevel
+			level = log.LevelError
 		}
 
-		logger.WithLevel(level).
-			Str("request_id", c.Locals(RequestIdKey{}).(string)).
-			Dur("duration_ms", time.Since(start)).
-			Str("source_ip", c.IP()).
-			Str("method", c.Method()).
-			Str("path", c.Path()).
-			Int("status_code", statusCode).
-			Err(err).
-			Msg("request handled")
+		accessLogger.Log(context.Background(),
+			level,
+			"",
+			"request_id", c.Locals(RequestIdKey{}).(string),
+			"duration_ms", time.Since(start).Milliseconds(),
+			"source_ip", c.IP(),
+			"method", c.Method(),
+			"path", c.Path(),
+			"status_code", statusCode,
+			"error", err,
+		)
 
-		// We handled error by logging it, no need to continue returning it.
+		// We handled error, no need to return it.
 		return nil
 	}
 }

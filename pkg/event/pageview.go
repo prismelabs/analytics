@@ -4,25 +4,13 @@ import (
 	"time"
 
 	"github.com/prismelabs/analytics/pkg/uri"
-	"github.com/rs/zerolog"
 )
-
-var _ zerolog.LogObjectMarshaler = &PageView{}
 
 // PageView define a page view event.
 // See https://www.prismeanalytics.com/docs/references/http/#page-view-events
 type PageView struct {
-	Session   Session
-	Timestamp time.Time
-	PageUri   uri.Uri
-	Status    uint16
-}
-
-// MarshalZerologObject implements zerolog.LogObjectMarshaler.
-func (pv *PageView) MarshalZerologObject(e *zerolog.Event) {
-	e.
-		Object("session", &pv.Session).
-		Time("timestamp", pv.Timestamp).
-		Stringer("page_uri", pv.PageUri).
-		Uint16("status", pv.Status)
+	Session   Session   `json:"session"`
+	Timestamp time.Time `json:"timestamp"`
+	PageUri   uri.Uri   `json:"page_uri"`
+	Status    uint16    `json:"status"`
 }

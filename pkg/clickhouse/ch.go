@@ -5,8 +5,8 @@ package clickhouse
 import (
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/golang-migrate/migrate/v4/source"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
-	"github.com/rs/zerolog"
 )
 
 // Ch define a connection to a ClickHouse instance.
@@ -16,24 +16,24 @@ type Ch struct {
 
 // NewCh returns a new Ch object.
 func NewCh(
-	logger zerolog.Logger,
+	logger log.Logger,
 	cfg Config,
 	source source.Driver,
 	teardown teardown.Service,
 ) Ch {
 
 	// Execute migrations.
-	sqlLogger := logger.With().
-		Str("service", "clickhouse_provider").
-		Str("protocol", "http").
-		Logger()
+	sqlLogger := logger.With(
+		"service", "clickhouse_provider",
+		"protocol", "http",
+	)
 	db := connectSql(sqlLogger, cfg, 5)
 	migrate(sqlLogger, db, cfg.Database, source)
 
-	logger = logger.With().
-		Str("service", "clickhouse_provider").
-		Str("protocol", "native").
-		Logger()
+	logger = logger.With(
+		"service", "clickhouse_provider",
+		"protocol", "native",
+	)
 
 	// Connect using native interface.
 	conn := Connect(logger, cfg, 5)

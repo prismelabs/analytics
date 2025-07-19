@@ -11,10 +11,10 @@ import (
 	"github.com/prismelabs/analytics/pkg/chdb"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/retry"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 )
 
 var (
@@ -34,7 +34,7 @@ type Service interface {
 // NewService returns a new event store service.
 func NewService(
 	cfg Config,
-	logger zerolog.Logger,
+	logger log.Logger,
 	promRegistry *prometheus.Registry,
 	teardown teardown.Service,
 	source source.Driver,
@@ -51,7 +51,7 @@ func NewService(
 }
 
 type service struct {
-	logger          zerolog.Logger
+	logger          log.Logger
 	backend         backend
 	maxBatchSize    uint64
 	maxBatchTimeout time.Duration
@@ -69,29 +69,29 @@ type backend interface {
 func newService(
 	cfg Config,
 	backend backend,
-	logger zerolog.Logger,
+	logger log.Logger,
 	promRegistry *prometheus.Registry,
 	teardownService teardown.Service,
 ) Service {
 	batchDone := make(chan struct{})
-	logger = logger.With().
-		Str("service", "eventstore").
-		Str("backend", cfg.Backend).
-		Uint64("ring_buffers_factor", cfg.RingBuffersFactor).
-		Uint64("max_batch_size", cfg.MaxBatchSize).
-		Stringer("max_batch_timeout", cfg.MaxBatchTimeout).
-		Logger()
+	logger = logger.With(
+		"service", "eventstore",
+		"backend", cfg.Backend,
+		"ring_buffers_factor", cfg.RingBuffersFactor,
+		"max_batch_size", cfg.MaxBatchSize,
+		"max_batch_timeout", cfg.MaxBatchTimeout,
+	)
 
 	// Create context for batch loops.
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Cancel them on teardown.
 	teardownService.RegisterProcedure(func() error {
-		logger.Info().Msg("cancelling event batch loops...")
+		logger.Info("cancelling event batch loops...")
 		cancel()
 		// Wait for last batch to be sent.
 		<-batchDone
-		logger.Info().Msg("event batch loops canceled.")
+		logger.Info("event batch loops canceled.")
 		return nil
 	})
 
@@ -104,7 +104,7 @@ func newService(
 			ringo.NewManyToOne(
 				int(cfg.MaxBatchSize*cfg.RingBuffersFactor),
 				ringo.WithManyToOneCollisionHandler[any](ringo.CollisionHandlerFunc(func(_ any) {
-					logger.Warn().Msg("events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_RING_BUFFERS_FACTOR or PRISME_EVENTSTORE_MAX_BATCH_SIZE")
+					logger.Warn("events ring buffer collision detected, consider increasing PRISME_EVENTSTORE_RING_BUFFERS_FACTOR or PRISME_EVENTSTORE_MAX_BATCH_SIZE")
 				})),
 			),
 			ringo.WithWaiterContext[any](ctx),
@@ -114,7 +114,7 @@ func newService(
 
 	go service.batchLoop(ctx, batchDone)
 
-	logger.Info().Msgf("%v based event store configured", cfg.Backend)
+	logger.Info("event store configured", "backend", cfg.Backend)
 
 	return service
 }
@@ -152,7 +152,7 @@ func (s *service) batchLoop(ctx context.Context, batchDone chan<- struct{}) {
 		if batchSize == 0 {
 			err = retry.LinearRandomBackoff(5, time.Second,
 				func(n uint) error {
-					s.logger.Debug().Uint("try", n).Msg("preparing a new event batch")
+					s.logger.Debug("preparing a new event batch", "try", n)
 					return s.backend.prepareBatch()
 				},
 				retry.CancelOnContextError,
@@ -161,38 +161,38 @@ func (s *service) batchLoop(ctx context.Context, batchDone chan<- struct{}) {
 				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 					break
 				}
-				s.logger.Err(err).Msg("failed to prepare next event batch")
+				s.logger.Err("failed to prepare next event batch", err)
 				continue
 			}
 
 			batchCreationDate = time.Now()
-			s.logger.Debug().Time("date", batchCreationDate).Msg("new event batch prepared")
+			s.logger.Debug("new event batch prepared", "date", batchCreationDate)
 		}
 
 		// Wait for next event.
-		s.logger.Debug().Msg("waiting for event...")
+		s.logger.Debug("waiting for event...")
 		ev, done, dropped := s.eventRingBuf.Next()
 		// Ring buffer context was canceled.
 		if done {
-			s.logger.Info().Msg("events ring buffer done, sending last batch...")
+			s.logger.Info("events ring buffer done, sending last batch...")
 			err = s.backend.sendBatch()
 			if err != nil {
-				s.logger.Error().Err(err).Msg("failed to send last batch of events")
+				s.logger.Err("failed to send last batch of events", err)
 			} else {
-				s.logger.Info().Msg("last batch of events sent")
+				s.logger.Info("last batch of events sent")
 			}
 			break
 		}
 		if dropped > 0 {
-			s.logger.Info().Int("dropped", dropped).Msg("events dropped")
+			s.logger.Info("events dropped", "dropped", dropped)
 			s.metrics.droppedEvents.Add(float64(dropped))
 		}
 
 		// Append to batch.
-		s.logger.Debug().Any("event", ev).Msg("appending event to batch...")
+		s.logger.Debug("appending event to batch...", "event", ev)
 		err = s.backend.appendToBatch(ev)
 		if err != nil {
-			s.logger.Err(err).Msg("failed to append event to batch")
+			s.logger.Err("failed to append event to batch", err)
 		} else {
 			batchSize++
 		}
@@ -204,7 +204,7 @@ func (s *service) batchLoop(ctx context.Context, batchDone chan<- struct{}) {
 	}
 
 	batchDone <- struct{}{}
-	s.logger.Info().Msg("eventstore batch loop done")
+	s.logger.Info("eventstore batch loop done")
 }
 
 func (s *service) sendBatch(batchSize int) {
@@ -212,7 +212,7 @@ func (s *service) sendBatch(batchSize int) {
 	// goes to idle state.
 	var err error
 
-	s.logger.Debug().Msg("sending event batch...")
+	s.logger.Debug("sending event batch...")
 	err = retry.LinearBackoff(5, time.Second, func(_ uint) error {
 		start := time.Now()
 		err := s.backend.sendBatch()
@@ -225,17 +225,19 @@ func (s *service) sendBatch(batchSize int) {
 			s.metrics.sendBatchDuration.Observe(dur.Seconds())
 			s.metrics.batchSize.Observe(float64(batchSize))
 			s.metrics.eventsCounter.Add(float64(batchSize))
-			s.logger.Debug().
-				Dur("send_duration", dur).
-				Int("batch_size", batchSize).
-				Msg("events batch successfully sent")
+			s.logger.Debug(
+				"events batch successfully sent",
+				"send_duration", dur,
+				"batch_size", batchSize,
+			)
+
 			return nil
 		}
 	}, retry.NeverCancel)
 
 	if err != nil {
 		s.metrics.batchDropped.Inc()
-		s.logger.Err(err).Msg("failed to send events batch")
+		s.logger.Err("failed to send events batch", err)
 	}
 }
 

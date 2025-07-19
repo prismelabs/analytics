@@ -6,27 +6,27 @@ import (
 	"strings"
 
 	"github.com/negrel/configue"
-	"github.com/rs/zerolog"
+	"github.com/prismelabs/analytics/pkg/log"
 )
 
 type service struct {
-	zerolog.Logger
+	logger  log.Logger
 	origins map[string]struct{}
 }
 
 // NewService returns a new origin registry Service.
-func NewService(cfg Config, logger zerolog.Logger) Service {
-	logger = logger.With().
-		Str("service", "originregistry").
-		Str("service_impl", "envvar").
-		Logger()
+func NewService(cfg Config, logger log.Logger) Service {
+	logger = logger.With(
+		"service", "originregistry",
+		"service_impl", "envvar",
+	)
 
 	origins := make(map[string]struct{})
 	for _, src := range strings.Split(cfg.Origins, ",") {
 		origins[src] = struct{}{}
 	}
 
-	logger.Info().Any("origins", origins).Msg("env var based origin registry configured")
+	logger.Info("env var based origin registry configured", "origins", origins)
 
 	return service{logger, origins}
 }
@@ -34,10 +34,11 @@ func NewService(cfg Config, logger zerolog.Logger) Service {
 // IsOriginRegistered implements Service.
 func (evs service) IsOriginRegistered(_ context.Context, origin string) (bool, error) {
 	_, ok := evs.origins[origin]
-	evs.Logger.Debug().
-		Str("origin", origin).
-		Bool("origin_registered", ok).
-		Msg("checked if origin is registered")
+	evs.logger.Debug(
+		"checked if origin is registered",
+		"origin", origin,
+		"origin_registered", ok,
+	)
 
 	return ok, nil
 }

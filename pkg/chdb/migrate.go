@@ -10,17 +10,16 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/clickhouse"
 	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/prismelabs/analytics/pkg/log"
-	"github.com/rs/zerolog"
 )
 
-func migrate(logger zerolog.Logger, db *sql.DB, source source.Driver) {
+func migrate(logger log.Logger, db *sql.DB, source source.Driver) {
 	_, err := db.Exec("CREATE DATABASE IF NOT EXISTS prisme")
 	if err != nil {
-		logger.Panic().Msgf("failed to create prisme database: %v", err.Error())
+		logger.Fatal("failed to create prisme database", err)
 	}
 	_, err = db.Exec("USE prisme")
 	if err != nil {
-		logger.Panic().Msgf("failed to use prisme database: %v", err.Error())
+		logger.Fatal("failed to use prisme database", err)
 	}
 
 	driver, err := clickhouse.WithInstance(db, &clickhouse.Config{
@@ -30,21 +29,21 @@ func migrate(logger zerolog.Logger, db *sql.DB, source source.Driver) {
 		MultiStatementEnabled: true,
 	})
 	if err != nil {
-		logger.Panic().Msgf("failed to create golang-migrate driver for clickhouse migration: %v", err.Error())
+		logger.Fatal("failed to create golang-migrate driver for clickhouse migration", err)
 	}
 
 	m, err := gomigrate.NewWithInstance("migrations", source, "prisme", driverWrapper{driver, db})
 	if err != nil {
-		logger.Panic().Msgf("failed to create go-migrate.Migrate instance: %v", err.Error())
+		logger.Fatal("failed to create go-migrate.Migrate instance", err)
 	}
 	m.Log = log.GoMigrateLogger(logger)
 
 	err = m.Up()
 	if err != nil && err != gomigrate.ErrNoChange {
-		logger.Panic().Msgf("failed to execute chdb migrations: %v", err.Error())
+		logger.Fatal("failed to execute chdb migrations", err)
 	}
 
-	logger.Info().Msg("chdb migration successfully done")
+	logger.Info("chdb migration successfully done")
 }
 
 // A wrapper around golang-migrate clickhouse driver that overwrites SetVersion()
