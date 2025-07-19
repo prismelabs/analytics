@@ -5,6 +5,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/negrel/configue"
 	"github.com/prismelabs/analytics/pkg/log"
 )
 
@@ -17,6 +18,15 @@ func init() {
 
 	logger := log.NewLogger("test_grafana_logger", io.Discard, false)
 
-	client := ProvideClient(configFromEnv())
+	var cfg Config
+	figue := configue.New(
+		"",
+		configue.PanicOnError,
+		configue.NewEnv("PRISME"),
+	)
+	cfg.RegisterOptions(figue)
+	_ = figue.Parse()
+
+	client := ProvideClient(cfg)
 	WaitHealthy(logger, client, 10)
 }

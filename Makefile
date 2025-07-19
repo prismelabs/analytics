@@ -8,7 +8,7 @@ GENENV_FILE ?= ./config/genenv.local.sh
 COMPOSE_PROJECT_NAME ?= $(notdir $(CURDIR))
 
 .PHONY: start
-start: start/server
+start: start/prisme
 
 start/%: .env
 	$(MAKE) go/build/$*
@@ -108,7 +108,7 @@ tests/%: FORCE
 	$(MAKE) -C ./tests $*
 
 .PHONY: go/build
-go/build: go/build/server
+go/build: go/build/prisme
 
 go/build/%: FORCE codegen
 	go build -o prisme -race ./cmd/$*

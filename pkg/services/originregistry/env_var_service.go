@@ -2,10 +2,10 @@ package originregistry
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"strings"
 
-	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/negrel/configue"
 	"github.com/rs/zerolog"
 )
 
@@ -15,27 +15,14 @@ type EnvVarService struct {
 }
 
 // ProvideEnvVarService is a wire provider for origin registry Service.
-func ProvideEnvVarService(logger zerolog.Logger) Service {
+func ProvideEnvVarService(cfg Config, logger zerolog.Logger) Service {
 	logger = logger.With().
 		Str("service", "originregistry").
 		Str("service_impl", "envvar").
 		Logger()
 
-	rawOrigins := config.GetEnvOrDefault("PRISME_ORIGIN_REGISTRY_ORIGINS", "")
-	if rawOrigins == "" {
-		// Deprecated.
-		rawOrigins = config.GetEnvOrDefault("PRISME_SOURCE_REGISTRY_SOURCES", "")
-	} else {
-		if config.GetEnvOrDefault("PRISME_SOURCE_REGISTRY_SOURCES", "") != "" {
-			panic("PRISME_ORIGIN_REGISTRY_ORIGINS and PRISME_SOURCE_REGISTRY_SOURCES are both set but they are mutually exclusive, please only use PRISME_ORIGIN_REGISTRY_ORIGINS")
-		}
-	}
-	if rawOrigins == "" {
-		panic(fmt.Errorf("PRISME_ORIGIN_REGISTRY_ORIGINS environment variable is not set or is an empty string"))
-	}
-
 	origins := make(map[string]struct{})
-	for _, src := range strings.Split(rawOrigins, ",") {
+	for _, src := range strings.Split(cfg.Origins, ",") {
 		origins[src] = struct{}{}
 	}
 
@@ -53,4 +40,22 @@ func (evs EnvVarService) IsOriginRegistered(_ context.Context, origin string) (b
 		Msg("checked if origin is registered")
 
 	return ok, nil
+}
+
+// Service options.
+type Config struct {
+	Origins string
+}
+
+// RegisterOptions registers Config fields as options.
+func (c *Config) RegisterOptions(f *configue.Figue) {
+	f.StringVar(&c.Origins, "origin.registry.origins", "", "comma separatel `list` (without whitespace) of valid origins. Events from unknown origins are rejected")
+}
+
+// Validate validates configuration options.
+func (c *Config) Validate() error {
+	if strings.TrimSpace(c.Origins) == "" {
+		return errors.New("origin registry origin list is empty")
+	}
+	return nil
 }

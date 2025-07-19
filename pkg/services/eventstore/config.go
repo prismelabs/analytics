@@ -1,12 +1,10 @@
 package eventstore
 
 import (
+	"errors"
 	"time"
 
-	"github.com/prismelabs/analytics/pkg/chdb"
-	"github.com/prismelabs/analytics/pkg/clickhouse"
-	"github.com/prismelabs/analytics/pkg/config"
-	"github.com/rs/zerolog"
+	"github.com/negrel/configue"
 )
 
 // Config holds service configuration.
@@ -18,29 +16,22 @@ type Config struct {
 	RingBuffersFactor uint64
 }
 
-// ProvideConfig is a wire provider for service config.
-func ProvideConfig(logger zerolog.Logger) Config {
-	backend := config.GetEnvOrDefault("PRISME_EVENTSTORE_BACKEND", "clickhouse")
+// RegisterOptions registers Config fields as options.
+func (c *Config) RegisterOptions(f *configue.Figue) {
+	f.StringVar(&c.Backend, "eventstore.backend", "clickhouse", "event store `backend` ('clickhouse'/'chdb') to use")
+	f.Uint64Var(&c.MaxBatchSize, "eventstore.max.batch.size", 4096, "maximum `size` of an event's batch")
+	f.DurationVar(&c.MaxBatchTimeout, "eventstore.max.batch.timeout", 1*time.Minute, "maximum `duration` before a batch is sent")
+	f.Uint64Var(&c.RingBuffersFactor, "eventstore.ring.buffers.factor", 100, "events ring buffer `size`")
+}
 
-	var backendConfig any
-	switch backend {
-	case "clickhouse":
-		backendConfig = clickhouse.ProvideConfig(logger)
-	case "chdb":
-		backendConfig = chdb.ProvideConfig(logger)
-	default:
-		logger.Panic().Msgf("invalid event store backend (%v), must be one of 'clickhouse', 'chdb'", backend)
+// Validate validates configuration options.
+func (c *Config) Validate() error {
+	var errs []error
+	if c.Backend != "clickhouse" && c.Backend != "chdb" {
+		errs = append(errs, errors.New("event store backend must be 'clickhouse' or 'chdb'"))
 	}
-
-	maxBatchSize := config.ParseUintEnvOrDefault("PRISME_EVENTSTORE_MAX_BATCH_SIZE", 4096, 64)
-	maxBatchTimeout := config.ParseDurationEnvOrDefault("PRISME_EVENTSTORE_MAX_BATCH_TIMEOUT", 1*time.Minute)
-	ringBufferFactor := config.ParseUintEnvOrDefault("PRISME_EVENTSTORE_RING_BUFFERS_FACTOR", 100, 64)
-
-	return Config{
-		Backend:           backend,
-		BackendConfig:     backendConfig,
-		MaxBatchSize:      maxBatchSize,
-		MaxBatchTimeout:   maxBatchTimeout,
-		RingBuffersFactor: ringBufferFactor,
+	if c.MaxBatchTimeout < time.Second {
+		errs = append(errs, errors.New("event store maximum batch timeout must be greater than or equal to 1s"))
 	}
+	return errors.Join(errs...)
 }

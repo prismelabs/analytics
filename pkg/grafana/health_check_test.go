@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/prismelabs/analytics/pkg/testutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -12,7 +13,8 @@ func TestIntegClientHealthCheck(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cfg := configFromEnv()
+	var cfg Config
+	testutils.ConfigueLoad(t, &cfg)
 	t.Run("Healthy", func(t *testing.T) {
 		cli := ProvideClient(cfg)
 

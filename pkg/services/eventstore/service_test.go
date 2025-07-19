@@ -36,9 +36,13 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 			var backendConfig any
 			switch backend {
 			case "clickhouse":
-				backendConfig = clickhouse.ProvideConfig(logger)
+				var cfg clickhouse.Config
+				testutils.ConfigueLoad(t, &cfg)
+				backendConfig = cfg
 			case "chdb":
-				backendConfig = chdb.ProvideConfig(logger)
+				var cfg chdb.Config
+				testutils.ConfigueLoad(t, &cfg)
+				backendConfig = cfg
 			}
 
 			cfg := Config{

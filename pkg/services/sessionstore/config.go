@@ -1,10 +1,10 @@
 package sessionstore
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
-	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/negrel/configue"
 )
 
 // Session storage service configuration options.
@@ -15,17 +15,28 @@ type Config struct {
 	maxSessionsPerVisitor  uint64
 }
 
-// ProvideConfig is a wire provider for session storage configuration.
-func ProvideConfig() Config {
-	deviceExpiryPercentile := int(config.ParseIntEnvOrDefault("PRISME_SESSIONSTORAGE_DEVICE_EXPIRY_PERCENTILE", 50, 8))
-	if deviceExpiryPercentile > 100 || deviceExpiryPercentile < 0 {
-		panic(fmt.Errorf("PRISME_SESSIONSTORAGE_DEVICE_EXPIRY_PERCENTILE must be comprise between 0 and 100"))
-	}
+// RegisterOptions registers Config fields as options.
+func (c *Config) RegisterOptions(f *configue.Figue) {
+	f.DurationVar(&c.gcInterval, "sessionstore.gc.interval", 10*time.Second, "interval at which expired sessions are collected")
+	f.DurationVar(&c.sessionInactiveTtl, "sessionstore.session.inactive.ttl", 24*time.Hour, "`duration` before inactive session expires")
+	f.IntVar(&c.deviceExpiryPercentile, "sessionstore.device.expiry.percentile", 50, "minimum percentage of expired sessions triggering device session cleanup")
+	f.Uint64Var(&c.maxSessionsPerVisitor, "sessionstore.max.sessions.per.visitor", 64, "maximum number of sessions per visitor/device")
+}
 
-	return Config{
-		gcInterval:             config.ParseDurationEnvOrDefault("PRISME_SESSIONSTORAGE_GC_INTERVAL", 10*time.Second),
-		sessionInactiveTtl:     config.ParseDurationEnvOrDefault("PRISME_SESSIONSTORAGE_SESSION_INACTIVE_TTL", 24*time.Hour),
-		deviceExpiryPercentile: deviceExpiryPercentile,
-		maxSessionsPerVisitor:  config.ParseUintEnvOrDefault("PRISME_SESSIONSTORAGE_MAX_SERSSIONS_PER_VISITOR", 64, 64),
+// Validate validates configuration options.
+func (c *Config) Validate() error {
+	var errs []error
+	if c.gcInterval < 1*time.Second {
+		errs = append(errs, errors.New("sessionstore gc interval must be greater than 1s"))
 	}
+	if c.sessionInactiveTtl < 1*time.Second {
+		errs = append(errs, errors.New("sessionstore inactive session TTL must be greater than 1s"))
+	}
+	if c.deviceExpiryPercentile <= 0 {
+		errs = append(errs, errors.New("sessionstore device expiry percentile must be greater than 0"))
+	}
+	if c.maxSessionsPerVisitor <= 0 {
+		errs = append(errs, errors.New("sessionstore max session per visitor must be greater than 0"))
+	}
+	return errors.Join(errs...)
 }

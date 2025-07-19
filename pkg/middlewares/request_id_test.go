@@ -7,13 +7,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/prisme"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRequestIdMiddleware(t *testing.T) {
 	t.Run("DoNotTrustProxy", func(t *testing.T) {
-		cfg := config.Server{
+		cfg := prisme.Config{
 			TrustProxy: false,
 		}
 
@@ -66,7 +66,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 			})
 
 			t.Run("Custom", func(t *testing.T) {
-				cfg := config.Server{
+				cfg := prisme.Config{
 					TrustProxy:           false,
 					ProxyRequestIdHeader: "X-Custom-Request-Id",
 				}
@@ -97,7 +97,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 	})
 
 	t.Run("TrustProxy", func(t *testing.T) {
-		cfg := config.Server{
+		cfg := prisme.Config{
 			TrustProxy:           true,
 			ProxyRequestIdHeader: fiber.HeaderXRequestID,
 		}
@@ -151,7 +151,7 @@ func TestRequestIdMiddleware(t *testing.T) {
 			})
 
 			t.Run("Custom", func(t *testing.T) {
-				cfg := config.Server{
+				cfg := prisme.Config{
 					TrustProxy:           true,
 					ProxyRequestIdHeader: "X-Custom-Request-Id",
 				}

@@ -7,13 +7,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/storage"
-	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/prisme"
 )
 
 type EventsRateLimiter fiber.Handler
 
 // ProvideEventsRateLimiter is a wire provider for events endpoints rate limiter.
-func ProvideEventsRateLimiter(cfg config.Server, storage storage.Storage) EventsRateLimiter {
+func ProvideEventsRateLimiter(cfg prisme.Config, storage storage.Storage) EventsRateLimiter {
 	max := 60
 	if cfg.Debug {
 		max = math.MaxInt

@@ -13,8 +13,8 @@ require (
 	github.com/gofiber/storage/memory v1.3.4
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/uuid v1.6.0
-	github.com/google/wire v0.6.0
 	github.com/negrel/assert v0.5.0
+	github.com/negrel/configue v0.3.0
 	github.com/negrel/ringo v0.7.0
 	github.com/negrel/secrecy v0.7.0
 	github.com/oschwald/maxminddb-golang v1.13.1

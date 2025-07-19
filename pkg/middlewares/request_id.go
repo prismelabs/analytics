@@ -3,7 +3,7 @@ package middlewares
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
-	"github.com/prismelabs/analytics/pkg/config"
+	"github.com/prismelabs/analytics/pkg/prisme"
 )
 
 type RequestId fiber.Handler
@@ -11,7 +11,7 @@ type RequestId fiber.Handler
 type RequestIdKey struct{}
 
 // ProvideRequestId define a wire provider for request id middleware.
-func ProvideRequestId(cfg config.Server) RequestId {
+func ProvideRequestId(cfg prisme.Config) RequestId {
 	return func(c *fiber.Ctx) error {
 		var requestId string
 

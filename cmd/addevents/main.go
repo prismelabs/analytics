@@ -4,8 +4,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/log"
-	"github.com/prismelabs/analytics/pkg/wired"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
 )
 
 func main() {
@@ -13,7 +14,12 @@ func main() {
 	logger := log.NewLogger("bootstrap", os.Stderr, true)
 	log.TestLoggers(logger)
 
-	app := Initialize(wired.BootstrapLogger(logger))
+	zerologLogger := ProvideLogger()
+	config := ProvideConfig()
+	driver := clickhouse.ProvideEmbeddedSourceDriver(zerologLogger)
+	service := teardown.ProvideService()
+	app := ProvideApp(zerologLogger, config, driver, service)
+
 	app.logger.Info().Any("config", app.cfg).Msg("initialization done.")
 
 	start := time.Now()
