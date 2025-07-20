@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/middlewares"
 	"github.com/prismelabs/analytics/pkg/prisme"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
+	grafanaService "github.com/prismelabs/analytics/pkg/services/grafana"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/originregistry"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
@@ -54,6 +56,7 @@ func main() {
 	sessionstoreCfg.RegisterOptions(figue)
 	eventStoreCfg.RegisterOptions(figue)
 	originRegistryCfg.RegisterOptions(figue)
+	mode := figue.String("mode", "default", "prisme server `mode` (default/ingestion)")
 
 	// Load configuration.
 	err := figue.Parse()
@@ -73,9 +76,10 @@ func main() {
 	// Validate configuration.
 	err = errors.Join(
 		prismeCfg.Validate(),
+		// Validated later.
 		// chdbCfg.Validate(),
 		// clickhouseCfg.Validate(),
-		grafanaCfg.Validate(),
+		// grafanaCfg.Validate(),
 		sessionstoreCfg.Validate(),
 		eventStoreCfg.Validate(),
 		originRegistryCfg.Validate(),
@@ -86,7 +90,30 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Sets eventstore backend config.
+	// Create application logger.
+	logger := log.New("app", os.Stderr, prismeCfg.Debug)
+	err = logger.TestOutput()
+	if err != nil {
+		panic(err)
+	}
+
+	if *mode == "default" {
+		err := grafanaCfg.Validate()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			figue.PrintDefaults()
+			os.Exit(1)
+		}
+
+		// Setup Grafana dashboard.
+		srv := grafanaService.NewService(grafana.NewClient(grafanaCfg), clickhouseCfg)
+		err = srv.SetupDatasourceAndDashboards(context.Background(), grafana.OrgId(grafanaCfg.OrgId))
+		if err != nil {
+			logger.Fatal("failed to setup ClickHouse datasource and dashboard in Grafana", err)
+		}
+	}
+
+	// Sets event store backend config.
 	if eventStoreCfg.Backend == "clickhouse" {
 		eventStoreCfg.BackendConfig = clickhouseCfg
 		err = clickhouseCfg.Validate()
@@ -117,13 +144,6 @@ func main() {
 	} else {
 		fiberCfg.EnableIPValidation = true
 		fiberCfg.ProxyHeader = ""
-	}
-
-	// Create application logger.
-	logger := log.New("app", os.Stderr, prismeCfg.Debug)
-	err = logger.TestOutput()
-	if err != nil {
-		panic(err)
 	}
 
 	// Setup prometheus registry.
