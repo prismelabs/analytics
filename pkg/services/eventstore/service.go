@@ -3,13 +3,12 @@ package eventstore
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/negrel/ringo"
-	"github.com/prismelabs/analytics/pkg/chdb"
-	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/retry"
@@ -31,6 +30,13 @@ type Service interface {
 	Query(ctx context.Context, query string, args ...any) (QueryResult, error)
 }
 
+var backendsFactory = map[string]func(
+	logger log.Logger,
+	cfg any,
+	source source.Driver,
+	teardown teardown.Service,
+) backend{}
+
 // NewService returns a new event store service.
 func NewService(
 	cfg Config,
@@ -38,16 +44,19 @@ func NewService(
 	promRegistry *prometheus.Registry,
 	teardown teardown.Service,
 	source source.Driver,
-) Service {
-	if cfg.Backend == "clickhouse" {
-		ch := clickhouse.NewCh(logger, cfg.BackendConfig.(clickhouse.Config), source, teardown)
-		backend := newClickhouseBackend(ch)
-		return newService(cfg, backend, logger, promRegistry, teardown)
-	} else {
-		chdb := chdb.NewChDb(logger, cfg.BackendConfig.(chdb.Config), source, teardown)
-		backend := newChDbBackend(chdb)
-		return newService(cfg, backend, logger, promRegistry, teardown)
+) (Service, error) {
+	fact := backendsFactory[cfg.Backend]
+	if fact == nil {
+		return nil, fmt.Errorf("no %v event store backend", cfg.Backend)
 	}
+
+	return newService(
+		cfg,
+		fact(logger, cfg.BackendConfig, source, teardown),
+		logger,
+		promRegistry,
+		teardown,
+	), nil
 }
 
 type service struct {

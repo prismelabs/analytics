@@ -1,3 +1,5 @@
+//go:build chdb
+
 package eventstore
 
 import (
@@ -10,17 +12,30 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/google/uuid"
 	"github.com/prismelabs/analytics/pkg/chdb"
 	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/log"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
 )
+
+func init() {
+	backendsFactory["chdb"] = newChDbBackend
+}
 
 type chdbBackend struct {
 	chdb         chdb.ChDb
 	eventBatches [maxEventKind]*batch
 }
 
-func newChDbBackend(chdb chdb.ChDb) *chdbBackend {
+func newChDbBackend(
+	logger log.Logger,
+	cfg any,
+	source source.Driver,
+	teardown teardown.Service,
+) backend {
+	chdb := chdb.NewChDb(logger, cfg.(chdb.Config), source, teardown)
 	return &chdbBackend{
 		chdb:         chdb,
 		eventBatches: [maxEventKind]*batch{},

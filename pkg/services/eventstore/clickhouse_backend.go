@@ -7,9 +7,12 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
+	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/retry"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
 )
 
 type clickhouseBackend struct {
@@ -17,7 +20,18 @@ type clickhouseBackend struct {
 	eventBatches [maxEventKind]driver.Batch
 }
 
-func newClickhouseBackend(ch clickhouse.Ch) *clickhouseBackend {
+func init() {
+	backendsFactory["clickhouse"] = newClickhouseBackend
+}
+
+func newClickhouseBackend(
+	logger log.Logger,
+	cfg any,
+	source source.Driver,
+	teardown teardown.Service,
+) backend {
+	ch := clickhouse.NewCh(logger, cfg.(clickhouse.Config), source, teardown)
+
 	return &clickhouseBackend{
 		ch:           ch,
 		eventBatches: [maxEventKind]driver.Batch{},

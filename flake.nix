@@ -19,6 +19,42 @@
         let
           pkgs = import nixpkgs { inherit system; };
           lib = pkgs.lib;
+          buildPrisme =
+            tags:
+            pkgs.buildGoModule {
+              pname = "prisme";
+              version = "0.20.0";
+              vendorHash = "sha256-oxr+DxEB9C6h/X8z61HTMISzv//Fv2YBf1V2jnrnonA=";
+
+              src = ./.;
+              # Skip go test.
+              doCheck = false;
+
+              tags = tags;
+
+              subPackages = "./cmd/prisme";
+            };
+          buildPrismeDocker =
+            prisme: extraEnv:
+            pkgs.dockerTools.buildImage {
+              name = "prismelabs/analytics";
+              tag = "dev";
+
+              copyToRoot = [ pkgs.cacert ];
+              runAsRoot = ''
+                #!${pkgs.runtimeShell}
+                mkdir -p /app
+                cp -r ${self.packages."${system}".prisme-healthcheck}/bin/* /healthcheck
+              '';
+
+              config = {
+                Cmd = [ "${prisme}/bin/prisme" ];
+                WorkingDir = "/app";
+                Env = [
+                  "PRISME_ADMIN_HOSTPORT=0.0.0.0:9090"
+                ] ++ extraEnv;
+              };
+            };
         in
         {
           pkgs = pkgs;
@@ -44,39 +80,16 @@
               LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
             };
           };
-          packages = {
-            default = pkgs.buildGoModule {
-              pname = "prisme";
-              version = "0.20.0";
-              vendorHash = "sha256-oxr+DxEB9C6h/X8z61HTMISzv//Fv2YBf1V2jnrnonA=";
+          packages = rec {
+            default = prisme;
 
-              src = ./.;
-              # Skip go test.
-              doCheck = false;
+            prisme = buildPrisme [ ];
+            prisme-chdb = buildPrisme [ "chdb" ];
 
-              subPackages = "./cmd/prisme";
-            };
-
-            docker = pkgs.dockerTools.buildImage {
-              name = "prismelabs/analytics";
-              tag = "dev";
-
-              copyToRoot = [ pkgs.cacert ];
-              runAsRoot = ''
-                #!${pkgs.runtimeShell}
-                mkdir -p /app
-                cp -r ${self.packages."${system}".prisme-healthcheck}/bin/* /healthcheck
-              '';
-
-              config = {
-                Cmd = [ "${self.packages.${system}.default}/bin/prisme" ];
-                WorkingDir = "/app";
-                Env = [
-                  "PRISME_ADMIN_HOSTPORT=0.0.0.0:9090"
-                  "CHDB_LIB_PATH=${self.packages.${system}.libchdb}/lib/libchdb.so"
-                ];
-              };
-            };
+            docker = buildPrismeDocker prisme [ ];
+            docker-chdb = buildPrismeDocker prisme-chdb [
+              "CHDB_LIB_PATH=${libchdb}/lib/libchdb.so"
+            ];
 
             prisme-healthcheck = pkgs.writeShellApplication {
               name = "prisme-healthcheck";

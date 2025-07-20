@@ -1,3 +1,5 @@
+//go:build chdb
+
 package chdb
 
 import (

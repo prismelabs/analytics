@@ -1,6 +1,8 @@
 package handlers
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 // HealthCheck returns a GET healthcheck handler.
 func HealthCheck() fiber.Handler {

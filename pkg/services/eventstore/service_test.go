@@ -56,12 +56,13 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 			t.Run("SinglePageView", func(t *testing.T) {
 				promRegistry := prometheus.NewRegistry()
-				service := NewService(cfg, logger, promRegistry, teardownService, source)
+				service, err := NewService(cfg, logger, promRegistry, teardownService, source)
+				require.NoError(t, err)
 				defer func() { require.NoError(t, teardownService.Teardown()) }()
 
 				// Add event to batch.
 				eventTime := time.Now().UTC().Round(time.Second)
-				err := service.StorePageView(context.Background(), &event.PageView{
+				err = service.StorePageView(context.Background(), &event.PageView{
 					Timestamp: eventTime,
 					PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
 					Session: event.Session{
@@ -119,7 +120,8 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 			t.Run("MultipleEvents/Pageviews/Custom/OutboundLinkClick", func(t *testing.T) {
 				promRegistry := prometheus.NewRegistry()
-				service := NewService(cfg, logger, promRegistry, teardownService, source)
+				service, err := NewService(cfg, logger, promRegistry, teardownService, source)
+				require.NoError(t, err)
 				defer func() { require.NoError(t, teardownService.Teardown()) }()
 
 				testStartTime := time.Now().UTC()
@@ -246,7 +248,8 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 					RingBuffersFactor: 1,
 				}
 
-				service := NewService(cfg, logger, promRegistry, teardownService, source)
+				service, err := NewService(cfg, logger, promRegistry, teardownService, source)
+				require.NoError(t, err)
 				defer func() { require.NoError(t, teardownService.Teardown()) }()
 
 				// Send hundreds of event without pause.

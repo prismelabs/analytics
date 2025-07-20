@@ -68,9 +68,7 @@ func main() {
 		return
 	}
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		figue.PrintDefaults()
-		os.Exit(1)
+		cliError(figue, err)
 	}
 
 	// Validate configuration.
@@ -85,9 +83,7 @@ func main() {
 		originRegistryCfg.Validate(),
 	)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		figue.PrintDefaults()
-		os.Exit(1)
+		cliError(figue, err)
 	}
 
 	// Create application logger.
@@ -100,9 +96,7 @@ func main() {
 	if *mode == "default" {
 		err := grafanaCfg.Validate()
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
-			figue.PrintDefaults()
-			os.Exit(1)
+			cliError(figue, err)
 		}
 
 		// Setup Grafana dashboard.
@@ -121,9 +115,7 @@ func main() {
 		eventStoreCfg.BackendConfig = chdbCfg
 	}
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		figue.PrintDefaults()
-		os.Exit(1)
+		cliError(figue, err)
 	}
 
 	// Fiber configuration.
@@ -156,13 +148,16 @@ func main() {
 	teardownService := teardown.NewService()
 
 	// Setup some services.
-	eventStore := eventstore.NewService(
+	eventStore, err := eventstore.NewService(
 		eventStoreCfg,
 		logger,
 		promRegistry,
 		teardownService,
 		clickhouse.EmbeddedSourceDriver(logger),
 	)
+	if err != nil {
+		cliError(figue, err)
+	}
 	uaParser := uaparser.NewService(logger, promRegistry)
 	ipGeolocator := ipgeolocator.NewMmdbService(logger, promRegistry)
 	saltManager := saltmanager.NewService(logger)
@@ -318,4 +313,10 @@ func main() {
 	err = teardownService.Teardown()
 	logger.Fatal("tearing down procedures done.", err)
 	logger.Info("tearing down successful, exiting...")
+}
+
+func cliError(figue *configue.Figue, err error) {
+	fmt.Fprintln(os.Stderr, err.Error())
+	figue.PrintDefaults()
+	os.Exit(1)
 }
