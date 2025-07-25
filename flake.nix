@@ -52,7 +52,8 @@
                 WorkingDir = "/app";
                 Env = [
                   "PRISME_ADMIN_HOSTPORT=0.0.0.0:9090"
-                ] ++ extraEnv;
+                ]
+                ++ extraEnv;
               };
             };
         in
