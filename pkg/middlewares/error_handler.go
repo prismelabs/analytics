@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"errors"
+	"runtime/debug"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -31,7 +32,11 @@ func ErrorHandler(promRegistry *prometheus.Registry, logger log.Logger) fiber.Ha
 					"status": strconv.Itoa(c.Response().StatusCode()),
 				}
 				reqsPanics.With(labels).Inc()
-				logger.Error("http request handler panicked", "error", err)
+				logger.Error(
+					"http request handler panicked",
+					"error", err,
+					"stacktrace", string(debug.Stack()),
+				)
 			}
 		}()
 
