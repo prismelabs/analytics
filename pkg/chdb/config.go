@@ -13,3 +13,8 @@ type Config struct {
 func (c *Config) RegisterOptions(f *configue.Figue) {
 	f.StringVar(&c.Path, "chdb.path", "", "chdb directory `filepath`")
 }
+
+// Validate validates configuration options.
+func (c *Config) Validate() error {
+	return nil
+}
