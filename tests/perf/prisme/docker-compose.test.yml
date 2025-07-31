@@ -1,7 +1,11 @@
 services:
   k6:
-    image: docker.io/grafana/k6
+    image: docker.io/grafana/k6:1.1.0
     command: run /data/main.js
     working_dir: /data
+    ports:
+      - 127.0.0.1:5665:5665
+    environment:
+      K6_WEB_DASHBOARD: true
     volumes:
       - $PWD:/data
