@@ -36,7 +36,7 @@
 
   // State variables.
   var referrer = doc.referrer.replace(loc.host, domain);
-  var pageviewCount = 1
+  var pageviewCount = 0
   var supportsKeepAlive = 'Request' in global && 'keepalive' in new Request('')
   var trackingDisabled = localStorage.getItem("prismeAnalytics.tracking.enable") === "false"
 
@@ -52,8 +52,8 @@
     if (!options.status) options.status = statusCode
 
     if (!options.path) {
-      // Ignore path variable when manual tracking is enabled or this isn't
-      // first pageview event and path variable value is outdated.
+      // Ignore path variable when manual tracking is enabled.
+      // Ignore path variable after first page view event.
       if (manual || pageviewCount > 1) options.path = loc.pathname
       else options.path = path
     }
@@ -96,6 +96,7 @@
 
   function pageview(options) {
     if (trackingDisabled) return;
+    pageviewCount++
     options = defaultOptions(options)
 
     doFetch(prismeApiEventsUrl.concat("/pageviews"), fetchDefaultOptions({
@@ -106,7 +107,6 @@
     }));
 
     referrer = options.url
-    pageviewCount++
   }
 
   function sendClickEvent(kind, url, options) {
