@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/negrel/ringo"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/retry"
+	"github.com/prismelabs/analytics/pkg/services/eventdb"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -26,38 +25,9 @@ type Service interface {
 	StoreCustom(context.Context, *event.Custom) error
 	StoreOutboundLinkClick(context.Context, *event.OutboundLinkClick) error
 	StoreFileDownload(context.Context, *event.FileDownload) error
-	// Only read-only query should be supported.
-	Query(ctx context.Context, query string, args ...any) (QueryResult, error)
 }
 
-var backendsFactory = map[string]func(
-	logger log.Logger,
-	cfg any,
-	source source.Driver,
-	teardown teardown.Service,
-) backend{}
-
-// NewService returns a new event store service.
-func NewService(
-	cfg Config,
-	logger log.Logger,
-	promRegistry *prometheus.Registry,
-	teardown teardown.Service,
-	source source.Driver,
-) (Service, error) {
-	fact := backendsFactory[cfg.Backend]
-	if fact == nil {
-		return nil, fmt.Errorf("no %v event store backend", cfg.Backend)
-	}
-
-	return newService(
-		cfg,
-		fact(logger, cfg.BackendConfig, source, teardown),
-		logger,
-		promRegistry,
-		teardown,
-	), nil
-}
+var backendsFactory = map[string]func(eventdb.Service) backend{}
 
 type service struct {
 	logger          log.Logger
@@ -72,20 +42,26 @@ type backend interface {
 	prepareBatch() error
 	appendToBatch(any) error
 	sendBatch() error
-	query(ctx context.Context, query string, args ...any) (QueryResult, error)
 }
 
-func newService(
+// NewService returns a new event store service.
+func NewService(
 	cfg Config,
-	backend backend,
+	db eventdb.Service,
 	logger log.Logger,
 	promRegistry *prometheus.Registry,
 	teardownService teardown.Service,
-) Service {
+) (Service, error) {
+	fact := backendsFactory[db.DriverName()]
+	if fact == nil {
+		return nil, fmt.Errorf("unsupported event store backend %v", db.DriverName())
+	}
+	backend := fact(db)
+
 	batchDone := make(chan struct{})
 	logger = logger.With(
 		"service", "eventstore",
-		"backend", cfg.Backend,
+		"backend", db.DriverName(),
 		"ring_buffers_factor", cfg.RingBuffersFactor,
 		"max_batch_size", cfg.MaxBatchSize,
 		"max_batch_timeout", cfg.MaxBatchTimeout,
@@ -123,9 +99,9 @@ func newService(
 
 	go service.batchLoop(ctx, batchDone)
 
-	logger.Info("event store configured", "backend", cfg.Backend)
+	logger.Info("event store configured", "backend", backend)
 
-	return service
+	return service, nil
 }
 
 // StoreFileDownload implements Service.
@@ -248,20 +224,4 @@ func (s *service) sendBatch(batchSize int) {
 		s.metrics.batchDropped.Inc()
 		s.logger.Err("failed to send events batch", err)
 	}
-}
-
-// Query implements Service.
-func (s *service) Query(ctx context.Context, query string, args ...any) (QueryResult, error) {
-	if !strings.HasPrefix(strings.ToLower(strings.TrimSpace(query)), "select ") {
-		return nil, ErrReadOnly
-	}
-
-	return s.backend.query(ctx, query, args...)
-}
-
-// QueryResult define result of an event store query.
-type QueryResult interface {
-	Next() bool
-	Scan(...any) error
-	Close() error
 }

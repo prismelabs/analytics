@@ -7,12 +7,10 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/event"
-	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/retry"
-	"github.com/prismelabs/analytics/pkg/services/teardown"
+	"github.com/prismelabs/analytics/pkg/services/eventdb"
 )
 
 type clickhouseBackend struct {
@@ -24,16 +22,9 @@ func init() {
 	backendsFactory["clickhouse"] = newClickhouseBackend
 }
 
-func newClickhouseBackend(
-	logger log.Logger,
-	cfg any,
-	source source.Driver,
-	teardown teardown.Service,
-) backend {
-	ch := clickhouse.NewCh(logger, cfg.(clickhouse.Config), source, teardown)
-
+func newClickhouseBackend(db eventdb.Service) backend {
 	return &clickhouseBackend{
-		ch:           ch,
+		ch:           db.Driver().(clickhouse.Ch),
 		eventBatches: [maxEventKind]driver.Batch{},
 	}
 }
@@ -41,17 +32,17 @@ func newClickhouseBackend(
 // prepareBatch implements backend.
 func (cb *clickhouseBackend) prepareBatch() error {
 	queries := [maxEventKind]string{
-		// pageviews table is a materialized view derived from sessions.
-		// sessions table engine is VersionedCollapsedMergeTree so we can
+		// pageviews table is a materialized view derived from sessions_versionned
+		// table. sessions_versionned table engine is VersionedCollapsedMergeTree so we can
 		// keep appending row with the same Session UUID.
 		// See https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/versionedcollapsingmergetree
-		pageviewEventKind:          "INSERT INTO sessions",
+		pageviewEventKind:          "INSERT INTO sessions_versionned",
 		customEventKind:            "INSERT INTO events_custom",
 		fileDownloadEventKind:      "INSERT INTO file_downloads",
 		outboundLinkClickEventKind: "INSERT INTO outbound_link_clicks",
 	}
 
-	for i := 0; i < len(cb.eventBatches); i++ {
+	for i := range maxEventKind {
 		err := retry.LinearBackoff(3, time.Second, func(_ uint) error {
 			var err error
 			cb.eventBatches[i], err = cb.ch.PrepareBatch(context.Background(), queries[i])
@@ -168,7 +159,7 @@ func (cb *clickhouseBackend) sendBatch() error {
 	var errs [maxEventKind]error
 	ch := make(chan error)
 
-	for i := 0; i < int(maxEventKind); i++ {
+	for i := range int(maxEventKind) {
 		batch := cb.eventBatches[i]
 		go func() {
 			ch <- retry.LinearBackoff(3, time.Second, func(_ uint) error {
@@ -177,13 +168,9 @@ func (cb *clickhouseBackend) sendBatch() error {
 		}()
 	}
 
-	for i := 0; i < int(maxEventKind); i++ {
+	for i := range int(maxEventKind) {
 		errs[i] = <-ch
 	}
 
 	return errors.Join(errs[:]...)
-}
-
-func (cb *clickhouseBackend) query(ctx context.Context, query string, args ...any) (QueryResult, error) {
-	return cb.ch.Query(ctx, query, args...)
 }
