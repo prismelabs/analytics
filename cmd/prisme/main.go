@@ -22,12 +22,14 @@ import (
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/middlewares"
 	"github.com/prismelabs/analytics/pkg/prisme"
+	"github.com/prismelabs/analytics/pkg/services/eventdb"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
 	grafanaService "github.com/prismelabs/analytics/pkg/services/grafana"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/originregistry"
 	"github.com/prismelabs/analytics/pkg/services/saltmanager"
 	"github.com/prismelabs/analytics/pkg/services/sessionstore"
+	"github.com/prismelabs/analytics/pkg/services/stats"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prometheus/client_golang/prometheus"
@@ -46,6 +48,7 @@ func main() {
 		grafanaCfg        grafana.Config
 		sessionstoreCfg   sessionstore.Config
 		fiberCfg          fiber.Config
+		eventDbCfg        eventdb.Config
 		eventStoreCfg     eventstore.Config
 		originRegistryCfg originregistry.Config
 	)
@@ -54,9 +57,10 @@ func main() {
 	clickhouseCfg.RegisterOptions(figue)
 	grafanaCfg.RegisterOptions(figue)
 	sessionstoreCfg.RegisterOptions(figue)
+	eventDbCfg.RegisterOptions(figue)
 	eventStoreCfg.RegisterOptions(figue)
 	originRegistryCfg.RegisterOptions(figue)
-	mode := figue.String("mode", "default", "prisme server `mode` (default/ingestion)")
+	mode := figue.String("mode", "default", "prisme server `mode` (default, ingestion)")
 
 	// Load configuration.
 	err := figue.Parse()
@@ -79,6 +83,7 @@ func main() {
 		// clickhouseCfg.Validate(),
 		// grafanaCfg.Validate(),
 		sessionstoreCfg.Validate(),
+		eventDbCfg.Validate(),
 		eventStoreCfg.Validate(),
 		originRegistryCfg.Validate(),
 	)
@@ -108,11 +113,13 @@ func main() {
 	}
 
 	// Sets event store backend config.
-	if eventStoreCfg.Backend == "clickhouse" {
-		eventStoreCfg.BackendConfig = clickhouseCfg
+	var driverCfg any
+	if eventDbCfg.Driver == "clickhouse" {
 		err = clickhouseCfg.Validate()
+		driverCfg = clickhouseCfg
 	} else {
-		eventStoreCfg.BackendConfig = chdbCfg
+		err = chdbCfg.Validate()
+		driverCfg = chdbCfg
 	}
 	if err != nil {
 		cliError(figue, err)
@@ -147,17 +154,28 @@ func main() {
 	// Create teardown service.
 	teardownService := teardown.NewService()
 
-	// Setup some services.
-	eventStore, err := eventstore.NewService(
-		eventStoreCfg,
+	// Setup services.
+	eventDb, err := eventdb.NewService(
+		eventDbCfg,
+		driverCfg,
 		logger,
-		promRegistry,
-		teardownService,
 		clickhouse.EmbeddedSourceDriver(logger),
+		teardownService,
 	)
 	if err != nil {
 		cliError(figue, err)
 	}
+	eventStore, err := eventstore.NewService(
+		eventStoreCfg,
+		eventDb,
+		logger,
+		promRegistry,
+		teardownService,
+	)
+	if err != nil {
+		cliError(figue, err)
+	}
+	stats := stats.NewService(eventDb)
 	uaParser := uaparser.NewService(logger, promRegistry)
 	ipGeolocator := ipgeolocator.NewMmdbService(logger, promRegistry)
 	saltManager := saltmanager.NewService(logger)
@@ -218,22 +236,22 @@ func main() {
 		)
 
 		app.Post("/api/v1/events/pageviews",
-			fiber.Handler(handlers.PostEventsPageViews(
+			handlers.PostEventsPageViews(
 				eventStore,
 				uaParser,
 				ipGeolocator,
 				saltManager,
 				sessionStore,
-			)),
+			),
 		)
 		app.Get("/api/v1/noscript/events/pageviews",
-			fiber.Handler(handlers.GetNoscriptEventsPageviews(
+			handlers.GetNoscriptEventsPageviews(
 				eventStore,
 				uaParser,
 				ipGeolocator,
 				saltManager,
 				sessionStore,
-			)),
+			),
 		)
 
 		app.Post("/api/v1/events/custom/:name",
@@ -244,34 +262,37 @@ func main() {
 			)),
 		)
 		app.Get("/api/v1/noscript/events/custom/:name",
-			fiber.Handler(handlers.GetNoscriptEventsCustom(eventStore,
+			handlers.GetNoscriptEventsCustom(eventStore,
 				saltManager,
 				sessionStore,
-			)),
+			),
 		)
 
 		app.Post("/api/v1/events/outbound-links",
-			fiber.Handler(handlers.PostEventsOutboundLinks(
+			handlers.PostEventsOutboundLinks(
 				eventStore,
 				saltManager,
 				sessionStore,
-			)),
+			),
 		)
 		app.Get("/api/v1/noscript/events/outbound-links",
-			fiber.Handler(handlers.GetNoscriptEventsOutboundLinks(
+			handlers.GetNoscriptEventsOutboundLinks(
 				eventStore,
 				sessionStore,
 				saltManager,
-			)),
+			),
 		)
 
 		app.Post("/api/v1/events/file-downloads",
-			fiber.Handler(handlers.PostEventsFileDownloads(
+			handlers.PostEventsFileDownloads(
 				eventStore,
 				saltManager,
 				sessionStore,
-			)),
+			),
 		)
+
+		app.Use("/api/v1/stats/*", middlewares.StatsCors(prismeCfg))
+		app.Get("/api/v1/stats/batch", handlers.GetStatsBatch(stats))
 	}
 
 	// Admin and profiling server.

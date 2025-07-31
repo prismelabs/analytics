@@ -27,6 +27,8 @@ type Config struct {
 	AdminHostPort string
 	// Timeout for /api/v1/events/* handlers.
 	ApiEventsTimeout time.Duration
+	// Comma separated list of origins that may access /api/v1/stats/* resources.
+	ApiStatsAllowOrigins string
 }
 
 // RegisterOptions registers Config fields as options.
@@ -38,7 +40,8 @@ func (c *Config) RegisterOptions(f *configue.Figue) {
 	f.StringVar(&c.ProxyHeader, "proxy.header", "X-Forwarded-For", "HTTP header used to determine client IP address.")
 	f.StringVar(&c.ProxyRequestIdHeader, "proxy.request.id.header", "X-Request-Id", "HTTP header used to retrieve request ID")
 	f.StringVar(&c.AdminHostPort, "admin.hostport", "127.0.0.1:9090", "use `host:port` for administration HTTP server")
-	f.DurationVar(&c.ApiEventsTimeout, "api.events.timeout", 3*time.Second, "`duration` before handlers under /api/* timeout")
+	f.DurationVar(&c.ApiEventsTimeout, "api.events.timeout", 3*time.Second, "`duration` before handlers /api/*/events/* timeout")
+	f.StringVar(&c.ApiStatsAllowOrigins, "api.stats.allow.origins", "", "comma separated list of `origins` that may access /api/*/stats/* resources")
 }
 
 // Validate validates configuration options.
