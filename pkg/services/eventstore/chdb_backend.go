@@ -12,12 +12,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/google/uuid"
 	"github.com/prismelabs/analytics/pkg/chdb"
 	"github.com/prismelabs/analytics/pkg/event"
-	"github.com/prismelabs/analytics/pkg/log"
-	"github.com/prismelabs/analytics/pkg/services/teardown"
 )
 
 func init() {
@@ -29,15 +26,9 @@ type chdbBackend struct {
 	eventBatches [maxEventKind]*batch
 }
 
-func newChDbBackend(
-	logger log.Logger,
-	cfg any,
-	source source.Driver,
-	teardown teardown.Service,
-) backend {
-	chdb := chdb.NewChDb(logger, cfg.(chdb.Config), source, teardown)
+func newChDbBackend(db eventdb.Service) backend {
 	return &chdbBackend{
-		chdb:         chdb,
+		chdb:         db.Driver().(chdb.ChDb),
 		eventBatches: [maxEventKind]*batch{},
 	}
 }
@@ -186,10 +177,6 @@ func (cb *chdbBackend) sendBatch() error {
 	}
 
 	return errors.Join(errs[:]...)
-}
-
-func (cb *chdbBackend) query(ctx context.Context, query string, args ...any) (QueryResult, error) {
-	return cb.chdb.QueryContext(ctx, query, args...)
 }
 
 type batch struct {
