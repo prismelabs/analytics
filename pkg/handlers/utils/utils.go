@@ -9,7 +9,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/event"
+	"github.com/prismelabs/analytics/pkg/services/stats"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
+	"github.com/prismelabs/analytics/pkg/timexpr"
 	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/valyala/fasthttp"
 )
@@ -167,4 +169,34 @@ func ExtractClientHints(headers *fasthttp.RequestHeader, client *uaparser.Client
 			client.OperatingSystem = os
 		}
 	}
+}
+
+// ExtractTimeRange parses time range from query parameters.
+func ExtractTimeRange(c *fiber.Ctx) (stats.TimeRange, error) {
+	from := c.Query("from", "")
+	if from == "" {
+		return stats.TimeRange{}, fiber.NewError(fiber.StatusBadRequest, "query parameter 'from' is missing")
+	}
+	to := c.Query("to", "")
+	if to == "" {
+		return stats.TimeRange{}, fiber.NewError(fiber.StatusBadRequest, "query parameter 'to' is missing")
+	}
+
+	fromTime, err := timexpr.Parse(from)
+	if err != nil {
+		return stats.TimeRange{}, fiber.NewError(fiber.StatusBadRequest, "invalid query parameter 'from'")
+	}
+	toTime, err := timexpr.Parse(to)
+	if err != nil {
+		return stats.TimeRange{}, fiber.NewError(fiber.StatusBadRequest, "invalid query parameter 'to'")
+	}
+
+	if toTime.Sub(fromTime) < time.Duration(0) {
+		return stats.TimeRange{}, fiber.NewError(fiber.StatusBadRequest, "'from' date must be before 'to' date")
+	}
+
+	return stats.TimeRange{
+		Start: fromTime,
+		Dur:   toTime.Sub(fromTime),
+	}, nil
 }

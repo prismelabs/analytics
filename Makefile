@@ -70,7 +70,6 @@ lint/fix:
 
 .PHONY: codegen
 codegen: ./pkg/embedded/static/wa.js
-	go generate ./...
 
 ./pkg/embedded/static/wa.js: ./tracker/web_analytics.js
 	minify --js-version 2019 $^ > $@
@@ -93,8 +92,8 @@ test/integ: .env
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.default.yml \
 		up --wait
-	source ./.env && go test -v -race -p 1 -run TestInteg ./...
-	source ./.env && go test -v -p 1 -run TestIntegNoRaceDetector ./...
+	source ./.env && go test -tags chdb -v -race -p 1 -run TestInteg ./...
+	source ./.env && go test -tags chdb -v -p 1 -run TestIntegNoRaceDetector ./...
 	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.default.yml \
 		down --volumes --remove-orphans
