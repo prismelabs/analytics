@@ -292,7 +292,7 @@ func main() {
 		)
 
 		app.Use("/api/v1/stats/*", middlewares.StatsCors(prismeCfg))
-		app.Get("/api/v1/stats/batch", handlers.GetStatsBatch(stats))
+		app.Get("/api/v1/stats/batch", handlers.GetStatsBatch(stats, logger))
 	}
 
 	// Admin and profiling server.

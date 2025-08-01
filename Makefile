@@ -44,7 +44,7 @@ clean:
 
 .PHONY: lint
 lint: codegen
-	golangci-lint run --timeout 2m ./...
+	golangci-lint run --allow-parallel-runners --timeout 2m ./...
 	$(MAKE) -C ./tests lint
 
 .PHONY: lint/fix

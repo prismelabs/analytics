@@ -134,7 +134,6 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 			t.Run("MultipleEvents/Pageviews/Custom/OutboundLinkClick", func(t *testing.T) {
 				forEachEventDb(t, cfg, func(t *testing.T, store Service, db eventdb.Service, promRegistry *prometheus.Registry) {
-
 					testStartTime := time.Now().UTC()
 					// Store events.
 					sessionsCount := 10
@@ -153,7 +152,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 						// Pageview to create entry in sessions table.
 						eventTime := time.Now().UTC().Round(time.Second)
-						err := service.StorePageView(context.Background(), &event.PageView{
+						err := store.StorePageView(context.Background(), &event.PageView{
 							Timestamp: eventTime,
 							PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
 							Session:   session,
@@ -162,7 +161,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 						// Custom event associated to the same session.
 						eventTime = time.Now().UTC().Round(time.Second)
-						err = service.StoreCustom(context.Background(), &event.Custom{
+						err = store.StoreCustom(context.Background(), &event.Custom{
 							Timestamp: eventTime,
 							PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
 							Session:   session,
@@ -173,7 +172,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 						require.NoError(t, err)
 
 						eventTime = time.Now().UTC().Round(time.Second)
-						err = service.StoreOutboundLinkClick(context.Background(), &event.OutboundLinkClick{
+						err = store.StoreOutboundLinkClick(context.Background(), &event.OutboundLinkClick{
 							Timestamp: eventTime,
 							PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
 							Session:   session,
@@ -182,7 +181,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 						require.NoError(t, err)
 
 						eventTime = time.Now().UTC().Round(time.Second)
-						err = service.StoreFileDownload(context.Background(), &event.FileDownload{
+						err = store.StoreFileDownload(context.Background(), &event.FileDownload{
 							Timestamp: eventTime,
 							PageUri:   testutils.Must(uri.Parse)("http://mywebsite.localhost/"),
 							Session:   session,
@@ -196,7 +195,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 					// Ensure pageviews events are stored.
 					{
-						row, err := service.Query(
+						row, err := db.Query(
 							context.Background(),
 							"SELECT COUNT(*) FROM prisme.pageviews WHERE timestamp >= ? AND session_uuid IN (SELECT session_uuid FROM prisme.sessions WHERE visitor_id = 'multipleEventsTestCase')",
 							testStartTime.Unix(),
@@ -212,7 +211,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 					// Ensure custom events are stored.
 					{
-						row, err := service.Query(
+						row, err := db.Query(
 							context.Background(),
 							"SELECT COUNT(*) FROM prisme.events_custom WHERE timestamp >= ? AND session_uuid IN (SELECT session_uuid FROM prisme.sessions WHERE visitor_id = 'multipleEventsTestCase')",
 							testStartTime.Unix(),
