@@ -6,10 +6,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/analytics/pkg/handlers/utils"
+	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/stats"
 )
 
-func GetStatsBatch(srv stats.Service) fiber.Handler {
+func GetStatsBatch(srv stats.Service, logger log.Logger) fiber.Handler {
 	type DataFrame struct {
 		Timestamps []int64  `json:"timestamps"`
 		Values     []uint64 `json:"values"`
@@ -40,10 +41,13 @@ func GetStatsBatch(srv stats.Service) fiber.Handler {
 		}
 
 		batch := srv.Begin(c.Context(), timeRange, stats.Filters{})
-		defer batch.Close()
+		defer func() {
+			err = batch.Close()
+			logger.Err("failed to close statistics batch", err)
+		}()
 
 		// Compute metrics.
-		for m, _ := range metrics {
+		for m := range metrics {
 			var df stats.DataFrame[uint64]
 			switch m {
 			case "bounces":

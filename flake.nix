@@ -78,6 +78,7 @@
                 ++ (with self.packages.${system}; [ libchdb ]);
 
               LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
+              GOFLAGS = "-tags=chdb";
             };
           };
           packages = rec {
