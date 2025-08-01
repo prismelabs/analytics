@@ -65,12 +65,11 @@
               buildInputs =
                 (with pkgs; [
                   go
-                  mockgen # Go mock generator
+                  air # FS watcher / Live reload
                   gopls # Go LSP
                   golangci-lint # Go linter
                   go-migrate # Go SQL migration
                   bunyan-rs # Bunyan format pretty print
-                  entr # FS watcher
                   bun # Bun JS runtime
                   minify # JS minifier
                   clickhouse # clickhouse client

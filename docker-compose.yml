@@ -13,7 +13,7 @@ services:
     environment:
       CLICKHOUSE_USER: "clickhouse"
       CLICKHOUSE_PASSWORD: "password"
-      CLICKHOUSE_DB: "${PRISME_CLICKHOUSE_DB}"
+      CLICKHOUSE_DB: "${PRISME_CLICKHOUSE_DB:-prisme}"
     networks:
       default:
         aliases:
@@ -44,5 +44,5 @@ services:
           - "grafana.localhost"
 
 volumes:
-  grafana_data:
   clickhouse_data:
+  grafana_data:
