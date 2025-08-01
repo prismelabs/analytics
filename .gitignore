@@ -5,10 +5,8 @@
 # .env generator script.
 config/genenv.local.sh
 
-node_modules/
-
 # gomock
 *_mock_test.go
 
-# Python virtual env
-streamlit/.venv/
+# Tmp file
+tmp/

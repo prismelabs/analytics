@@ -7,57 +7,40 @@ GENENV_FILE ?= ./config/genenv.local.sh
 
 COMPOSE_PROJECT_NAME ?= $(notdir $(CURDIR))
 
-.PHONY: start
-start: start/prisme
+GO ?= go
+TMPDIR := ./tmp
 
-start/%: .env
-	$(MAKE) go/build/$*
-	source ./.env \
+default: start
+
+.PHONY: start
+start: tmp/.env tmp/prisme
+	source ./tmp/.env \
 	&& $(DOCKER_COMPOSE) \
-		-f ./docker-compose.$${PRISME_MODE}.yml \
+		-f ./docker-compose.yml \
 		up --wait
-	$(DOCKER_COMPOSE) \
-		-f ./docker-compose.dev.yml \
-		down
-	-source ./.env \
-	&& $(DOCKER_COMPOSE) \
-		-f ./docker-compose.dev.yml \
-		up --wait --force-recreate
-	$(DOCKER) logs -f $(COMPOSE_PROJECT_NAME)-prisme-1 |& bunyan
+	source ./tmp/.env \
+		&& air --build.cmd '$(MAKE) tmp/prisme' --build.bin './tmp/prisme' \
+		|& bunyan
 
 .PHONY: stop
 stop:
 	$(DOCKER_COMPOSE) \
-		-f ./docker-compose.dev.yml \
-		-f ./docker-compose.default.yml \
-		-f ./docker-compose.ingestion.yml \
+		-f ./docker-compose.yml \
 		stop
 
 .PHONY: down
 down:
 	$(DOCKER_COMPOSE) \
-		-f ./docker-compose.dev.yml \
-		-f ./docker-compose.default.yml \
-		-f ./docker-compose.ingestion.yml \
+		-f ./docker-compose.yml \
 		down
 
 .PHONY: clean
-clean: .env
-	source ./.env && rm -rf $$PRISME_CHDB_PATH
-	$(DOCKER_COMPOSE) \
-		-f ./docker-compose.dev.yml \
-		-f ./docker-compose.default.yml \
-		-f ./docker-compose.ingestion.yml \
+clean:
+	-test -f tmp/.env && source tmp/.env && rm -rf $$PRISME_CHDB_PATH
+	-$(DOCKER_COMPOSE) \
+		-f ./docker-compose.yml \
 		 down --volumes --remove-orphans
-	rm -f .env
-
-watch/%:
-	# When a new file is added, you must rerun make watch/...
-	find '(' -regex '.*\.go$$' -or -regex '.*docker-compose.*' ')' \
-		-and -not -regex '.*_test.go' \
-		-and -not -regex '.*_gen.go' \
-		-and -not -regex '.*/tests/.*' | \
-		entr -n -r sh -c "$(MAKE) $*"
+	rm -rf tmp/
 
 .PHONY: lint
 lint: codegen
@@ -80,22 +63,27 @@ $(GENENV_FILE):
 	@chmod +x $(GENENV_FILE)
 	@echo "$(GENENV_FILE) generated, you can edit it!"
 
-.env: $(GENENV_FILES) $(GENENV_FILE)
-	bash $(GENENV_FILE) > .env; \
+tmp/.env: tmp/ $(GENENV_FILES) $(GENENV_FILE)
+	bash $(GENENV_FILE) > tmp/.env; \
+
+tmp/prisme: go/build/prisme
+
+tmp/:
+	mkdir -p tmp/
 
 .PHONY: test/unit
 test/unit: codegen
 	go test -v -tags assert -short -race -bench=./... -benchmem ./...
 
 .PHONY: test/integ
-test/integ: .env
+test/integ: tmp/.env
 	$(DOCKER_COMPOSE) \
-		-f ./docker-compose.default.yml \
+		-f ./docker-compose.yml \
 		up --wait
-	source ./.env && go test -tags chdb -v -race -p 1 -run TestInteg ./...
-	source ./.env && go test -tags chdb -v -p 1 -run TestIntegNoRaceDetector ./...
+	source ./tmp/.env && go test -tags chdb -v -race -p 1 -run TestInteg ./...
+	source ./tmp/.env && go test -tags chdb -v -p 1 -run TestIntegNoRaceDetector ./...
 	$(DOCKER_COMPOSE) \
-		-f ./docker-compose.default.yml \
+		-f ./docker-compose.yml \
 		down --volumes --remove-orphans
 
 .PHONY: test/e2e
@@ -109,7 +97,7 @@ tests/%: FORCE
 go/build: go/build/prisme
 
 go/build/%: FORCE codegen
-	go build -o prisme -race ./cmd/$*
+	$(GO) build -o ./tmp/$* -race ./cmd/$*
 
 .PHONY: nix/build
 nix/build:
