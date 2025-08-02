@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+	--color-grafana-blue: #488fdc;
+	--color-grafana-purple: #a163d0;
+}
+
+:root {
+	--system-bg: #FAFAFE;
+	--system-fg: #333;
+
+	--font-sans: Inter, Arial, Helvetica, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--system-bg: #2C324B;
+		--system-fg: #EEF;
+	}
+}
+
+@theme {
+	--color-system-bg: var(--system-bg);
+	--color-system-fg: var(--system-fg);
+}
+
+.world-map .country {
+	@apply transition-colors duration-400;
+}
+
+.world-map .country:hover {
+	@apply fill-violet-400;
+}

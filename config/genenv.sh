@@ -15,7 +15,7 @@ setenv PRISME_TRUST_PROXY "false"
 
 # CHDB eventstore backend
 # setenv PRISME_EVENTSTORE_BACKEND "chdb"
-setenv PRISME_CHDB_PATH "/tmp/prisme/chdb"
+setenv PRISME_CHDB_PATH "/tmp/prisme-chdb"
 
 # Clickhouse related options.
 setenv PRISME_CLICKHOUSE_TLS "false"
@@ -31,3 +31,6 @@ setenv PRISME_ORIGIN_REGISTRY_ORIGINS "localhost,mywebsite.localhost,foo.mywebsi
 setenv PRISME_GRAFANA_URL "http://grafana.localhost:3000"
 setenv PRISME_GRAFANA_USER "admin"
 setenv PRISME_GRAFANA_PASSWORD "admin"
+
+# Front / vitejs
+setenv NODE_ENV "production"
