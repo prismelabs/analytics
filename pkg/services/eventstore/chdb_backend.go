@@ -15,6 +15,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/chdb"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/eventdb"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
 )
 
 func init() {
@@ -26,11 +27,18 @@ type chdbBackend struct {
 	eventBatches [maxEventKind]*batch
 }
 
-func newChDbBackend(db eventdb.Service) backend {
-	return &chdbBackend{
+func newChDbBackend(db eventdb.Service, teardown teardown.Service) backend {
+	b := &chdbBackend{
 		chdb:         db.Driver().(chdb.ChDb),
 		eventBatches: [maxEventKind]*batch{},
 	}
+
+	teardown.RegisterProcedure(func() error {
+		workDir := path.Join(os.TempDir(), "prisme-"+strconv.Itoa(os.Getpid()))
+		return os.RemoveAll(workDir)
+	})
+
+	return b
 }
 
 var (
@@ -39,25 +47,29 @@ var (
 		// sessions table engine is VersionedCollapsedMergeTree so we can
 		// keep appending row with the same Session UUID.
 		// See https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/versionedcollapsingmergetree
-		pageviewEventKind:          "sessions",
+		pageviewEventKind:          "sessions_versionned",
 		customEventKind:            "events_custom",
 		fileDownloadEventKind:      "file_downloads",
 		outboundLinkClickEventKind: "outbound_link_clicks",
 	}
 )
 
+func (cb *chdbBackend) workDir() string {
+	return path.Join(os.TempDir(), "prisme-"+strconv.Itoa(os.Getpid()), "eventstore")
+}
+
 // prepareBatch implements backend.
 func (cb *chdbBackend) prepareBatch() error {
-	pipeDir := path.Join(os.TempDir(), "prisme-"+strconv.Itoa(os.Getpid()))
+	workDir := cb.workDir()
 
-	err := os.MkdirAll(pipeDir, os.ModePerm)
+	err := os.MkdirAll(workDir, os.ModePerm)
 	if err != nil {
-		return fmt.Errorf("failed to create prisme tmp directory %s: %w", pipeDir, err)
+		return fmt.Errorf("failed to create event store work directory %s: %w", workDir, err)
 	}
 
-	for i := 0; i < int(maxEventKind); i++ {
-		pipePath := path.Join(pipeDir, eventKindTable[i])
-		cb.eventBatches[i], err = newBatch(cb.chdb, pipePath, "insert into "+eventKindTable[i]+" from infile '"+pipePath+"' FORMAT JSONEachRow")
+	for i := range int(maxEventKind) {
+		filePath := path.Join(workDir, eventKindTable[i])
+		cb.eventBatches[i], err = newBatch(cb.chdb, filePath, "insert into "+eventKindTable[i]+" from infile '"+filePath+"' FORMAT JSONEachRow")
 		if err != nil {
 			return err
 		}
@@ -186,11 +198,10 @@ type batch struct {
 	encoder *json.Encoder
 }
 
-func newBatch(chdb chdb.ChDb, pipePath, query string) (*batch, error) {
-	_ = os.Remove(pipePath)
-	f, err := os.OpenFile(pipePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+func newBatch(chdb chdb.ChDb, filePath, query string) (*batch, error) {
+	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open fifo file %s: %w", pipePath, err)
+		return nil, fmt.Errorf("failed to open file %s: %w", filePath, err)
 	}
 
 	return &batch{
