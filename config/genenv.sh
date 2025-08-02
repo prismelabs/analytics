@@ -31,3 +31,6 @@ setenv PRISME_ORIGINS "localhost,mywebsite.localhost,foo.mywebsite.localhost"
 setenv PRISME_GRAFANA_URL "http://grafana.localhost:3000"
 setenv PRISME_GRAFANA_USER "admin"
 setenv PRISME_GRAFANA_PASSWORD "admin"
+
+# Front / vitejs
+setenv NODE_ENV "production"

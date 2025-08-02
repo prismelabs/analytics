@@ -1,0 +1,36 @@
+{
+  "tasks": {
+    "dev": "deno run -A --node-modules-dir npm:vite",
+    "build": "deno run -A --node-modules-dir npm:vite build",
+    "preview": "deno run -A --node-modules-dir npm:vite preview",
+    "serve": "deno run --allow-net --allow-read jsr:@std/http@1/file-server dist/"
+  },
+  "compilerOptions": {
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "imports": {
+    "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.5",
+    "@headlessui/react": "npm:@headlessui/react@^2.2.7",
+    "@heroicons/react": "npm:@heroicons/react@^2.2.0",
+    "@preact/preset-vite": "npm:@preact/preset-vite@^2.10.2",
+    "@preact/signals": "npm:@preact/signals@^2.2.1",
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.11",
+    "preact": "npm:preact@^10.26.9",
+    "tailwindcss": "npm:tailwindcss@^4.1.11",
+    "uplot": "npm:uplot@^1.6.32",
+    "uplot-react": "npm:uplot-react@^1.2.4",
+    "vite": "npm:vite@^7.0.0",
+    "@/": "./src/"
+  },
+  "scopes": {
+    "uplot-react": {
+      "react": "npm:preact@^10.26.9/compat"
+    }
+  }
+}
