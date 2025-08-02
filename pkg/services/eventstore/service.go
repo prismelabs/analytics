@@ -27,7 +27,7 @@ type Service interface {
 	StoreFileDownload(context.Context, *event.FileDownload) error
 }
 
-var backendsFactory = map[string]func(eventdb.Service) backend{}
+var backendsFactory = map[string]func(eventdb.Service, teardown.Service) backend{}
 
 type service struct {
 	logger          log.Logger
@@ -50,13 +50,13 @@ func NewService(
 	db eventdb.Service,
 	logger log.Logger,
 	promRegistry *prometheus.Registry,
-	teardownService teardown.Service,
+	teardown teardown.Service,
 ) (Service, error) {
 	fact := backendsFactory[db.DriverName()]
 	if fact == nil {
 		return nil, fmt.Errorf("unsupported event store backend %v", db.DriverName())
 	}
-	backend := fact(db)
+	backend := fact(db, teardown)
 
 	batchDone := make(chan struct{})
 	logger = logger.With(
@@ -71,7 +71,7 @@ func NewService(
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Cancel them on teardown.
-	teardownService.RegisterProcedure(func() error {
+	teardown.RegisterProcedure(func() error {
 		logger.Info("cancelling event batch loops...")
 		cancel()
 		// Wait for last batch to be sent.
