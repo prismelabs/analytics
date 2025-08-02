@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --color-grafana-blue: #488fdc;
+  --color-grafana-purple: #a163d0;
+}
+
+:root {
+  --page-bg: var(--color-violet-100);
+  --page-fg: #A6A;
+  --system-bg: #FAFAFE;
+  --system-fg: #333;
+
+  --font-sans: Inter, Arial, Helvetica, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page-bg: #1F2537;
+    --page-fg: #CCF;
+    --system-bg: #2C324B;
+    --system-fg: #EEF;
+  }
+}
+
+@theme {
+  --color-page-bg: var(--page-bg);
+  --color-page-fg: var(--page-fg);
+  --color-system-bg: var(--system-bg);
+  --color-system-fg: var(--system-fg);
+}
+
+.world-map .country {
+  @apply transition-colors duration-400;
+}
+
+.world-map .country:hover {
+  @apply fill-violet-400;
+}
