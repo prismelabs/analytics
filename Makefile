@@ -35,7 +35,6 @@ down:
 
 .PHONY: clean
 clean:
-	-test -f tmp/.env && source tmp/.env && rm -rf $$PRISME_CHDB_PATH
 	-$(DOCKER_COMPOSE) \
 		-f ./docker-compose.yml \
 		 down --volumes --remove-orphans

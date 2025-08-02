@@ -11,6 +11,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/retry"
 	"github.com/prismelabs/analytics/pkg/services/eventdb"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
 )
 
 type clickhouseBackend struct {
@@ -22,7 +23,7 @@ func init() {
 	backendsFactory["clickhouse"] = newClickhouseBackend
 }
 
-func newClickhouseBackend(db eventdb.Service) backend {
+func newClickhouseBackend(db eventdb.Service, _ teardown.Service) backend {
 	return &clickhouseBackend{
 		ch:           db.Driver().(clickhouse.Ch),
 		eventBatches: [maxEventKind]driver.Batch{},
