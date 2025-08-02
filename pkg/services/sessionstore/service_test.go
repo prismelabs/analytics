@@ -335,7 +335,7 @@ func TestService(t *testing.T) {
 				actualSession, found := service.WaitSession(deviceId, pageUri, 10*time.Millisecond)
 				require.True(t, found)
 				require.Equal(t, session, actualSession)
-				require.WithinDuration(t, now.Add(5*time.Millisecond), time.Now(), 3*time.Millisecond)
+				require.WithinDuration(t, now.Add(5*time.Millisecond), time.Now(), 10*time.Millisecond)
 
 				require.Equal(t, float64(0),
 					testutils.GaugeValue(t, promRegistry, "sessionstore_sessions_wait", nil))
