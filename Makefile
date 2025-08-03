@@ -9,17 +9,24 @@ COMPOSE_PROJECT_NAME ?= $(notdir $(CURDIR))
 
 GO ?= go
 
-default: start
+default: start/prisme
 
-.PHONY: start
-start: tmp/.env tmp/prisme
+.PHONY: start/prisme
+start/prisme: tmp/.env tmp/prisme
 	source ./tmp/.env \
 	&& $(DOCKER_COMPOSE) \
 		-f ./docker-compose.yml \
-		up --wait
+		up --wait \
+	&& air --build.cmd '$(MAKE) tmp/prisme' --build.bin './tmp/prisme' \
+	|& bunyan
+
+.PHONY: start/addevents
+start/addevents: tmp/.env
 	source ./tmp/.env \
-		&& air --build.cmd '$(MAKE) tmp/prisme' --build.bin './tmp/prisme' \
-		|& bunyan
+	&& $(DOCKER_COMPOSE) \
+		-f ./docker-compose.yml \
+		up --wait \
+	&& $(GO) run ./cmd/addevents |& bunyan
 
 .PHONY: stop
 stop:

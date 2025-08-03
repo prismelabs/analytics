@@ -18,7 +18,7 @@ import (
 
 // NewApp returns a new App.
 func NewApp(logger log.Logger, cfg Config, source source.Driver, teardown teardown.Service) App {
-	f := configue.New("", configue.ContinueOnError, configue.NewEnv("PRISME"), configue.NewFlag())
+	f := configue.New("", configue.PanicOnError, configue.NewEnv("PRISME"), configue.NewFlag())
 
 	var clickhouseCfg clickhouse.Config
 	clickhouseCfg.RegisterOptions(f)
@@ -26,6 +26,11 @@ func NewApp(logger log.Logger, cfg Config, source source.Driver, teardown teardo
 	err := f.Parse()
 	if err != nil {
 		logger.Fatal("failed to parse options", err)
+	}
+
+	err = clickhouseCfg.Validate()
+	if err != nil {
+		logger.Fatal("invalid clickhouse config: %v", err)
 	}
 
 	return App{
@@ -77,7 +82,7 @@ func (a App) executeScenario(worker func(time.Time, Config, chan<- any) uint64) 
 		goPoolCh <- func() {
 			// Poll events and append them to the batch.
 			for totalEvents.Load() < a.cfg.TotalEvents {
-				sessionsBatch, err := a.ch.PrepareBatch(context.Background(), "INSERT INTO prisme.sessions")
+				sessionsBatch, err := a.ch.PrepareBatch(context.Background(), "INSERT INTO prisme.sessions_versionned")
 				if err != nil {
 					a.logger.Fatal("failed to prepare sessions batch", err)
 				}
@@ -136,7 +141,7 @@ func (a App) executeScenario(worker func(time.Time, Config, chan<- any) uint64) 
 func goPool(goroutines int) chan<- func() {
 	ch := make(chan func(), goroutines)
 
-	for i := 0; i < goroutines; i++ {
+	for range goroutines {
 		go func() {
 			for {
 				task := <-ch
