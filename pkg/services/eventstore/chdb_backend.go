@@ -47,7 +47,7 @@ var (
 		// sessions table engine is VersionedCollapsedMergeTree so we can
 		// keep appending row with the same Session UUID.
 		// See https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/versionedcollapsingmergetree
-		pageviewEventKind:          "sessions_versionned",
+		pageviewEventKind:          "sessions",
 		customEventKind:            "events_custom",
 		fileDownloadEventKind:      "file_downloads",
 		outboundLinkClickEventKind: "outbound_link_clicks",

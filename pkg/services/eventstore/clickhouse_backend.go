@@ -33,11 +33,11 @@ func newClickhouseBackend(db eventdb.Service, _ teardown.Service) backend {
 // prepareBatch implements backend.
 func (cb *clickhouseBackend) prepareBatch() error {
 	queries := [maxEventKind]string{
-		// pageviews table is a materialized view derived from sessions_versionned
-		// table. sessions_versionned table engine is VersionedCollapsedMergeTree so we can
-		// keep appending row with the same Session UUID.
+		// pageviews table is a materialized view derived from sessions table.
+		// sessions table engine is VersionedCollapsedMergeTree so we can keep
+		// appending row with the same Session UUID.
 		// See https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/versionedcollapsingmergetree
-		pageviewEventKind:          "INSERT INTO sessions_versionned",
+		pageviewEventKind:          "INSERT INTO sessions",
 		customEventKind:            "INSERT INTO events_custom",
 		fileDownloadEventKind:      "INSERT INTO file_downloads",
 		outboundLinkClickEventKind: "INSERT INTO outbound_link_clicks",
