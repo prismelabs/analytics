@@ -40,7 +40,7 @@ func GetStatsBatch(srv stats.Service, logger log.Logger) fiber.Handler {
 			return err
 		}
 
-		batch := srv.Begin(c.Context(), timeRange, stats.Filters{})
+		batch := srv.Begin(c.UserContext(), timeRange, stats.Filters{})
 		defer func() {
 			err = batch.Close()
 			logger.Err("failed to close statistics batch", err)
