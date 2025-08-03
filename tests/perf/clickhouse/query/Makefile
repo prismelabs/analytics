@@ -34,7 +34,7 @@ test:
 			--format Pretty --database "$$PRISME_CLICKHOUSE_DB" \
 			-q "$$(bash "$$query") LIMIT 10" \
 		&& $(DOCKER) exec ${COMPOSE_PROJECT_NAME}-clickhouse-1 clickhouse-benchmark \
-			--database "$$PRISME_CLICKHOUSE_DB" -i 10 -q "$$(bash "$$query")"; \
+			--database "$$PRISME_CLICKHOUSE_DB" -i 3 -q "$$(bash "$$query")"; \
 	done
 
 .PHONY: clean
