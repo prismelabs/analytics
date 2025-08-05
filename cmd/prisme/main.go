@@ -41,6 +41,16 @@ func main() {
 	// Setup configuration loader.
 	env := configue.NewEnv("PRISME")
 	figue := configue.New("", configue.ContinueOnError, env, configue.NewFlag())
+	figue.Usage = func() {
+		_, _ = fmt.Fprintln(figue.Output(), "prisme - High-perfomance, self-hosted and privacy-focused web analytics service.")
+		_, _ = fmt.Fprintln(figue.Output())
+		_, _ = fmt.Fprintln(figue.Output(), "Usage:")
+		_, _ = fmt.Fprintln(figue.Output(), "  prisme [flags]")
+		_, _ = fmt.Fprintln(figue.Output())
+		_, _ = fmt.Fprintln(figue.Output(), "  prisme -eventdb-driver chdb -chdb-path ./prisme -origins 'localhost,prismeanalytics.com'")
+		_, _ = fmt.Fprintln(figue.Output())
+		figue.PrintDefaults()
+	}
 	var (
 		prismeCfg         prisme.Config
 		chdbCfg           chdb.Config
@@ -65,10 +75,6 @@ func main() {
 	// Load configuration.
 	err := figue.Parse()
 	if errors.Is(err, flag.ErrHelp) {
-		fmt.Fprintln(os.Stderr)
-		// `flag` package print usage on flag.ErrHelp so we just prints environment
-		// variable defaults.
-		env.PrintDefaults()
 		return
 	}
 	if err != nil {
@@ -337,7 +343,10 @@ func main() {
 }
 
 func cliError(figue *configue.Figue, err error) {
-	fmt.Fprintln(os.Stderr, err.Error())
-	figue.PrintDefaults()
+	_, _ = fmt.Fprintln(figue.Output(), "Error:", err.Error())
+	_, _ = fmt.Fprintln(figue.Output())
+	_, _ = fmt.Fprintln(figue.Output(), "Usage: prisme [flags]")
+	_, _ = fmt.Fprintln(figue.Output())
+	_, _ = fmt.Fprintln(figue.Output(), "Run 'prisme -h' for more information.")
 	os.Exit(1)
 }
