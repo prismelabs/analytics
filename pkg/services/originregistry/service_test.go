@@ -23,9 +23,17 @@ func TestEnvVarService(t *testing.T) {
 		})
 
 		t.Run("Registered", func(t *testing.T) {
-			service := NewService(Config{Origins: "example.org,example.com"}, logger)
+			service := NewService(Config{Origins: "example.org,example.com, example.io"}, logger)
 
 			isRegistered, err := service.IsOriginRegistered(ctx, "example.com")
+			require.NoError(t, err)
+			require.True(t, isRegistered)
+
+			isRegistered, err = service.IsOriginRegistered(ctx, "example.org")
+			require.NoError(t, err)
+			require.True(t, isRegistered)
+
+			isRegistered, err = service.IsOriginRegistered(ctx, "example.io")
 			require.NoError(t, err)
 			require.True(t, isRegistered)
 		})

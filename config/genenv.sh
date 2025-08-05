@@ -25,7 +25,7 @@ setenv PRISME_CLICKHOUSE_USER "clickhouse"
 setenv PRISME_CLICKHOUSE_PASSWORD "password"
 
 # Origin registry options.
-setenv PRISME_ORIGIN_REGISTRY_ORIGINS "localhost,mywebsite.localhost,foo.mywebsite.localhost"
+setenv PRISME_ORIGINS "localhost,mywebsite.localhost,foo.mywebsite.localhost"
 
 # Grafana related options.
 setenv PRISME_GRAFANA_URL "http://grafana.localhost:3000"
