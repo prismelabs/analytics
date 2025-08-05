@@ -15,7 +15,7 @@ setenv PRISME_TRUST_PROXY "false"
 
 # CHDB eventstore backend
 # setenv PRISME_EVENTSTORE_BACKEND "chdb"
-setenv PRISME_CHDB_PATH "/tmp/prisme/chdb"
+setenv PRISME_CHDB_PATH "$PWD/tmp/chdb"
 
 # Clickhouse related options.
 setenv PRISME_CLICKHOUSE_TLS "false"
