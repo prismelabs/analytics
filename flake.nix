@@ -34,13 +34,18 @@
 
               subPackages = "./cmd/prisme";
             };
-          buildPrismeDocker =
+          dockerBuildPrisme =
             prisme: extraEnv:
             pkgs.dockerTools.buildImage {
               name = "prismelabs/analytics";
               tag = "dev";
 
-              copyToRoot = [ pkgs.cacert ];
+              copyToRoot = with pkgs; [
+                cacert
+                bash
+                coreutils
+                bunyan-rs
+              ];
               runAsRoot = ''
                 #!${pkgs.runtimeShell}
                 mkdir -p /app
@@ -87,8 +92,8 @@
             prisme = buildPrisme [ ];
             prisme-chdb = buildPrisme [ "chdb" ];
 
-            docker = buildPrismeDocker prisme [ ];
-            docker-chdb = buildPrismeDocker prisme-chdb [
+            docker = dockerBuildPrisme prisme [ ];
+            docker-chdb = dockerBuildPrisme prisme-chdb [
               "CHDB_LIB_PATH=${libchdb}/lib/libchdb.so"
             ];
 
