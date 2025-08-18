@@ -61,7 +61,7 @@ func NewService(
 	batchDone := make(chan struct{})
 	logger = logger.With(
 		"service", "eventstore",
-		"backend", db.DriverName(),
+		"driver", db.DriverName(),
 		"ring_buffers_factor", cfg.RingBuffersFactor,
 		"max_batch_size", cfg.MaxBatchSize,
 		"max_batch_timeout", cfg.MaxBatchTimeout,
@@ -99,7 +99,7 @@ func NewService(
 
 	go service.batchLoop(ctx, batchDone)
 
-	logger.Info("event store configured", "backend", backend)
+	logger.Info("event store configured", "driver", db.DriverName())
 
 	return service, nil
 }

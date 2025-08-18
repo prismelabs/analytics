@@ -181,7 +181,7 @@ func main() {
 	if err != nil {
 		cliError(figue, err)
 	}
-	stats := stats.NewService(eventDb)
+	stats := stats.NewService(eventDb, teardownService)
 	uaParser := uaparser.NewService(logger, promRegistry)
 	ipGeolocator := ipgeolocator.NewMmdbService(logger, promRegistry)
 	saltManager := saltmanager.NewService(logger)
@@ -298,7 +298,15 @@ func main() {
 		)
 
 		app.Use("/api/v1/stats/*", middlewares.StatsCors(prismeCfg))
-		app.Get("/api/v1/stats/batch", handlers.GetStatsBatch(stats, logger))
+		app.Get("/api/v1/stats/bounces", handlers.GetStatsBounces(stats))
+		app.Get("/api/v1/stats/visitors", handlers.GetStatsVisitors(stats))
+		app.Get("/api/v1/stats/sessions", handlers.GetStatsSessions(stats))
+		app.Get("/api/v1/stats/sessions-duration", handlers.GetStatsSessionsDuration(stats))
+		app.Get("/api/v1/stats/pageviews", handlers.GetStatsPageViews(stats))
+		app.Get("/api/v1/stats/live-visitors", handlers.GetStatsLiveVisitors(stats))
+		app.Get("/api/v1/stats/top-pages", handlers.GetStatsTopPages(stats))
+		app.Get("/api/v1/stats/top-entry-pages", handlers.GetStatsTopEntryPages(stats))
+		app.Get("/api/v1/stats/top-exit-pages", handlers.GetStatsTopExitPages(stats))
 	}
 
 	// Admin and profiling server.

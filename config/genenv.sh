@@ -11,10 +11,14 @@ setenv PRISME_MODE "default"
 setenv PRISME_ACCESS_LOG "/dev/stdout"
 setenv PRISME_DEBUG "true"
 setenv PRISME_PORT "8000"
+setenv VITE_PRISME_PORT "8000"
 setenv PRISME_TRUST_PROXY "false"
 
+# Allow everyone to access /api/*/stats/* resources.
+setenv PRISME_API_STATS_ALLOW_ORIGINS "*"
+
 # CHDB eventstore backend
-# setenv PRISME_EVENTSTORE_BACKEND "chdb"
+# setenv PRISME_EVENTDB_DRIVER "chdb"
 setenv PRISME_CHDB_PATH "$PWD/tmp/chdb"
 
 # Clickhouse related options.
@@ -31,6 +35,3 @@ setenv PRISME_ORIGINS "localhost,mywebsite.localhost,foo.mywebsite.localhost"
 setenv PRISME_GRAFANA_URL "http://grafana.localhost:3000"
 setenv PRISME_GRAFANA_USER "admin"
 setenv PRISME_GRAFANA_PASSWORD "admin"
-
-# Front / vitejs
-setenv NODE_ENV "production"

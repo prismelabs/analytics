@@ -3,21 +3,46 @@ package stats
 import (
 	"context"
 	"fmt"
-	"math/rand/v2"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/prismelabs/analytics/pkg/services/eventdb"
+	"github.com/prismelabs/analytics/pkg/services/teardown"
 )
 
-// Filters define statistics options.
+// Service define a statistics service.
+type Service interface {
+	Visitors(context.Context, Filters) (DataFrame[time.Time, uint64], error)
+	Sessions(context.Context, Filters) (DataFrame[time.Time, uint64], error)
+	SessionsDuration(context.Context, Filters) (DataFrame[time.Time, uint64], error)
+	PageViews(context.Context, Filters) (DataFrame[time.Time, uint64], error)
+	LiveVisitors(context.Context, Filters) (DataFrame[time.Time, uint64], error)
+	Bounces(context.Context, Filters) (DataFrame[time.Time, uint64], error)
+	TopPages(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
+	TopEntryPages(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
+	TopExitPages(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
+}
+
+// DataFrame defines a columnar view over timestamped data.
+type DataFrame[K, V any] struct {
+	Keys   []K
+	Values []V
+}
+
+// TimeRange define an interval of time.
+type TimeRange struct {
+	Start time.Time
+	Dur   time.Duration
+}
+
+// Filters defines supported query filters.
 type Filters struct {
+	TimeRange       TimeRange
 	Domain          []string
 	Path            []string
 	EntryPath       []string
 	ExitPath        []string
-	Referrals       []string
+	Referrers       []string
 	OperatingSystem []string
 	BrowserFamily   []string
 	Country         []string
@@ -28,223 +53,286 @@ type Filters struct {
 	UtmContent      []string
 }
 
-// TimeRange define an interval of time.
-type TimeRange struct {
-	Start time.Time
-	Dur   time.Duration
-}
-
-// Service define a statistics service.
-type Service interface {
-	Begin(context.Context, TimeRange, Filters) Batch
-}
-
-// DataFrame defines a columnar view over timestamped data.
-type DataFrame[T any] struct {
-	Timestamps []time.Time
-	Values     []T
-}
-
-type Batch interface {
-	Visitors() (DataFrame[uint64], error)
-	Sessions() (DataFrame[uint64], error)
-	PageViews() (DataFrame[uint64], error)
-	LiveVisitors() (DataFrame[uint64], error)
-	Bounces() (DataFrame[uint64], error)
-	Close() error
-}
-
 type service struct {
 	db eventdb.Service
 }
 
-type batch struct {
-	tablePrefix string
-	ctx         context.Context
-	db          eventdb.Service
-	timeRange   TimeRange
-	filters     Filters
-}
-
 // NewService returns a new Service.
-func NewService(db eventdb.Service) Service {
-	return &service{db}
+func NewService(
+	db eventdb.Service,
+	teardown teardown.Service,
+) Service {
+	return &service{db: db}
 }
 
-// Begin implements Service.
-func (s *service) Begin(ctx context.Context, timeRange TimeRange, filters Filters) Batch {
-	return &batch{"", ctx, s.db, timeRange, filters}
-}
-
-// Bounces implements Batch.
-func (b *batch) Bounces() (DataFrame[uint64], error) {
-	tab, err := b.sessionTable()
-	if err != nil {
-		return DataFrame[uint64]{}, err
-	}
-
+// Bounces implements Service.
+func (s *service) Bounces(
+	ctx context.Context,
+	filters Filters,
+) (DataFrame[time.Time, uint64], error) {
+	var args []any
 	var query = `
-SELECT toStartOfInterval(toDateTime(session_timestamp), ` + b.interval() + `) AS time,
-	COUNT(*)
-FROM ` + tab + `
-WHERE pageviews = 1
-GROUP BY time
-ORDER BY time`
+	WITH bounces AS (
+		SELECT argMax(session_timestamp, version) AS session_timestamp,
+		argMax(pageviews, version) AS pageviews
+		FROM sessions
+		WHERE session_id IN (` + sessionQuery(filters, &args) + `)
+		GROUP BY session_id
+		HAVING pageviews = 1
+	)
+	SELECT toStartOfInterval(toDateTime(session_timestamp), ` + s.interval(filters.TimeRange) + `) AS time,
+		COUNT(*) AS bounces
+	FROM bounces
+	GROUP BY time
+	ORDER BY time`
 
-	return b.query(query)
+	return doQuery[time.Time](s.db, ctx, query, args...)
 }
 
-// Close implements Batch.
-func (b *batch) Close() error {
-	return b.db.Exec(b.ctx, "DROP TABLE "+b.tmpTableName("sessions"))
-}
-
-// LiveVisitors implements Batch.
-func (b *batch) LiveVisitors() (DataFrame[uint64], error) {
-	tab, err := b.sessionTable()
-	if err != nil {
-		return DataFrame[uint64]{}, err
-	}
-
+// LiveVisitors implements Service.
+func (s *service) LiveVisitors(
+	ctx context.Context,
+	filters Filters,
+) (DataFrame[time.Time, uint64], error) {
+	var args []any
 	var query = `
-SELECT toStartOfInterval(toDateTime(session_timestamp), ` + b.interval() + `) AS time,
+SELECT toStartOfInterval(toDateTime(session_timestamp), ` + s.interval(filters.TimeRange) + `) AS time,
 	COUNT(DISTINCT(visitor_id))
-FROM ` + tab + `
-WHERE addMinutes(exit_timestamp, 15) > now()
+FROM sessions
+WHERE session_id IN (` + sessionQuery(filters, &args) + `)
+AND addMinutes(exit_timestamp, 15) > ?
 GROUP BY time
 ORDER BY time`
+	args = append(args, filters.TimeRange.Start.Add(filters.TimeRange.Dur))
 
-	return b.query(query)
+	return doQuery[time.Time](s.db, ctx, query, args...)
 }
 
-// PageViews implements Batch.
-func (b *batch) PageViews() (DataFrame[uint64], error) {
-	tab, err := b.sessionTable()
-	if err != nil {
-		return DataFrame[uint64]{}, err
-	}
-
+// PageViews implements Service.
+func (s *service) PageViews(
+	ctx context.Context,
+	filters Filters,
+) (DataFrame[time.Time, uint64], error) {
+	var args []any
 	var query = `
-SELECT toStartOfInterval(toDateTime(timestamp), ` + b.interval() + `) AS time,
+SELECT toStartOfInterval(toDateTime(timestamp), ` + s.interval(filters.TimeRange) + `) AS time,
 	COUNT(*)
 FROM pageviews
-WHERE session_id IN (
-	SELECT session_id FROM ` + tab + `
-)
+WHERE session_id IN (` + sessionQuery(filters, &args) + `)
 GROUP BY time
 ORDER BY time`
 
-	return b.query(query)
+	return doQuery[time.Time](s.db, ctx, query, args...)
 }
 
-// Sessions implements Batch.
-func (b *batch) Sessions() (DataFrame[uint64], error) {
-	tab, err := b.sessionTable()
-	if err != nil {
-		return DataFrame[uint64]{}, err
-	}
-
+// Sessions implements Service.
+func (s *service) Sessions(
+	ctx context.Context,
+	filters Filters,
+) (DataFrame[time.Time, uint64], error) {
+	var args []any
 	var query = `
-SELECT toStartOfInterval(toDateTime(session_timestamp), ` + b.interval() + `) AS time,
-	COUNT(*)
-FROM ` + tab + `
+SELECT toStartOfInterval(toDateTime(session_timestamp), ` + s.interval(filters.TimeRange) + `) AS time,
+	COUNT(DISTINCT(session_id))
+FROM sessions
+WHERE session_id IN (` + sessionQuery(filters, &args) + `)
 GROUP BY time
 ORDER BY time`
 
-	return b.query(query)
+	return doQuery[time.Time](s.db, ctx, query, args...)
 }
 
-// Visitors implements Batch.
-func (b *batch) Visitors() (DataFrame[uint64], error) {
-	tab, err := b.sessionTable()
-	if err != nil {
-		return DataFrame[uint64]{}, err
-	}
-
+// SessionsDuration implements Service.
+func (s *service) SessionsDuration(
+	ctx context.Context,
+	filters Filters,
+) (DataFrame[time.Time, uint64], error) {
+	var args []any
 	var query = `
-SELECT toStartOfInterval(toDateTime(session_timestamp), ` + b.interval() + `) AS time,
+WITH sessions_duration AS (
+	SELECT toStartOfInterval(toDateTime(session_timestamp), ` + s.interval(filters.TimeRange) + `) AS time,
+		argMax(session_timestamp, pageviews) as session_timestamp,
+		argMax(exit_timestamp, pageviews) as exit_timestamp
+	FROM sessions
+	WHERE session_id IN (` + sessionQuery(filters, &args) + `)
+	GROUP BY session_id
+) SELECT time, toUInt64(avg(exit_timestamp - session_timestamp)) FROM sessions_duration
+GROUP BY time
+ORDER BY time`
+
+	return doQuery[time.Time](s.db, ctx, query, args...)
+}
+
+// Visitors implements Service.
+func (s *service) Visitors(
+	ctx context.Context,
+	filters Filters,
+) (DataFrame[time.Time, uint64], error) {
+	var args []any
+	var query = `
+SELECT toStartOfInterval(toDateTime(session_timestamp), ` + s.interval(filters.TimeRange) + `) AS time,
 	COUNT(DISTINCT(visitor_id))
-FROM ` + tab + `
+FROM sessions
+WHERE session_id IN (` + sessionQuery(filters, &args) + `)
 GROUP BY time
 ORDER BY time`
 
-	return b.query(query)
+	return doQuery[time.Time](s.db, ctx, query, args...)
 }
 
-func (b *batch) tmpTableName(name string) string {
-	if b.tablePrefix == "" {
-		b.tablePrefix = "tmp_stats_" + strconv.FormatUint(rand.Uint64(), 16)
-	}
+// TopPages implements Service.
+func (s *service) TopPages(ctx context.Context, filters Filters, limit uint64) (DataFrame[string, uint64], error) {
+	var args []any
+	var query = `
+SELECT path, COUNT(*) AS pageviews
+FROM pageviews
+WHERE session_id IN (` + sessionQuery(filters, &args) + `)
+AND ` + timeFilter("timestamp", filters, &args) + `
+GROUP BY path
+ORDER BY pageviews DESC
+LIMIT ` + strconv.FormatUint(limit, 10)
 
-	return b.tablePrefix + "_" + name
+	return doQuery[string](s.db, ctx, query, args...)
 }
 
-// sessionTable is an idempotent method that creates and initializes temporary
-// session table.
-func (b *batch) sessionTable() (string, error) {
-	tabName := b.tmpTableName("sessions")
+// TopEntryPages implements Service.
+func (s *service) TopEntryPages(ctx context.Context, filters Filters, limit uint64) (DataFrame[string, uint64], error) {
+	var args []any
+	var query = `
+WITH entry_pageviews AS (
+	SELECT argMax(entry_path, pageviews) AS path
+	FROM sessions
+	WHERE session_id IN (` + sessionQuery(filters, &args) + `)
+	AND ` + timeFilter("entry_timestamp", filters, &args) + `
+	GROUP BY session_uuid
+) SELECT path, COUNT(*) AS pageviews
+FROM entry_pageviews
+GROUP BY path
+ORDER BY pageviews DESC
+LIMIT ` + strconv.FormatUint(limit, 10)
 
-	row := b.db.QueryRow(b.ctx, "SELECT 1 FROM "+tabName)
-	err := row.Err()
-	if err != nil {
-		if strings.Contains(err.Error(), "Unknown table expression identifier 'tmp_stats_") {
-			// Table doesn't exists, create it.
-			err = b.db.Exec(b.ctx, "CREATE TABLE "+tabName+" AS sessions ENGINE = Memory;")
-			if err != nil {
-				return "", fmt.Errorf("failed to create temporary session table: %w", err)
-			}
-
-			// Build query.
-			query := "INSERT INTO " + tabName + " SELECT * FROM sessions WHERE 1 = 1"
-			var args []any
-			if (b.timeRange != TimeRange{}) {
-				query += " AND (session_timestamp >= toDateTime(?) and session_timestamp <= toDateTime(?) OR exit_timestamp >= toDateTime(?) AND exit_timestamp <= toDateTime(?))"
-				args = append(args, b.timeRange.Start, b.timeRange.Start.Add(b.timeRange.Dur), b.timeRange.Start, b.timeRange.Start.Add(b.timeRange.Dur))
-			}
-
-			// Insert into table.
-			err := b.db.Exec(b.ctx, query, args...)
-			if err != nil {
-				return "", fmt.Errorf("failed to insert sessions into stats temporary table: %w", err)
-			}
-		} else {
-			return "", fmt.Errorf("failed to check existence of stats temporary table: %w", err)
-		}
-	}
-
-	return tabName, nil
+	return doQuery[string](s.db, ctx, query, args...)
 }
 
-func (b *batch) interval() string {
-	if b.timeRange.Dur == 0 {
+// TopExitPages implements Service.
+func (s *service) TopExitPages(ctx context.Context, filters Filters, limit uint64) (DataFrame[string, uint64], error) {
+	var args []any
+	var query = `
+WITH exit_pageviews AS (
+	SELECT argMax(exit_path, pageviews) AS path
+	FROM sessions
+	WHERE session_id IN (` + sessionQuery(filters, &args) + `)
+	AND ` + timeFilter("exit_timestamp", filters, &args) + `
+	GROUP BY session_uuid
+) SELECT path, COUNT(*) AS pageviews
+FROM exit_pageviews
+GROUP BY path
+ORDER BY pageviews DESC
+LIMIT ` + strconv.FormatUint(limit, 10)
+
+	return doQuery[string](s.db, ctx, query, args...)
+}
+
+func (s *service) interval(timeRange TimeRange) string {
+	if timeRange.Dur == 0 {
 		return "INTERVAL 1 second"
 	}
 
-	return fmt.Sprintf("INTERVAL %d second", b.timeRange.Dur/(16*time.Second))
+	return fmt.Sprintf("INTERVAL %d second", timeRange.Dur/(16*time.Second))
 }
 
-func (b *batch) query(query string, args ...any) (DataFrame[uint64], error) {
-	df := DataFrame[uint64]{
-		Timestamps: []time.Time{},
-		Values:     []uint64{},
+func doQuery[K any](
+	db eventdb.Service,
+	ctx context.Context,
+	query string,
+	args ...any,
+) (DataFrame[K, uint64], error) {
+	df := DataFrame[K, uint64]{
+		Keys:   []K{},
+		Values: []uint64{},
 	}
 
-	result, err := b.db.Query(b.ctx, query, args...)
+	result, err := db.Query(ctx, query, args...)
 	if err != nil {
-		return DataFrame[uint64]{}, err
+		return DataFrame[K, uint64]{}, fmt.Errorf("query %v failed: %w", query, err)
 	}
 
 	for result.Next() {
-		var ti time.Time
+		var k K
 		var v uint64
-		err := result.Scan(&ti, &v)
+		err := result.Scan(&k, &v)
 		if err != nil {
-			return DataFrame[uint64]{}, err
+			return DataFrame[K, uint64]{}, err
 		}
 
-		df.Timestamps = append(df.Timestamps, ti)
+		df.Keys = append(df.Keys, k)
 		df.Values = append(df.Values, v)
 	}
 
 	return df, nil
+}
+
+func sessionQuery(filters Filters, args *[]any) string {
+	query := "WITH filtered_sessions AS (SELECT *, session_id, pageviews FROM sessions WHERE 1 = 1"
+	if (filters.TimeRange != TimeRange{}) {
+		query += " AND (" + timeFilter("session_timestamp", filters, args)
+		query += " OR " + timeFilter("exit_timestamp", filters, args) + ")"
+	}
+
+	query += ") SELECT session_id FROM filtered_sessions WHERE 1 = 1"
+
+	if len(filters.Path) > 0 {
+		query += " AND session_id IN (SELECT session_id FROM pageviews WHERE path IN ("
+		for i, p := range filters.Path {
+			if i > 0 {
+				query += ", ?"
+			} else {
+				query += "?"
+			}
+			*args = append(*args, p)
+		}
+		query += ") AND session_id IN (select session_id FROM filtered_sessions))"
+	}
+	if len(filters.EntryPath) > 0 {
+		query += " AND entry_path IN ("
+		for i, p := range filters.EntryPath {
+			if i > 0 {
+				query += ", ?"
+			} else {
+				query += "?"
+			}
+			*args = append(*args, p)
+		}
+		query += ")"
+	}
+	if len(filters.ExitPath) > 0 {
+		query += " AND exit_path IN ("
+		for i, p := range filters.ExitPath {
+			if i > 0 {
+				query += ", ?"
+			} else {
+				query += "?"
+			}
+			*args = append(*args, p)
+		}
+		query += ")"
+	}
+
+	return query
+}
+
+func timeFilter(col string, filters Filters, args *[]any) string {
+	timeRange := filters.TimeRange
+
+	if (timeRange != TimeRange{}) {
+		*args = append(
+			*args,
+			timeRange.Start.Format(time.DateTime),
+			timeRange.Start.Add(timeRange.Dur).Format(time.DateTime),
+		)
+
+		return "(" + col + " >= toDateTime(?) AND " + col + " <= toDateTime(?))"
+	}
+
+	return "1 = 1"
 }

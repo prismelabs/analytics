@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cespare/xxhash/v2"
@@ -171,32 +172,60 @@ func ExtractClientHints(headers *fasthttp.RequestHeader, client *uaparser.Client
 	}
 }
 
-// ExtractTimeRange parses time range from query parameters.
-func ExtractTimeRange(c *fiber.Ctx) (stats.TimeRange, error) {
+// ExtractStatsFilters parses stats.Filters
+func ExtractStatsFilters(c *fiber.Ctx) (stats.Filters, error) {
+	f := stats.Filters{}
+
 	from := c.Query("from", "")
 	if from == "" {
-		return stats.TimeRange{}, fiber.NewError(fiber.StatusBadRequest, "query parameter 'from' is missing")
+		return f, fiber.NewError(fiber.StatusBadRequest, "query parameter 'from' is missing")
 	}
 	to := c.Query("to", "")
 	if to == "" {
-		return stats.TimeRange{}, fiber.NewError(fiber.StatusBadRequest, "query parameter 'to' is missing")
+		return f, fiber.NewError(fiber.StatusBadRequest, "query parameter 'to' is missing")
 	}
 
 	fromTime, err := timexpr.Parse(from)
 	if err != nil {
-		return stats.TimeRange{}, fiber.NewError(fiber.StatusBadRequest, "invalid query parameter 'from'")
+		return f, fiber.NewError(fiber.StatusBadRequest, "invalid query parameter 'from'")
 	}
 	toTime, err := timexpr.Parse(to)
 	if err != nil {
-		return stats.TimeRange{}, fiber.NewError(fiber.StatusBadRequest, "invalid query parameter 'to'")
+		return f, fiber.NewError(fiber.StatusBadRequest, "invalid query parameter 'to'")
 	}
 
 	if toTime.Sub(fromTime) < time.Duration(0) {
-		return stats.TimeRange{}, fiber.NewError(fiber.StatusBadRequest, "'from' date must be before 'to' date")
+		return f, fiber.NewError(fiber.StatusBadRequest, "'from' date must be before 'to' date")
 	}
 
-	return stats.TimeRange{
-		Start: fromTime,
-		Dur:   toTime.Sub(fromTime),
+	return stats.Filters{
+		TimeRange: stats.TimeRange{
+			Start: fromTime,
+			Dur:   toTime.Sub(fromTime),
+		},
+		Domain:          filterEmptyTrimmedString(strings.Split(c.Query("domain", ""), ",")),
+		Path:            filterEmptyTrimmedString(strings.Split(c.Query("path", ""), ",")),
+		EntryPath:       filterEmptyTrimmedString(strings.Split(c.Query("entry-path", ""), ",")),
+		ExitPath:        filterEmptyTrimmedString(strings.Split(c.Query("exit-path", ""), ",")),
+		Referrers:       filterEmptyTrimmedString(strings.Split(c.Query("referrer", ""), ",")),
+		OperatingSystem: filterEmptyTrimmedString(strings.Split(c.Query("os", ""), ",")),
+		BrowserFamily:   filterEmptyTrimmedString(strings.Split(c.Query("browser", ""), ",")),
+		Country:         filterEmptyTrimmedString(strings.Split(c.Query("country", ""), ",")),
+		UtmSource:       filterEmptyTrimmedString(strings.Split(c.Query("utm-source", ""), ",")),
+		UtmMedium:       filterEmptyTrimmedString(strings.Split(c.Query("utm-medium", ""), ",")),
+		UtmCampaign:     filterEmptyTrimmedString(strings.Split(c.Query("utm-campaign", ""), ",")),
+		UtmTerm:         filterEmptyTrimmedString(strings.Split(c.Query("utm-term", ""), ",")),
+		UtmContent:      filterEmptyTrimmedString(strings.Split(c.Query("utm-content", ""), ",")),
 	}, nil
+}
+
+func filterEmptyTrimmedString(strs []string) []string {
+	for i := 0; i < len(strs); i++ {
+		if strings.TrimSpace(strs[i]) == "" {
+			strs[i], strs[len(strs)-1] = strs[len(strs)-1], strs[i]
+			strs = strs[:len(strs)-1]
+		}
+	}
+
+	return strs
 }

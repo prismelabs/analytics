@@ -1,80 +1,221 @@
 package handlers
 
 import (
-	"fmt"
-	"strings"
+	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/analytics/pkg/handlers/utils"
-	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/stats"
 )
 
-func GetStatsBatch(srv stats.Service, logger log.Logger) fiber.Handler {
-	type DataFrame struct {
-		Timestamps []int64  `json:"timestamps"`
-		Values     []uint64 `json:"values"`
-	}
+type DataFrame[T any] struct {
+	Keys   []T      `json:"keys"`
+	Values []uint64 `json:"values"`
+}
 
-	validMetrics := map[string]struct{}{
-		"bounces":       {},
-		"live-visitors": {},
-		"pageviews":     {},
-		"sessions":      {},
-		"visitors":      {},
-	}
-
+// GetStatsBounces returns a GET /api/v1/stats/bounces handler.
+func GetStatsBounces(s stats.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		metrics := make(map[string]any)
-		for _, m := range strings.Split(c.Query("metrics", ""), ",") {
-			_, ok := validMetrics[m]
-			if !ok {
-				return fiber.NewError(fiber.StatusBadRequest, "unknown metrics")
-			}
+		var err error
 
-			metrics[m] = nil
-		}
-
-		timeRange, err := utils.ExtractTimeRange(c)
+		filters, err := utils.ExtractStatsFilters(c)
 		if err != nil {
 			return err
 		}
 
-		batch := srv.Begin(c.UserContext(), timeRange, stats.Filters{})
-		defer func() {
-			err = batch.Close()
-			logger.Err("failed to close statistics batch", err)
-		}()
-
-		// Compute metrics.
-		for m := range metrics {
-			var df stats.DataFrame[uint64]
-			switch m {
-			case "bounces":
-				df, err = batch.Bounces()
-			case "live-visitors":
-				df, err = batch.LiveVisitors()
-			case "pageviews":
-				df, err = batch.PageViews()
-			case "sessions":
-				df, err = batch.Sessions()
-			case "visitors":
-				df, err = batch.Visitors()
-			}
-			if err != nil {
-				return fmt.Errorf("unexpected error occurred while computing metrics: %w", err)
-			}
-
-			ts := make([]int64, 0, cap(df.Timestamps))
-			for _, t := range df.Timestamps {
-				ts = append(ts, t.UnixMilli())
-			}
-			metrics[m] = DataFrame{
-				Timestamps: ts,
-				Values:     df.Values,
-			}
+		df, err := s.Bounces(c.UserContext(), filters)
+		if err != nil {
+			return err
 		}
 
-		return c.JSON(metrics)
+		return c.JSON(DataFrame[int64]{
+			Keys:   timeToTimestamps(df.Keys),
+			Values: df.Values,
+		})
 	}
+}
+
+// GetStatsVisitors returns a GET /api/v1/stats/visitors handler.
+func GetStatsVisitors(s stats.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var err error
+
+		filters, err := utils.ExtractStatsFilters(c)
+		if err != nil {
+			return err
+		}
+
+		df, err := s.Visitors(c.UserContext(), filters)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(DataFrame[int64]{
+			Keys:   timeToTimestamps(df.Keys),
+			Values: df.Values,
+		})
+	}
+}
+
+// GetStatsSessions returns a GET /api/v1/stats/sessions handler.
+func GetStatsSessions(s stats.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var err error
+
+		filters, err := utils.ExtractStatsFilters(c)
+		if err != nil {
+			return err
+		}
+
+		df, err := s.Sessions(c.UserContext(), filters)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(DataFrame[int64]{
+			Keys:   timeToTimestamps(df.Keys),
+			Values: df.Values,
+		})
+	}
+}
+
+// GetStatsSessionsDuration returns a GET /api/v1/stats/sessions-duration handler.
+func GetStatsSessionsDuration(s stats.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var err error
+
+		filters, err := utils.ExtractStatsFilters(c)
+		if err != nil {
+			return err
+		}
+
+		df, err := s.SessionsDuration(c.UserContext(), filters)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(DataFrame[int64]{
+			Keys:   timeToTimestamps(df.Keys),
+			Values: df.Values,
+		})
+	}
+}
+
+// GetStatsPageViews returns a GET /api/v1/stats/pageviews handler.
+func GetStatsPageViews(s stats.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var err error
+
+		filters, err := utils.ExtractStatsFilters(c)
+		if err != nil {
+			return err
+		}
+
+		df, err := s.PageViews(c.UserContext(), filters)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(DataFrame[int64]{
+			Keys:   timeToTimestamps(df.Keys),
+			Values: df.Values,
+		})
+	}
+}
+
+// GetStatsLiveVisitors returns a GET /api/v1/stats/live-visitors handler.
+func GetStatsLiveVisitors(s stats.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var err error
+
+		filters, err := utils.ExtractStatsFilters(c)
+		if err != nil {
+			return err
+		}
+
+		df, err := s.LiveVisitors(c.UserContext(), filters)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(DataFrame[int64]{
+			Keys:   timeToTimestamps(df.Keys),
+			Values: df.Values,
+		})
+	}
+}
+
+// GetStatsTopPages returns a GET /api/v1/stats/top-pages handler.
+func GetStatsTopPages(s stats.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+
+		filters, err := utils.ExtractStatsFilters(c)
+		if err != nil {
+			return err
+		}
+
+		df, err := s.TopPages(c.UserContext(), filters, limit)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(DataFrame[string](df))
+	}
+}
+
+// GetStatsTopEntryPages returns a GET /api/v1/stats/top-entry-pages handler.
+func GetStatsTopEntryPages(s stats.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+
+		filters, err := utils.ExtractStatsFilters(c)
+		if err != nil {
+			return err
+		}
+
+		df, err := s.TopEntryPages(c.UserContext(), filters, limit)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(DataFrame[string](df))
+	}
+}
+
+// GetStatsTopExitPages returns a GET /api/v1/stats/top-exit-pages handler.
+func GetStatsTopExitPages(s stats.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+
+		filters, err := utils.ExtractStatsFilters(c)
+		if err != nil {
+			return err
+		}
+
+		df, err := s.TopExitPages(c.UserContext(), filters, limit)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(DataFrame[string](df))
+	}
+}
+
+func timeToTimestamps(ti []time.Time) []int64 {
+	ts := make([]int64, 0, cap(ti))
+	for _, t := range ti {
+		ts = append(ts, t.UnixMilli())
+	}
+	return ts
 }
