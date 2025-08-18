@@ -307,6 +307,10 @@ func main() {
 		app.Get("/api/v1/stats/top-pages", handlers.GetStatsTopPages(stats))
 		app.Get("/api/v1/stats/top-entry-pages", handlers.GetStatsTopEntryPages(stats))
 		app.Get("/api/v1/stats/top-exit-pages", handlers.GetStatsTopExitPages(stats))
+		app.Get("/api/v1/stats/top-referrers", handlers.GetStatsTopReferrers(stats))
+		app.Get("/api/v1/stats/top-utm-sources", handlers.GetStatsTopUtmSources(stats))
+		app.Get("/api/v1/stats/top-utm-mediums", handlers.GetStatsTopUtmMediums(stats))
+		app.Get("/api/v1/stats/top-utm-campaigns", handlers.GetStatsTopUtmCampaigns(stats))
 	}
 
 	// Admin and profiling server.
