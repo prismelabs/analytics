@@ -9,7 +9,7 @@ export default function Card(
   },
 ) {
   return (
-    <section class={`bg-system-bg rounded p-4 ${className}`}>
+    <section class={`bg-trend-background rounded p-4 ${className}`}>
       {!title ? null : size === "big"
         ? (
           <h2 class="text-md font-semibold mb-2">

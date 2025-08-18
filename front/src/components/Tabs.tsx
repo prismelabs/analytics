@@ -7,19 +7,17 @@ export type Tab = {
 };
 
 export default function Tabs({ tabs }: { tabs: Tab[] }) {
-  if (tabs.length === 0) return;
-
-  const [tab, setTab] = useState(tabs[0]);
+  const [active, setTab] = useState(0);
 
   return (
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto overflow-y-hidden h-full max-h-full">
       <div class="flex gap-4 mb-2 whitespace-nowrap">
-        {tabs.map((t) => (
+        {tabs.map((t, i) => (
           <h2
             key={t.name}
-            onClick={() => setTab(t)}
+            onClick={() => setTab(i)}
             class={`select-none ${
-              t === tab
+              t.name === tabs[active].name
                 ? "font-semibold text-system-fg"
                 : "hover:cursor-pointer"
             }`}
@@ -28,7 +26,7 @@ export default function Tabs({ tabs }: { tabs: Tab[] }) {
           </h2>
         ))}
       </div>
-      {tab.children}
+      {tabs[active]?.children}
     </div>
   );
 }

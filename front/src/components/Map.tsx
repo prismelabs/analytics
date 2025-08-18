@@ -1,6 +1,8 @@
-// import IsoToCountry from "@/assets/map_countries.json" with { type: "json" };
+import { Ref } from "preact";
 
-export default function Map({ class: className = "" }: { class?: string }) {
+export default function Map(
+  { class: className = "", ref }: { class?: string; ref?: Ref },
+) {
   return (
     <svg
       baseProfile="tiny"
@@ -12,6 +14,7 @@ export default function Map({ class: className = "" }: { class?: string }) {
       version="1.2"
       viewBox="0 0 2000 857"
       xmlns="http://www.w3.org/2000/svg"
+      ref={ref}
     >
       <path
         d="M1383 261.6l1.5 1.8-2.9 0.8-2.4 1.1-5.9 0.8-5.3 1.3-2.4 2.8 1.9 2.7 1.4 3.2-2 2.7 0.8 2.5-0.9 2.3-5.2-0.2 3.1 4.2-3.1 1.7-1.4 3.8 1.1 3.9-1.8 1.8-2.1-0.6-4 0.9-0.2 1.7-4.1 0-2.3 3.7 0.8 5.4-6.6 2.7-3.9-0.6-0.9 1.4-3.4-0.8-5.3 1-9.6-3.3 3.9-5.8-1.1-4.1-4.3-1.1-1.2-4.1-2.7-5.1 1.6-3.5-2.5-1 0.5-4.7 0.6-8 5.9 2.5 3.9-0.9 0.4-2.9 4-0.9 2.6-2-0.2-5.1 4.2-1.3 0.3-2.2 2.9 1.7 1.6 0.2 3 0 4.3 1.4 1.8 0.7 3.4-2 2.1 1.2 0.9-2.9 3.2 0.1 0.6-0.9-0.2-2.6 1.7-2.2 3.3 1.4-0.1 2 1.7 0.3 0.9 5.4 2.7 2.1 1.5-1.4 2.2-0.6 2.5-2.9 3.8 0.5 5.4 0z"
@@ -1915,7 +1918,11 @@ export default function Map({ class: className = "" }: { class?: string }) {
         d="M 1898.4 628.7 1898.2 628.9 1898.1 628.5 1898.3 628.3 1898.4 628.7 Z"
       >
       </path>
-      <path d="M1933 505.3l-0.2 0-0.1-0.3 0.3 0 0 0.3z" id="NR" class="country Nauru">
+      <path
+        d="M1933 505.3l-0.2 0-0.1-0.3 0.3 0 0 0.3z"
+        id="NR"
+        class="country Nauru"
+      >
       </path>
       <path
         d="M1747.7 453.1l-0.2 0.4 0.1 0.1-0.2 0.6 0.1 0.2-0.5 0.2-0.2-0.7 0.3-0.2-0.2-0.2 0.3-0.6 0.3-0.1 0.2 0.3z"
@@ -2259,7 +2266,11 @@ export default function Map({ class: className = "" }: { class?: string }) {
         d="M 645.2 429 645.1 429.5 644.8 429.6 644.4 429.9 644.2 429.9 643.5 430.3 643.3 430.1 643.6 429.8 644.3 429.3 645.2 429 Z"
       >
       </path>
-      <path d="M1998.9 556.6l0-0.2 0.1 0 0 0.1-0.1 0.1z" id="TV" class="country Tuvalu">
+      <path
+        d="M1998.9 556.6l0-0.2 0.1 0 0 0.1-0.1 0.1z"
+        id="TV"
+        class="country Tuvalu"
+      >
       </path>
       <path
         d="M642.2 417.4l-0.1 0.1-0.5-0.3 0-0.4 0.2-0.3 0.2-0.5 0.4 0 0.1 0.4-0.1 0.8-0.2 0.2z"

@@ -1,68 +1,59 @@
-import { useEffect, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import "uplot/dist/uPlot.min.css";
 
 import Uplot from "@/components/Uplot.tsx";
 import Card from "@/components/Card.tsx";
-import { from, to } from "@/components/TimeRangeInput.tsx"
 
-import * as bignum from "@/lib/bignum.ts"
+import * as format from "@/lib/format.ts";
+import useStats from "@/hooks/useStats.ts";
+import { theme } from "@/signals/trend.ts";
 
 export default function Summary() {
-  const [visitorsDF, setVisitorsDF] = useState<DataFrame>(emptyDataFrame);
-  const [sessionsDF, setSessionsDF] = useState<DataFrame>(emptyDataFrame);
-  const [pageViewsDF, setPageViewsDF] = useState<DataFrame>(emptyDataFrame);
-  const [liveVisitorsDF, setLiveVisitorsDF] = useState<DataFrame>(
-    emptyDataFrame,
-  );
-  const [bouncesDF, setBouncesDF] = useState<DataFrame>(emptyDataFrame);
+  const {
+    visitors: visitorsDF,
+    pageViews: pageViewsDF,
+    sessions: sessionsDF,
+    sessionsDuration: sessionsDurationDF,
+    liveVisitors: liveVisitorsDF,
+    bounces: bouncesDF,
+  } = useStats();
 
-  const [visitors, pageViews, sessions, liveVisitors, bounces] = [
+  const [
+    visitors,
+    pageViews,
+    sessions,
+    sessionsDuration,
+    liveVisitors,
+    bounces,
+  ] = [
     sum(visitorsDF.values),
     sum(pageViewsDF.values),
     sum(sessionsDF.values),
+    avg(sessionsDurationDF.values),
     sum(liveVisitorsDF.values),
     sum(bouncesDF.values),
   ];
 
-  // @ts-ignore: vitejs magic env.
-  const prismeUrl = import.meta.env.VITE_PRISME_URL;
-
-  useEffect(() => {
-    const abort = new AbortController();
-
-    fetch(
-      `${prismeUrl}/api/v1/stats/batch?metrics=visitors,sessions,pageviews,live-visitors,bounces&from=${from.value}&to=${to.value}`,
-      {
-        signal: abort.signal,
-      },
-    )
-      .then((r) => r.json())
-      .then((data) => {
-        setVisitorsDF(data.visitors);
-        setSessionsDF(data.sessions);
-        setPageViewsDF(data.pageviews);
-        setLiveVisitorsDF(data["live-visitors"]);
-        setBouncesDF(data.bounces);
-      });
-
-    return () => abort.abort();
-  }, []);
+  const bouncesRateDF = {
+    keys: bouncesDF.keys,
+    values: mul(div(bouncesDF.values, sessionsDF.values), 100),
+  };
 
   const metrics = [
     {
-      name: "Unique visitors",
-      value: bignum.format( visitors),
+      name: "Visitors",
+      value: format.bigNumber(visitors),
       data: visitorsDF,
     },
     {
-      name: "Unique sessions",
-      value: bignum.format( sessions),
-      data: visitorsDF,
+      name: "Sessions",
+      value: format.bigNumber(sessions),
+      data: sessionsDF,
     },
     {
-      name: "Total page views",
-      value: bignum.format(sum(pageViewsDF.values)).toString(),
-      data: visitorsDF,
+      name: "Page views",
+      value: format.bigNumber(pageViews).toString(),
+      data: pageViewsDF,
     },
     {
       name: "Views per session",
@@ -71,12 +62,24 @@ export default function Summary() {
         : "0",
       data: visitorsDF,
     },
-    { name: "Live visitors", value: bignum.format( liveVisitors), data: visitorsDF },
+    {
+      name: "Live visitors",
+      value: format.bigNumber(liveVisitors),
+      data: liveVisitorsDF,
+    },
     {
       name: "Bounce rate",
-      value: bounces === 0 ? "0%" : (bounces / sessions * 100).toFixed(1) + "%",
+      value: bounces === 0
+        ? "0%"
+        : bouncesRateDF.values[bouncesRateDF.values.length - 1].toFixed(2) +
+          "%",
+      data: bouncesRateDF,
     },
-    { name: "Avg. session duration", value: "59.6mins" },
+    {
+      name: "Avg. session duration",
+      value: format.duration(sessionsDuration),
+      data: sessionsDurationDF,
+    },
   ];
 
   return (
@@ -92,10 +95,10 @@ function Metric(
   { name, value, data }: {
     name: string;
     value: string;
-    data?: { timestamps: Array<number>; values: Array<number> };
+    data?: { keys: Array<number>; values: Array<number> };
   },
 ) {
-  const hasPlot = data !== undefined && data.timestamps.length > 1;
+  const hasPlot = data !== undefined && data.keys.length > 1;
 
   return (
     <Card
@@ -114,7 +117,7 @@ function Metric(
 }
 
 function Plot(
-  { timestamps, values }: { timestamps: Array<number>; values: Array<number> },
+  { keys, values }: { keys: Array<number>; values: Array<number> },
 ) {
   const [width, setWidth] = useState(0);
 
@@ -144,30 +147,22 @@ function Plot(
             {},
             {
               show: true,
-              stroke: "rgb(161, 99, 208)",
+              stroke: theme.value.primary,
               width: 1,
               points: { show: false },
-              fill: "rgba(72, 143, 220, 0.25)",
+              fill: theme.value["primary-light"] + "88",
             },
-            // {
-            //   show: true,
-            //   stroke: "rgb(161, 99, 208)",
-            //   width: 1,
-            //   fill: "rgba(161, 99, 208, 0.25)",
-            // },
           ],
         }}
-        data={[timestamps, values]}
+        data={[keys, values]}
       />
     </div>
   );
 }
 
 const sum = (arr: Array<number>) => arr.reduce((acc, i) => acc + i, 0);
-
-export type DataFrame = {
-  timestamps: Array<number>;
-  values: Array<number>;
-};
-
-const emptyDataFrame = { timestamps: [], values: [] };
+const avg = (arr: Array<number>) =>
+  arr.length === 0 ? 0 : sum(arr) / arr.length;
+const mul = (arr: Array<number>, scalar: number) => arr.map((v) => v * scalar);
+const div = (arr: Array<number>, div: Array<number>) =>
+  arr.map((v, i) => v / div[i]);
