@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"strconv"
+	"context"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,289 +14,95 @@ type DataFrame[T any] struct {
 	Values []uint64 `json:"values"`
 }
 
-// GetStatsBounces returns a GET /api/v1/stats/bounces handler.
-func GetStatsBounces(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var err error
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.Bounces(c.UserContext(), filters)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[int64]{
-			Keys:   timeToTimestamps(df.Keys),
-			Values: df.Values,
-		})
-	}
+// Struct containing all /api/v1/stats/... handlers.
+type Stats struct {
+	Bounces          fiber.Handler
+	Visitors         fiber.Handler
+	Sessions         fiber.Handler
+	SessionsDuration fiber.Handler
+	PageViews        fiber.Handler
+	LiveVisitors     fiber.Handler
+	TopPages         fiber.Handler
+	TopEntryPages    fiber.Handler
+	TopExitPages     fiber.Handler
+	TopReferrers     fiber.Handler
+	TopUtmSources    fiber.Handler
+	TopUtmMediums    fiber.Handler
+	TopUtmCampaigns  fiber.Handler
+	TopCountries     fiber.Handler
 }
 
-// GetStatsVisitors returns a GET /api/v1/stats/visitors handler.
-func GetStatsVisitors(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var err error
+func GetStatsHandlers(s stats.Service) Stats {
+	type TimeSerieFunc = func(
+		stats.Service,
+		context.Context,
+		stats.Filters,
+	) (stats.DataFrame[time.Time, uint64], error)
 
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
+	newTimeSerieHandler := func(
+		fetch TimeSerieFunc,
+	) fiber.Handler {
+		return func(c *fiber.Ctx) error {
+			var err error
+
+			filters, err := utils.ExtractStatsFilters(c)
+			if err != nil {
+				return err
+			}
+
+			df, err := fetch(s, c.UserContext(), filters)
+			if err != nil {
+				return err
+			}
+
+			return c.JSON(DataFrame[int64]{
+				Keys:   timeToTimestamps(df.Keys),
+				Values: df.Values,
+			})
 		}
-
-		df, err := s.Visitors(c.UserContext(), filters)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[int64]{
-			Keys:   timeToTimestamps(df.Keys),
-			Values: df.Values,
-		})
 	}
-}
 
-// GetStatsSessions returns a GET /api/v1/stats/sessions handler.
-func GetStatsSessions(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var err error
+	type TopFunc = func(
+		stats.Service,
+		context.Context,
+		stats.Filters,
+		uint64,
+	) (stats.DataFrame[string, uint64], error)
+	newTopHandler := func(
+		fetch TopFunc,
+	) fiber.Handler {
+		return func(c *fiber.Ctx) error {
+			var err error
 
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
+			filters, limit, err := utils.ExtractStatsFiltersAndLimit(c)
+			if err != nil {
+				return err
+			}
+
+			df, err := fetch(s, c.UserContext(), filters, limit)
+			if err != nil {
+				return err
+			}
+
+			return c.JSON(DataFrame[string](df))
 		}
-
-		df, err := s.Sessions(c.UserContext(), filters)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[int64]{
-			Keys:   timeToTimestamps(df.Keys),
-			Values: df.Values,
-		})
 	}
-}
 
-// GetStatsSessionsDuration returns a GET /api/v1/stats/sessions-duration handler.
-func GetStatsSessionsDuration(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var err error
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.SessionsDuration(c.UserContext(), filters)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[int64]{
-			Keys:   timeToTimestamps(df.Keys),
-			Values: df.Values,
-		})
-	}
-}
-
-// GetStatsPageViews returns a GET /api/v1/stats/pageviews handler.
-func GetStatsPageViews(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var err error
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.PageViews(c.UserContext(), filters)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[int64]{
-			Keys:   timeToTimestamps(df.Keys),
-			Values: df.Values,
-		})
-	}
-}
-
-// GetStatsLiveVisitors returns a GET /api/v1/stats/live-visitors handler.
-func GetStatsLiveVisitors(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var err error
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.LiveVisitors(c.UserContext(), filters)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[int64]{
-			Keys:   timeToTimestamps(df.Keys),
-			Values: df.Values,
-		})
-	}
-}
-
-// GetStatsTopPages returns a GET /api/v1/stats/top-pages handler.
-func GetStatsTopPages(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.TopPages(c.UserContext(), filters, limit)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[string](df))
-	}
-}
-
-// GetStatsTopEntryPages returns a GET /api/v1/stats/top-entry-pages handler.
-func GetStatsTopEntryPages(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.TopEntryPages(c.UserContext(), filters, limit)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[string](df))
-	}
-}
-
-// GetStatsTopExitPages returns a GET /api/v1/stats/top-exit-pages handler.
-func GetStatsTopExitPages(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.TopExitPages(c.UserContext(), filters, limit)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[string](df))
-	}
-}
-
-// GetStatsTopReferrers returns a GET /api/v1/stats/top-referrers handler.
-func GetStatsTopReferrers(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.TopReferrers(c.UserContext(), filters, limit)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[string](df))
-	}
-}
-
-// GetStatsTopUtmSources returns a GET /api/v1/stats/top-utm-sources handler.
-func GetStatsTopUtmSources(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.TopUtmSources(c.UserContext(), filters, limit)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[string](df))
-	}
-}
-
-// GetStatsTopUtmMediums returns a GET /api/v1/stats/top-utm-mediums handler.
-func GetStatsTopUtmMediums(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.TopUtmMediums(c.UserContext(), filters, limit)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[string](df))
-	}
-}
-
-// GetStatsTopCampaigns returns a GET /api/v1/stats/top-utm-campaigns handler.
-func GetStatsTopUtmCampaigns(s stats.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-
-		filters, err := utils.ExtractStatsFilters(c)
-		if err != nil {
-			return err
-		}
-
-		df, err := s.TopUtmCampaigns(c.UserContext(), filters, limit)
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(DataFrame[string](df))
+	return Stats{
+		Bounces:          newTimeSerieHandler(stats.Service.Bounces),
+		Visitors:         newTimeSerieHandler(stats.Service.Visitors),
+		Sessions:         newTimeSerieHandler(stats.Service.Sessions),
+		SessionsDuration: newTimeSerieHandler(stats.Service.SessionsDuration),
+		PageViews:        newTimeSerieHandler(stats.Service.PageViews),
+		LiveVisitors:     newTimeSerieHandler(stats.Service.LiveVisitors),
+		TopPages:         newTopHandler(stats.Service.TopPages),
+		TopEntryPages:    newTopHandler(stats.Service.TopEntryPages),
+		TopExitPages:     newTopHandler(stats.Service.TopExitPages),
+		TopReferrers:     newTopHandler(stats.Service.TopReferrers),
+		TopUtmSources:    newTopHandler(stats.Service.TopUtmSources),
+		TopUtmMediums:    newTopHandler(stats.Service.TopUtmMediums),
+		TopUtmCampaigns:  newTopHandler(stats.Service.TopUtmCampaigns),
+		TopCountries:     newTopHandler(stats.Service.TopCountries),
 	}
 }
 

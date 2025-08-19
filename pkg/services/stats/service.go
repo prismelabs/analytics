@@ -25,6 +25,7 @@ type Service interface {
 	TopUtmSources(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
 	TopUtmMediums(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
 	TopUtmCampaigns(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
+	TopCountries(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
 }
 
 // DataFrame defines a columnar view over timestamped data.
@@ -303,6 +304,24 @@ WITH utm_campaigns AS (
 ) SELECT utm_campaign, COUNT(*) AS sessions
 FROM utm_campaigns
 GROUP BY utm_campaign
+ORDER BY sessions DESC
+LIMIT ` + strconv.FormatUint(limit, 10)
+
+	return doQuery[string](s.db, ctx, query, args...)
+}
+
+// TopCountries implements Service.
+func (s *service) TopCountries(ctx context.Context, filters Filters, limit uint64) (DataFrame[string, uint64], error) {
+	var args []any
+	var query = `
+WITH sessions_locations AS (
+	SELECT argMax(country_code, pageviews) AS country_code
+	FROM sessions
+	WHERE session_id IN (` + sessionQuery(filters, &args) + `)
+	GROUP BY session_uuid
+) SELECT country_code, COUNT(*) AS sessions
+FROM sessions_locations
+GROUP BY country_code
 ORDER BY sessions DESC
 LIMIT ` + strconv.FormatUint(limit, 10)
 

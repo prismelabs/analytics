@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -172,7 +173,7 @@ func ExtractClientHints(headers *fasthttp.RequestHeader, client *uaparser.Client
 	}
 }
 
-// ExtractStatsFilters parses stats.Filters
+// ExtractStatsFilters parses stats.Filters.
 func ExtractStatsFilters(c *fiber.Ctx) (stats.Filters, error) {
 	f := stats.Filters{}
 
@@ -217,6 +218,21 @@ func ExtractStatsFilters(c *fiber.Ctx) (stats.Filters, error) {
 		UtmTerm:         filterEmptyTrimmedString(strings.Split(c.Query("utm-term", ""), ",")),
 		UtmContent:      filterEmptyTrimmedString(strings.Split(c.Query("utm-content", ""), ",")),
 	}, nil
+}
+
+// ExtractStatsFilters parses stats.Filters and limit query parameter.
+func ExtractStatsFiltersAndLimit(c *fiber.Ctx) (stats.Filters, uint64, error) {
+	filters, err := ExtractStatsFilters(c)
+	if err != nil {
+		return filters, 0, err
+	}
+
+	limit, err := strconv.ParseUint(c.Query("limit", "10"), 10, 64)
+	if err != nil {
+		return filters, 0, fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return filters, limit, nil
 }
 
 func filterEmptyTrimmedString(strs []string) []string {
