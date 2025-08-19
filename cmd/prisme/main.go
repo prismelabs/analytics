@@ -313,6 +313,8 @@ func main() {
 		app.Get("/api/v1/stats/top-utm-mediums", stats.TopUtmMediums)
 		app.Get("/api/v1/stats/top-utm-campaigns", stats.TopUtmCampaigns)
 		app.Get("/api/v1/stats/top-countries", stats.TopCountries)
+		app.Get("/api/v1/stats/top-operating-systems", stats.TopOperatingSystems)
+		app.Get("/api/v1/stats/top-browsers", stats.TopBrowsers)
 	}
 
 	// Admin and profiling server.

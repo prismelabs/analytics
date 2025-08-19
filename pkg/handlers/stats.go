@@ -16,20 +16,22 @@ type DataFrame[T any] struct {
 
 // Struct containing all /api/v1/stats/... handlers.
 type Stats struct {
-	Bounces          fiber.Handler
-	Visitors         fiber.Handler
-	Sessions         fiber.Handler
-	SessionsDuration fiber.Handler
-	PageViews        fiber.Handler
-	LiveVisitors     fiber.Handler
-	TopPages         fiber.Handler
-	TopEntryPages    fiber.Handler
-	TopExitPages     fiber.Handler
-	TopReferrers     fiber.Handler
-	TopUtmSources    fiber.Handler
-	TopUtmMediums    fiber.Handler
-	TopUtmCampaigns  fiber.Handler
-	TopCountries     fiber.Handler
+	Bounces             fiber.Handler
+	Visitors            fiber.Handler
+	Sessions            fiber.Handler
+	SessionsDuration    fiber.Handler
+	PageViews           fiber.Handler
+	LiveVisitors        fiber.Handler
+	TopPages            fiber.Handler
+	TopEntryPages       fiber.Handler
+	TopExitPages        fiber.Handler
+	TopReferrers        fiber.Handler
+	TopUtmSources       fiber.Handler
+	TopUtmMediums       fiber.Handler
+	TopUtmCampaigns     fiber.Handler
+	TopCountries        fiber.Handler
+	TopOperatingSystems fiber.Handler
+	TopBrowsers         fiber.Handler
 }
 
 func GetStatsHandlers(s stats.Service) Stats {
@@ -89,20 +91,22 @@ func GetStatsHandlers(s stats.Service) Stats {
 	}
 
 	return Stats{
-		Bounces:          newTimeSerieHandler(stats.Service.Bounces),
-		Visitors:         newTimeSerieHandler(stats.Service.Visitors),
-		Sessions:         newTimeSerieHandler(stats.Service.Sessions),
-		SessionsDuration: newTimeSerieHandler(stats.Service.SessionsDuration),
-		PageViews:        newTimeSerieHandler(stats.Service.PageViews),
-		LiveVisitors:     newTimeSerieHandler(stats.Service.LiveVisitors),
-		TopPages:         newTopHandler(stats.Service.TopPages),
-		TopEntryPages:    newTopHandler(stats.Service.TopEntryPages),
-		TopExitPages:     newTopHandler(stats.Service.TopExitPages),
-		TopReferrers:     newTopHandler(stats.Service.TopReferrers),
-		TopUtmSources:    newTopHandler(stats.Service.TopUtmSources),
-		TopUtmMediums:    newTopHandler(stats.Service.TopUtmMediums),
-		TopUtmCampaigns:  newTopHandler(stats.Service.TopUtmCampaigns),
-		TopCountries:     newTopHandler(stats.Service.TopCountries),
+		Bounces:             newTimeSerieHandler(stats.Service.Bounces),
+		Visitors:            newTimeSerieHandler(stats.Service.Visitors),
+		Sessions:            newTimeSerieHandler(stats.Service.Sessions),
+		SessionsDuration:    newTimeSerieHandler(stats.Service.SessionsDuration),
+		PageViews:           newTimeSerieHandler(stats.Service.PageViews),
+		LiveVisitors:        newTimeSerieHandler(stats.Service.LiveVisitors),
+		TopPages:            newTopHandler(stats.Service.TopPages),
+		TopEntryPages:       newTopHandler(stats.Service.TopEntryPages),
+		TopExitPages:        newTopHandler(stats.Service.TopExitPages),
+		TopReferrers:        newTopHandler(stats.Service.TopReferrers),
+		TopUtmSources:       newTopHandler(stats.Service.TopUtmSources),
+		TopUtmMediums:       newTopHandler(stats.Service.TopUtmMediums),
+		TopUtmCampaigns:     newTopHandler(stats.Service.TopUtmCampaigns),
+		TopCountries:        newTopHandler(stats.Service.TopCountries),
+		TopOperatingSystems: newTopHandler(stats.Service.TopOperatingSystems),
+		TopBrowsers:         newTopHandler(stats.Service.TopBrowsers),
 	}
 }
 

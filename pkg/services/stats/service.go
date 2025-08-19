@@ -26,6 +26,8 @@ type Service interface {
 	TopUtmMediums(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
 	TopUtmCampaigns(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
 	TopCountries(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
+	TopBrowsers(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
+	TopOperatingSystems(context.Context, Filters, uint64) (DataFrame[string, uint64], error)
 }
 
 // DataFrame defines a columnar view over timestamped data.
@@ -328,6 +330,42 @@ LIMIT ` + strconv.FormatUint(limit, 10)
 	return doQuery[string](s.db, ctx, query, args...)
 }
 
+// TopBrowsers implements Service.
+func (s *service) TopBrowsers(ctx context.Context, filters Filters, limit uint64) (DataFrame[string, uint64], error) {
+	var args []any
+	var query = `
+WITH sessions_browsers AS (
+	SELECT argMax(browser_family, pageviews) AS browser
+	FROM sessions
+	WHERE session_id IN (` + sessionQuery(filters, &args) + `)
+	GROUP BY session_uuid
+) SELECT browser, COUNT(*) AS sessions
+FROM sessions_browsers
+GROUP BY browser
+ORDER BY sessions DESC
+LIMIT ` + strconv.FormatUint(limit, 10)
+
+	return doQuery[string](s.db, ctx, query, args...)
+}
+
+// TopOperatingSystems implements Service.
+func (s *service) TopOperatingSystems(ctx context.Context, filters Filters, limit uint64) (DataFrame[string, uint64], error) {
+	var args []any
+	var query = `
+WITH sessions_os AS (
+	SELECT argMax(operating_system, pageviews) AS os
+	FROM sessions
+	WHERE session_id IN (` + sessionQuery(filters, &args) + `)
+	GROUP BY session_uuid
+) SELECT os, COUNT(*) AS sessions
+FROM sessions_os
+GROUP BY os
+ORDER BY sessions DESC
+LIMIT ` + strconv.FormatUint(limit, 10)
+
+	return doQuery[string](s.db, ctx, query, args...)
+}
+
 func (s *service) interval(timeRange TimeRange) string {
 	if timeRange.Dur == 0 {
 		return "INTERVAL 1 second"
@@ -397,7 +435,7 @@ func sessionQuery(filters Filters, args *[]any) string {
 		query += " AND " + stringListFilter("operating_system", filters.OperatingSystem, args)
 	}
 	if len(filters.BrowserFamily) > 0 {
-		query += " AND " + stringListFilter("browser_family", filters.OperatingSystem, args)
+		query += " AND " + stringListFilter("browser_family", filters.BrowserFamily, args)
 	}
 	if len(filters.Country) > 0 {
 		query += " AND " + stringListFilter("country_code", filters.Country, args)
