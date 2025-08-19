@@ -9,34 +9,20 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/golang-migrate/migrate/v4/source"
-	"github.com/negrel/configue"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/log"
-	"github.com/prismelabs/analytics/pkg/services/teardown"
 )
 
 // NewApp returns a new App.
-func NewApp(logger log.Logger, cfg Config, source source.Driver, teardown teardown.Service) App {
-	f := configue.New("", configue.PanicOnError, configue.NewEnv("PRISME"), configue.NewFlag())
-
-	var clickhouseCfg clickhouse.Config
-	clickhouseCfg.RegisterOptions(f)
-
-	err := f.Parse()
-	if err != nil {
-		logger.Fatal("failed to parse options", err)
-	}
-
-	err = clickhouseCfg.Validate()
-	if err != nil {
-		logger.Fatal("invalid clickhouse config: %v", err)
-	}
-
+func NewApp(
+	logger log.Logger,
+	cfg Config,
+	ch clickhouse.Ch,
+) App {
 	return App{
 		logger: logger,
 		cfg:    cfg,
-		ch:     clickhouse.NewCh(logger, clickhouseCfg, source, teardown),
+		ch:     ch,
 	}
 }
 
@@ -82,7 +68,7 @@ func (a App) executeScenario(worker func(time.Time, Config, chan<- any) uint64) 
 		goPoolCh <- func() {
 			// Poll events and append them to the batch.
 			for totalEvents.Load() < a.cfg.TotalEvents {
-				sessionsBatch, err := a.ch.PrepareBatch(context.Background(), "INSERT INTO prisme.sessions_versionned")
+				sessionsBatch, err := a.ch.PrepareBatch(context.Background(), "INSERT INTO prisme.sessions")
 				if err != nil {
 					a.logger.Fatal("failed to prepare sessions batch", err)
 				}

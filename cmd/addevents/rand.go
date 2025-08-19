@@ -9,9 +9,6 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 )
 
-func init() {
-}
-
 func randomDesktopClient() uaparser.Client {
 	return randomItem(desktopClients)
 }
@@ -48,7 +45,7 @@ const (
 func randomString(charset string, length int) string {
 	buf := make([]byte, length)
 
-	for i := 0; i < length; i++ {
+	for i := range length {
 		buf[i] = charset[rand.Intn(len(charset)-1)]
 	}
 

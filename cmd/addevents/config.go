@@ -1,10 +1,11 @@
 package main
 
 import (
-	"flag"
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/negrel/configue"
 )
 
 type Config struct {
@@ -20,33 +21,29 @@ type Config struct {
 	DirectTrafficRate float64   `json:"direct_traffic_rate"`
 }
 
-// NewConfig returns a Config parsed from command line.
-func NewConfig() Config {
-	cfg := Config{}
-
+// RegisterOptions returns a Config parsed from command line.
+func (c *Config) RegisterOptions(f *configue.Figue) {
 	domains := "localhost,mywebsite.localhost,foo.mywebsite.localhost"
 	var extraDomains int
 	var extraPaths int
 
-	flag.Uint64Var(&cfg.BatchSize, "batch-size", 40_000, "size of a batch")
-	flag.Uint64Var(&cfg.TotalEvents, "total-events", 40_000_000, "number of events to generate")
-	flag.StringVar(&domains, "domains", domains, "comma separated extra list of domains with events")
-	flag.IntVar(&extraDomains, "extra-domains", 10, "number of random domains generated added to the domains list")
-	flag.IntVar(&extraPaths, "extra-paths", 10, "number of random paths generated added to the paths list")
-	flag.Float64Var(&cfg.CustomEventsRate, "custom-events-rate", 0.3, "custom events rate per viewed page")
-	flag.Float64Var(&cfg.BounceRate, "bounce-rate", 0.56, "bounce rate")
-	flag.Float64Var(&cfg.ExitRate, "exit-rate", 0.3, "exit rate when no bounce")
-	flag.Float64Var(&cfg.MobileRate, "mobile-rate", 0.3, "mobile client rate")
-	flag.Uint64Var(&cfg.VisitorIdsRange, "visitor-ids", 40_000, "range of visitor ids")
-	flag.Float64Var(&cfg.DirectTrafficRate, "direct-rate", 0.5, "direct traffic rate against external traffic")
-	flag.Parse()
+	f.Uint64Var(&c.BatchSize, "batch-size", 40_000, "size of a batch")
+	f.Uint64Var(&c.TotalEvents, "total-events", 4_000_000, "number of events to generate")
+	f.StringVar(&domains, "domains", domains, "comma separated extra list of domains with events")
+	f.IntVar(&extraDomains, "extra-domains", 10, "number of random domains generated added to the domains list")
+	f.IntVar(&extraPaths, "extra-paths", 10, "number of random paths generated added to the paths list")
+	f.Float64Var(&c.CustomEventsRate, "custom-events-rate", 0.3, "custom events rate per viewed page")
+	f.Float64Var(&c.BounceRate, "bounce-rate", 0.56, "bounce rate")
+	f.Float64Var(&c.ExitRate, "exit-rate", 0.3, "exit rate when no bounce")
+	f.Float64Var(&c.MobileRate, "mobile-rate", 0.3, "mobile client rate")
+	f.Uint64Var(&c.VisitorIdsRange, "visitor-ids", 40_000, "range of visitor ids")
+	f.Float64Var(&c.DirectTrafficRate, "direct-rate", 0.5, "direct traffic rate against external traffic")
 
-	cfg.Domains = strings.Split(domains, ",")
-	cfg.FromDate = time.Now().AddDate(0, -6, 0)
+	c.FromDate = time.Now().AddDate(0, -6, 0)
 
 	// Generate extra domains.
 	for i := 0; i < extraDomains; i++ {
-		cfg.Domains = append(cfg.Domains, randomString(alpha, 1)+randomString(alphaNum, rand.Intn(8))+randomItem([]string{".com", ".fr", ".eu", ".io", ".sh"}))
+		c.Domains = append(c.Domains, randomString(alpha, 1)+randomString(alphaNum, rand.Intn(8))+randomItem([]string{".com", ".fr", ".eu", ".io", ".sh"}))
 	}
 
 	// Generate extra paths
@@ -59,8 +56,6 @@ func NewConfig() Config {
 
 		pathnamesList = append(pathnamesList, strings.Join(path, ""))
 	}
-
-	return cfg
 }
 
 func (c Config) BatchCount() uint64 {
