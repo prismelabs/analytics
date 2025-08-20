@@ -236,10 +236,12 @@ func ExtractStatsFiltersAndLimit(c *fiber.Ctx) (stats.Filters, uint64, error) {
 }
 
 func filterEmptyTrimmedString(strs []string) []string {
-	for i := 0; i < len(strs); i++ {
+	for i := 0; i < len(strs); {
 		if strings.TrimSpace(strs[i]) == "" {
 			strs[i], strs[len(strs)-1] = strs[len(strs)-1], strs[i]
 			strs = strs[:len(strs)-1]
+		} else {
+			i++
 		}
 	}
 
