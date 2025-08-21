@@ -10,8 +10,10 @@ import (
 )
 
 type DataFrame[T any] struct {
-	Keys   []T      `json:"keys"`
-	Values []uint64 `json:"values"`
+	From   time.Time `json:"from"`
+	To     time.Time `json:"to"`
+	Keys   []T       `json:"keys"`
+	Values []uint64  `json:"values"`
 }
 
 // Struct containing all /api/v1/stats/... handlers.
@@ -58,6 +60,8 @@ func GetStatsHandlers(s stats.Service) Stats {
 			}
 
 			return c.JSON(DataFrame[int64]{
+				From:   filters.TimeRange.Start,
+				To:     filters.TimeRange.Start.Add(filters.TimeRange.Dur),
 				Keys:   timeToTimestamps(df.Keys),
 				Values: df.Values,
 			})
@@ -86,7 +90,13 @@ func GetStatsHandlers(s stats.Service) Stats {
 				return err
 			}
 
-			return c.JSON(DataFrame[string](df))
+			return c.JSON(DataFrame[string]{
+				From:   filters.TimeRange.Start,
+				To:     filters.TimeRange.Start.Add(filters.TimeRange.Dur),
+				Keys:   df.Keys,
+				Values: df.Values,
+			})
+
 		}
 	}
 

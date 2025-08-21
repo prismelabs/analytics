@@ -186,11 +186,11 @@ func ExtractStatsFilters(c *fiber.Ctx) (stats.Filters, error) {
 		return f, fiber.NewError(fiber.StatusBadRequest, "query parameter 'to' is missing")
 	}
 
-	fromTime, err := timexpr.Parse(from)
+	fromTime, err := timexpr.Parse(from, true)
 	if err != nil {
 		return f, fiber.NewError(fiber.StatusBadRequest, "invalid query parameter 'from'")
 	}
-	toTime, err := timexpr.Parse(to)
+	toTime, err := timexpr.Parse(to, false)
 	if err != nil {
 		return f, fiber.NewError(fiber.StatusBadRequest, "invalid query parameter 'to'")
 	}

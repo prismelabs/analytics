@@ -11,6 +11,7 @@ import (
 func TestParse(t *testing.T) {
 	type testCase struct {
 		expr     string
+		floor    bool
 		expected time.Time
 		err      error
 	}
@@ -22,8 +23,14 @@ func TestParse(t *testing.T) {
 		{expr: "now-7d", expected: time.Now().AddDate(0, 0, -7)},
 		{expr: "now-3M", expected: time.Now().AddDate(0, -3, 0)},
 		{expr: "now-4y", expected: time.Now().AddDate(-4, 0, 0)},
+		{expr: "now-1y/y", floor: true, expected: time.Date(time.Now().Year()-1, time.January, 1, 0, 0, 0, 0, time.UTC)},
+		{expr: "now-1y/y", expected: time.Date(time.Now().Year()-1, time.December, 31, 23, 59, 59, 99999999, time.UTC)},
+		{expr: "now-1y/M", floor: true, expected: time.Date(time.Now().Year()-1, time.Now().Month(), 1, 0, 0, 0, 0, time.UTC)},
+		{expr: "now-1y/M", expected: time.Date(time.Now().Year()-1, time.Now().Month(), 31, 23, 59, 59, 99999999, time.UTC)},
+		{expr: "now-1M/M", floor: true, expected: time.Date(time.Now().Year(), time.Now().Month()-1, 1, 0, 0, 0, 0, time.UTC)},
+		{expr: "now-1M/M", expected: time.Date(time.Now().Year(), time.Now().Month(), 0, 23, 59, 59, 99999999, time.UTC)},
 		{expr: "now-7", expected: time.Time{}, err: ErrSyntax},
-		{expr: "now-7h-7d", expected: time.Time{}, err: ErrSyntax},
+		{expr: "now-7h-7d", expected: time.Now().Add(-7*time.Hour).AddDate(0, 0, -7)},
 		{expr: "", expected: time.Time{}, err: ErrSyntax},
 		{expr: "¨¨", expected: time.Time{}, err: ErrSyntax},
 		{
@@ -44,7 +51,7 @@ func TestParse(t *testing.T) {
 
 	for _, tcase := range testCases {
 		t.Run(tcase.expr, func(t *testing.T) {
-			ti, err := Parse(tcase.expr)
+			ti, err := Parse(tcase.expr, tcase.floor)
 			if tcase.err != nil {
 				require.Error(t, err)
 				require.ErrorIs(t, err, tcase.err)
