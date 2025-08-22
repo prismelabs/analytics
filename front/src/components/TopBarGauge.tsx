@@ -16,13 +16,11 @@ export default function (
   // deno-lint-ignore no-explicit-any
   const [top, setTop] = useState<DataFrame<any>>(emptyDataFrame);
 
-  // @ts-ignore: vitejs magic env.
-  const prismeUrl = import.meta.env.VITE_PRISME_URL;
   const search = location.current.value.search;
   const loc = location.current.value.toString();
   const useFetchStats = (stat: string) =>
     useFetchJson<DataFrame<string>>(
-      `${prismeUrl}/api/v1/stats/${stat}${search}`,
+      `/api/v1/stats/${stat}${search}`,
       [loc],
     );
 

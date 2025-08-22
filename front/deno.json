@@ -15,6 +15,7 @@
     "jsxImportSource": "preact"
   },
   "imports": {
+    "@/": "./src/",
     "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.5",
     "@headlessui/react": "npm:@headlessui/react@^2.2.7",
     "@heroicons/react": "npm:@heroicons/react@^2.2.0",
@@ -22,11 +23,11 @@
     "@preact/signals": "npm:@preact/signals@^2.2.1",
     "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.11",
     "preact": "npm:preact@^10.26.9",
+    "react-calendar": "npm:react-calendar@^6.0.0",
     "tailwindcss": "npm:tailwindcss@^4.1.11",
     "uplot": "npm:uplot@^1.6.32",
     "uplot-react": "npm:uplot-react@^1.2.4",
-    "vite": "npm:vite@^7.0.0",
-    "@/": "./src/"
+    "vite": "npm:vite@^7.0.0"
   },
   "scopes": {
     "uplot-react": {

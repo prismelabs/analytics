@@ -20,7 +20,7 @@ export default function BarGauge(
 
   return (data.length === 0
     ? (
-      <span class="font-bold text-page-fg text-center flex flex-row min-h-56 h-full items-center justify-center">
+      <span class="font-bold text-page-fg text-center flex flex-row min-h-56 items-center justify-center">
         No data
       </span>
     )
@@ -29,7 +29,7 @@ export default function BarGauge(
         {data.map((d, i) => (
           <li
             key={i}
-            class="rounded hover:bg-page-bg cursor-pointer"
+            class="rounded hover:bg-trend-page cursor-pointer"
             onClick={d.onClick ? () => d.onClick!(d) : undefined}
             onMouseEnter={d.onMouseEnter ? () => d.onMouseEnter!(d) : undefined}
             onMouseLeave={d.onMouseLeave ? () => d.onMouseLeave!(d) : undefined}

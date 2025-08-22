@@ -14,10 +14,15 @@ export function App() {
 
   return (
     <>
-      <span class={`loader fixed top-0 ${isLoading.value ? "" : "hidden!"}`}>
+      <span
+        class={`loader fixed top-0 z-50 ${isLoading.value ? "" : "hidden!"}`}
+      >
       </span>
-      <header class="p-4 flex justify-between">
-        <div />
+      <header class="px-4 py-2 w-screen flex gap-2 justify-between sticky bg-trend-page top-0 z-40">
+        <div class="flex items-center gap-2">
+          <img src="/prisme.svg" class="size-8" />
+          <span class="text-system-fg font-bold">Prisme Analytics</span>
+        </div>
         <TimeRangeInput />
       </header>
       <main class="p-4 md:px-16 lg:px-32 m-auto flex flex-col gap-4">

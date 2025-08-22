@@ -1,80 +1,103 @@
-import { useState } from "preact/hooks";
+import { useRef } from "preact/hooks";
 import Uplot from "@/components/Uplot.tsx";
 import uPlot from "uplot";
-import useStats from "@/hooks/useStats.ts";
 import * as format from "@/lib/format.ts";
 import { preferred as colorScheme } from "@/signals/color-scheme.ts";
 import { theme } from "@/signals/trend.ts";
-import { breakpoint } from "@/signals/breakpoint.ts";
+import useSizeOf from "@/hooks/useSizeOf.ts";
+import { measureText } from "@/lib/canvas.ts";
+import { selectedTimeRange } from "@/components/TimeRangeInput.tsx";
+import Card from "@/components/Card.tsx";
+import { selectedTimeSerie } from "@/components/Summary.tsx";
+import { sessionsDuration } from "@/signals/stats.ts";
+
+const max = (acc: number, v: number) => v > acc ? v : acc;
 
 export default function TimeSerie() {
-  const [width, setWidth] = useState(0);
-  const stroke = colorScheme.value === "light" ? "black" : "white";
-  const stats = useStats();
+  const plotRef = useRef(null);
+  const size = useSizeOf(plotRef);
 
-  let filter: uPlot.Axis.Filter = (_, splits) =>
-    splits.map((v, i) => i % 2 === 0 ? v : null);
-  switch (breakpoint.value) {
-    case "sm":
-      filter = (_, splits) => splits.map((v, i) => i % 6 === 0 ? v : null);
-      break;
-    case "md":
-      filter = (_, splits) => splits.map((v, i) => i % 3 === 0 ? v : null);
-      break;
-    case "lg":
-      // Default.
-      break;
-  }
+  const stroke = colorScheme.value === "light" ? "black" : "white";
+  const stat = selectedTimeSerie.value.value;
+  if (!stat) return;
+
+  const formatY = selectedTimeSerie.value === sessionsDuration
+    ? format.duration
+    : format.bigNumber;
 
   return (
-    <section class="bg-trend-background p-4 rounded">
-      <div
-        ref={(div) => {
-          if (div) {
-            const obs = new ResizeObserver((entries) => {
-              for (const ent of entries) {
-                setWidth(ent.contentBoxSize[0].inlineSize as number);
-                break;
-              }
-            });
-            obs.observe(div);
-          }
-        }}
-      >
+    <Card size="big">
+      <div ref={plotRef}>
         <h2 class="font-semibold tracking-wide whitespace-nowrap text-system-muted">
           Time Series
         </h2>
-        <Uplot
-          options={{
-            width,
-            height: 312,
-            legend: { show: false },
-            axes: [{
-              stroke,
-              grid: { width: 0.05, stroke },
-              ticks: { width: 0.05, stroke },
-              values: (_, splits) => format.dateSerie(splits),
-            }, {
-              stroke,
-              grid: { width: 0.05, stroke },
-              ticks: { width: 0.05, stroke },
-              values: (_, splits) => splits.map(format.bigNumber),
-            }],
-            series: [
-              {},
-              {
-                show: true,
-                stroke: theme.value.primary,
-                width: 1,
-                fill: theme.value["primary-light"] + "88",
-              },
-            ],
-            plugins: [tooltipPlugin()],
-          }}
-          data={[stats.visitors.keys, stats.visitors.values]}
-        />
+        {stat.keys.length === 0
+          ? (
+            <div class="flex h-[312px] items-center text-center">
+              <p class="w-full font-bold">No data</p>
+            </div>
+          )
+          : (
+            <Uplot
+              key={stat}
+              options={{
+                width: size.width,
+                height: 312,
+                legend: { show: false },
+                scales: {
+                  // x: { range: [stat.from * 1000, stat.to * 1000] },
+                  y: { range: [0, stat.values.reduce(max, 0)] },
+                },
+                axes: [{
+                  stroke,
+                  grid: { width: 0.05, stroke },
+                  ticks: { width: 0.05, stroke },
+                  font: "400 12px Arial",
+                  space: (
+                    _self: uPlot,
+                    _axisIdx: number,
+                    scaleMin: number,
+                    scaleMax: number,
+                    _plotDim: number,
+                    _formatValue?: (value: unknown) => string,
+                  ) => {
+                    const sample = format.dateSerie([scaleMin, scaleMax])[0];
+                    return measureText(sample, 12).width + 8;
+                  },
+                  values: (_, splits) => format.dateSerie(splits),
+                }, {
+                  stroke,
+                  grid: { width: 0.05, stroke },
+                  ticks: { width: 0.05, stroke },
+                  values: (_, splits) => splits.map(formatY),
+                  size: (
+                    _: uPlot,
+                    values: string[],
+                  ) => {
+                    if (!values) return 0;
+                    const w = values.reduce(
+                      (acc, str) => Math.max(measureText(str, 12).width, acc),
+                      0,
+                    );
+                    return Math.ceil(w) + 24;
+                  },
+                }],
+                series: [
+                  {},
+                  {
+                    show: true,
+                    stroke: theme.value.primary,
+                    width: 1,
+                    fill: theme.value["primary-light"] + "88",
+                  },
+                ],
+                plugins: [tooltipPlugin(), selectTimeRangePlugin],
+              }}
+              data={[stat.keys, stat.values]}
+            />
+          )}
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -137,16 +160,31 @@ function tooltipPlugin(): uPlot.Plugin {
           cursortt.style.translate = "0% -100%";
         }
 
-        if (idx) {
-          date.textContent = new Date(u.data[0][idx])
-            .toLocaleDateString(navigator.language, {
-              weekday: "short",
-              month: "short",
-              day: "2-digit",
-            });
+        if (idx !== null && idx !== undefined) {
+          date.textContent = Intl.DateTimeFormat(undefined, {
+            dateStyle: "short",
+            timeStyle: "short",
+          }).format(new Date(u.data[0][idx]));
           value.textContent = format.bigNumber(u.data[1][idx] ?? 0);
         }
       },
     },
   };
 }
+
+const selectTimeRangePlugin: uPlot.Plugin = {
+  hooks: {
+    setSelect: (u) => {
+      const min = u.posToVal(u.select.left, "x");
+      const max = u.posToVal(u.select.left + u.select.width, "x");
+
+      const from = new Date(min);
+      const to = new Date(max);
+
+      selectedTimeRange.value = {
+        from: from.toISOString(),
+        to: to.toISOString(),
+      };
+    },
+  },
+};

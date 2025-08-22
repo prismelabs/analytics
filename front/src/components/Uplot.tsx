@@ -1,5 +1,6 @@
 import { JSX } from "preact";
 import UplotReact from "uplot-react";
+import "uplot/dist/uPlot.min.css";
 
 export default function (props: {
   options: uPlot.Options;

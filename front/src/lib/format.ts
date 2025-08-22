@@ -41,15 +41,23 @@ export function dateSerie(
   const firstDate = nonNullDates[0];
   const lastDate = nonNullDates[nonNullDates.length - 1];
 
-  if (
-    firstDate?.getFullYear() === lastDate?.getFullYear() &&
-    firstDate?.getMonth() === lastDate?.getMonth() &&
-    firstDate?.getDate() === lastDate?.getDate()
-  ) {
+  const sameY = firstDate?.getFullYear() === lastDate?.getFullYear();
+  const sameM = firstDate?.getMonth() === lastDate?.getMonth();
+  const sameD = firstDate?.getDate() === lastDate?.getDate();
+
+  if (sameY && sameM && sameD && ts.length !== 1) {
     return dates.map((d) =>
       d === null ? "" : Intl.DateTimeFormat(locale, {
-        dateStyle: "short",
         timeStyle: "short",
+      }).format(d)
+    );
+  } else if (sameY && sameM && ts.length !== 1) {
+    return dates.map((d) =>
+      d === null ? "" : Intl.DateTimeFormat(locale, {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
       }).format(d)
     );
   } else {
