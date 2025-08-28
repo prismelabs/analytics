@@ -1,17 +1,19 @@
 import Card from "@/components/Card.tsx";
 import Tabs from "@/components/Tabs.tsx";
 import TopBarGauge from "@/components/TopBarGauge.tsx";
+import {
+  topReferrers,
+  topUtmCampaigns,
+  topUtmMediums,
+  topUtmSources,
+} from "@/signals/stats.ts";
 
 export default function () {
   const tabs = [
-    { name: "Referrers", resource: "top-referrers", searchParam: "referrer" },
-    { name: "Sources", resource: "top-utm-sources", searchParam: "utm-source" },
-    { name: "Mediums", resource: "top-utm-mediums", searchParam: "utm-medium" },
-    {
-      name: "Campaigns",
-      resource: "top-utm-campaigns",
-      searchParam: "utm-campaign",
-    },
+    { name: "Referrers", data: topReferrers, searchParam: "referrer" },
+    { name: "Sources", data: topUtmSources, searchParam: "utm-source" },
+    { name: "Mediums", data: topUtmMediums, searchParam: "utm-medium" },
+    { name: "Campaigns", data: topUtmCampaigns, searchParam: "utm-campaign" },
   ];
 
   return (
@@ -21,12 +23,12 @@ export default function () {
     >
       <Tabs
         tabs={tabs.map(
-          ({ name, resource, searchParam }, i) => ({
+          ({ name, data, searchParam }) => ({
             name,
             children: (
               <TopBarGauge
                 key={name}
-                resource={resource}
+                data={data.value}
                 searchParam={searchParam}
                 transformKey={(key: string) => {
                   if (key.trim() === "") {

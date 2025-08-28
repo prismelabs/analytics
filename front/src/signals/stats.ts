@@ -1,5 +1,5 @@
-import { computed, effect, signal } from "@preact/signals";
-import { emptyDataFrame } from "@/lib/types.ts";
+import { computed, effect, Signal, signal } from "@preact/signals";
+import { DataFrame, emptyDataFrame } from "@/lib/types.ts";
 import * as location from "@/signals/location.ts";
 
 const sum = (arr: Array<number>) => arr.reduce((acc, v) => acc + v, 0);
@@ -22,50 +22,44 @@ const abort = computed(() => {
   });
 })();
 
-const fetchStat = async (stat: string, init?: RequestInit) => {
+const fetchStat = <K>(
+  signal: Signal<DataFrame<K>>,
+  stat: string,
+  init?: RequestInit,
+) => {
   const search = location.current.value.search;
-  const r = await fetch(`/api/v1/stats/${stat}${search}`, {
+  fetch(`/api/v1/stats/${stat}${search}`, {
     ...init,
     signal: abort.value.signal,
-  });
-  return await r.json();
+  }).then((r) => r.json())
+    .then((df) => signal.value = df);
 };
 
-export const visitors = signal({ ...emptyDataFrame });
+export const visitors = signal<DataFrame>({ ...emptyDataFrame });
 effect(() => {
-  fetchStat("visitors").then((df) => visitors.value = df);
+  fetchStat(visitors, "visitors");
 });
 export const totalVisitors = computed(() => sum(visitors.value.values));
 
-export const sessions = signal({ ...emptyDataFrame });
-effect(() => {
-  fetchStat("sessions").then((df) => sessions.value = df);
-});
+export const sessions = signal<DataFrame>({ ...emptyDataFrame });
+effect(() => fetchStat(sessions, "sessions"));
 export const totalSessions = computed(() => sum(sessions.value.values));
 
-export const pageViews = signal({ ...emptyDataFrame });
-effect(() => {
-  fetchStat("pageviews").then((df) => pageViews.value = df);
-});
+export const pageViews = signal<DataFrame>({ ...emptyDataFrame });
+effect(() => fetchStat(pageViews, "pageviews"));
 export const totalPageViews = computed(() => sum(pageViews.value.values));
 
-export const sessionsDuration = signal({ ...emptyDataFrame });
-effect(() => {
-  fetchStat("sessions-duration").then((df) => sessionsDuration.value = df);
-});
+export const sessionsDuration = signal<DataFrame>({ ...emptyDataFrame });
+effect(() => fetchStat(sessionsDuration, "sessions-duration"));
 export const avgSessionsDuration = computed(() =>
   avg(sessionsDuration.value.values)
 );
 
-export const bounces = signal({ ...emptyDataFrame });
-effect(() => {
-  fetchStat("bounces").then((df) => bounces.value = df);
-});
+export const bounces = signal<DataFrame>({ ...emptyDataFrame });
+effect(() => fetchStat(bounces, "bounces"));
 
-export const liveVisitors = signal({ ...emptyDataFrame });
-effect(() => {
-  fetchStat("live-visitors").then((df) => liveVisitors.value = df);
-});
+export const liveVisitors = signal<DataFrame>({ ...emptyDataFrame });
+effect(() => fetchStat(liveVisitors, "live-visitors"));
 export const totalLiveVisitors = computed(() => avg(liveVisitors.value.values));
 
 export const viewsPerSessions = computed(() => {
@@ -74,3 +68,43 @@ export const viewsPerSessions = computed(() => {
   }
   return 0;
 });
+
+export const topPages = signal<DataFrame<string>>({ ...emptyDataFrame });
+effect(() => fetchStat(topPages, "top-pages"));
+
+export const topEntryPages = signal<DataFrame<string>>({ ...emptyDataFrame });
+effect(() => fetchStat(topEntryPages, "top-entry-pages"));
+
+export const topExitPages = signal<DataFrame<string>>({ ...emptyDataFrame });
+effect(() => fetchStat(topExitPages, "top-exit-pages"));
+
+export const topCountries = signal<DataFrame<string>>({ ...emptyDataFrame });
+effect(() => fetchStat(topCountries, "top-countries"));
+
+export const topBrowsers = signal<DataFrame<string>>({ ...emptyDataFrame });
+effect(() => fetchStat(topBrowsers, "top-browsers"));
+
+export const topOperatingSystems = signal<DataFrame<string>>({
+  ...emptyDataFrame,
+});
+effect(() => fetchStat(topOperatingSystems, "top-operating-systems"));
+
+export const topReferrers = signal<DataFrame<string>>({
+  ...emptyDataFrame,
+});
+effect(() => fetchStat(topReferrers, "top-referrers"));
+
+export const topUtmSources = signal<DataFrame<string>>({
+  ...emptyDataFrame,
+});
+effect(() => fetchStat(topUtmSources, "top-utm-sources"));
+
+export const topUtmMediums = signal<DataFrame<string>>({
+  ...emptyDataFrame,
+});
+effect(() => fetchStat(topUtmMediums, "top-utm-mediums"));
+
+export const topUtmCampaigns = signal<DataFrame<string>>({
+  ...emptyDataFrame,
+});
+effect(() => fetchStat(topUtmCampaigns, "top-utm-campaigns"));

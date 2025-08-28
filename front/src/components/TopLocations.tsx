@@ -4,6 +4,7 @@ import Card from "@/components/Card.tsx";
 import Map from "@/components/Map.tsx";
 import TopBarGauge from "@/components/TopBarGauge.tsx";
 import { countryClass, countryCode, countryName } from "@/lib/countries.ts";
+import { topCountries } from "@/signals/stats.ts";
 
 export default function Locations() {
   const [country, setCountry] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export default function Locations() {
       >
         <Map class="fill-trend-primary-light stroke-system-muted md:col-span-2" />
         <TopBarGauge
-          resource="top-countries"
+          data={topCountries.value}
           searchParam="country"
           transformKey={(k) => {
             if (countryName[k]) return countryName[k];

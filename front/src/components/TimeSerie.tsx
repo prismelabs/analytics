@@ -91,7 +91,7 @@ export default function TimeSerie() {
                     fill: theme.value["primary-light"] + "88",
                   },
                 ],
-                plugins: [tooltipPlugin(), selectTimeRangePlugin],
+                plugins: [tooltipPlugin(formatY), selectTimeRangePlugin],
               }}
               data={[stat.keys, stat.values]}
             />
@@ -101,7 +101,7 @@ export default function TimeSerie() {
   );
 }
 
-function tooltipPlugin(): uPlot.Plugin {
+function tooltipPlugin(formatY: (_: number) => string): uPlot.Plugin {
   let cursortt: HTMLDivElement;
   let date: HTMLParagraphElement;
   let value: HTMLParagraphElement;
@@ -165,7 +165,7 @@ function tooltipPlugin(): uPlot.Plugin {
             dateStyle: "short",
             timeStyle: "short",
           }).format(new Date(u.data[0][idx]));
-          value.textContent = format.bigNumber(u.data[1][idx] ?? 0);
+          value.textContent = formatY(u.data[1][idx] ?? 0);
         }
       },
     },
