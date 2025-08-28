@@ -371,7 +371,7 @@ func (s *service) interval(timeRange TimeRange) string {
 		return "INTERVAL 1 second"
 	}
 
-	return fmt.Sprintf("INTERVAL %d second", timeRange.Dur/(16*time.Second))
+	return fmt.Sprintf("INTERVAL %d second", timeRange.Dur/(32*time.Second))
 }
 
 func doQuery[K any](
@@ -408,8 +408,7 @@ func doQuery[K any](
 func sessionQuery(filters Filters, args *[]any) string {
 	query := "WITH filtered_sessions AS (SELECT *, session_id, pageviews FROM sessions WHERE 1 = 1"
 	if (filters.TimeRange != TimeRange{}) {
-		query += " AND (" + timeFilter("session_timestamp", filters, args)
-		query += " OR " + timeFilter("exit_timestamp", filters, args) + ")"
+		query += " AND " + sessionTimeFilter(filters, args)
 	}
 
 	query += ") SELECT session_id FROM filtered_sessions WHERE 1 = 1"
@@ -473,6 +472,21 @@ func timeFilter(col string, filters Filters, args *[]any) string {
 	}
 
 	return "1 = 1"
+}
+
+func sessionTimeFilter(filters Filters, args *[]any) string {
+	timeRange := filters.TimeRange
+
+	var query string
+	query += "(" + timeFilter("session_timestamp", filters, args)
+	query += " OR " + timeFilter("exit_timestamp", filters, args) + ")"
+	query += " OR session_timestamp <= toDateTime(?) AND exit_timestamp >= toDateTime(?)"
+	*args = append(*args,
+		timeRange.Start.Format(time.DateTime),
+		timeRange.Start.Add(timeRange.Dur).Format(time.DateTime),
+	)
+
+	return query
 }
 
 func stringListFilter(col string, list []string, args *[]any) string {
