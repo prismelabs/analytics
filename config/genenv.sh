@@ -11,7 +11,6 @@ setenv PRISME_MODE "default"
 setenv PRISME_ACCESS_LOG "/dev/stdout"
 setenv PRISME_DEBUG "true"
 setenv PRISME_PORT "8000"
-setenv VITE_PRISME_PORT "8000"
 setenv PRISME_TRUST_PROXY "false"
 
 # Allow everyone to access /api/*/stats/* resources.
