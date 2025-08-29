@@ -7,7 +7,7 @@ import * as location from "@/signals/location.ts";
 
 export default function TimeRangeInput() {
   return (
-    <Popover as="div" class="relative inline-block text-system-fg">
+    <Popover as="div" class="relative inline-block text-system-fg min-w-max">
       <PopoverButton
         as="button"
         class="bg-trend-background flex items-center gap-2 w-full justify-center rounded-xl p-3 text-sm outline-none"

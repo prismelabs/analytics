@@ -66,6 +66,10 @@
   }
 }
 
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
 .react-calendar {
   @apply text-sm text-nowrap text-system-fg rounded
 }
