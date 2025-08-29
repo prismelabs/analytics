@@ -2,15 +2,13 @@ package timexpr
 
 import (
 	"errors"
-	"regexp"
 	"strconv"
 	"time"
 	"unicode"
 )
 
 var (
-	ErrSyntax     = errors.New("invalid time expression syntax")
-	durationRegex = regexp.MustCompile(`\d+(y|Q|M|w|d|h|m|s)`)
+	ErrSyntax = errors.New("invalid time expression syntax")
 )
 
 func Parse(expr string, floor bool) (time.Time, error) {
@@ -25,177 +23,6 @@ func Parse(expr string, floor bool) (time.Time, error) {
 		return time.Time{}, err
 	}
 	return p.time, nil
-}
-
-// Parse parse a datetime expression such as 'now-7d' or
-// '2025-07-10T22:00:00.000Z'.
-// func Parse(expr string, floor bool) (t time.Time, err error) {
-//
-// 	if expr == "" {
-// 		return time.Time{}, ErrSyntax
-// 	}
-//
-// 	var sign int64 = 1
-//
-// 	for i := 0; i < len(expr); i++ {
-// 		c := expr[i]
-// 		if c > 127 {
-// 			return time.Time{}, ErrSyntax
-// 		}
-// 		r := rune(c)
-//
-// 		if unicode.IsLetter(r) {
-// 			if !t.Equal(time.Time{}) {
-// 				return time.Time{}, ErrSyntax
-// 			}
-//
-// 			var read int
-// 			t, read, err = parseRef(expr[i:])
-// 			if err != nil {
-// 				return t, err
-// 			}
-// 			skip = read - 1
-// 			continue
-// 		}
-// 		if r == '-' || r == '+' {
-// 			if t.Equal(time.Time{}) {
-// 				return time.Time{}, ErrSyntax
-// 			}
-// 			if r == '-' {
-// 				sign = -1
-// 			}
-// 			continue
-// 		}
-//
-// 		if unicode.IsDigit(r) {
-// 			if t.Equal(time.Time{}) {
-// 				t, err = time.Parse(time.RFC3339, expr[i:])
-// 				if err != nil {
-// 					t, err = time.Parse(time.DateOnly, expr[i:])
-// 				}
-// 				return
-// 			} else if durationRegex.MatchString(expr[i:]) {
-// 				var n int64
-// 				n, err = strconv.ParseInt(expr[i:len(expr)-1], 10, 64)
-// 				if err != nil {
-// 					return t, err
-// 				}
-// 				i := int(sign * n)
-// 				d := time.Duration(sign * n)
-//
-// 				switch expr[len(expr)-1] {
-// 				case 'y': // Year.
-// 					t = t.AddDate(i, 0, 0)
-// 				case 'Q': // Quarter.
-// 					t = t.AddDate(0, 3*i, 0)
-// 				case 'M': // Month.
-// 					t = t.AddDate(0, i, 0)
-// 				case 'w': // Week.
-// 					t = t.AddDate(0, 0, 7*i)
-// 				case 'd': // Day.
-// 					t = t.AddDate(0, 0, i)
-// 				case 'h': // Hour.
-// 					t = t.Add(d * time.Hour)
-// 				case 'm': // Minute.
-// 					t = t.Add(d * time.Minute)
-// 				case 's': // Second.
-// 					t = t.Add(d * time.Second)
-// 				default:
-// 					return time.Time{}, ErrSyntax
-// 				}
-// 			}
-// 		}
-// 		if r == '/' {
-// 			if t.Equal(time.Time{}) {
-// 				return time.Time{}, ErrSyntax
-// 			}
-// 			return parseAndApplyRoundingFactor(expr[i+1:], t, floor)
-// 		}
-//
-// 		return time.Time{}, ErrSyntax
-// 	}
-//
-// 	return t, nil
-// }
-
-func parseRef(expr string) (time.Time, int, error) {
-	var ref string
-
-	for i, r := range expr {
-		if !unicode.IsLetter(r) {
-			break
-		}
-
-		ref = expr[:i+1]
-	}
-
-	switch ref {
-	case "now":
-		return time.Now(), len(ref), nil
-	default:
-		return time.Time{}, 0, ErrSyntax
-	}
-}
-
-func parseAndApplyRoundingFactor(factor string, t time.Time, floor bool) (time.Time, error) {
-	switch factor {
-	case "y": // Year.
-		if floor {
-			return time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, time.UTC), nil
-		} else {
-			return time.Date(t.Year(), time.December, 31, 23, 59, 59, 999999999, time.UTC), nil
-		}
-	case "Q": // Quarter.
-		if floor {
-			return time.Date(t.Year(), t.Month()-t.Month()%3, 1, 0, 0, 0, 0, time.UTC), nil
-		} else {
-			return time.Date(t.Year(), t.Month()+3-t.Month()%3, 31, 23, 59, 59, 999999999, time.UTC), nil
-		}
-	case "fQ": // Fiscal quarter.
-		if floor {
-			return time.Date(t.Year(), ((t.Month()-1)/3)*3, 1, 0, 0, 0, 0, time.UTC), nil
-		} else {
-			return time.Date(t.Year(), ((t.Month()+2)/3)*3, 31, 23, 59, 59, 999999999, time.UTC), nil
-		}
-	case "M": // Month.
-		if floor {
-			return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC), nil
-		} else {
-			return time.Date(t.Year(), t.Month(), 31, 23, 59, 59, 999999999, time.UTC), nil
-		}
-	case "w": // Week.
-		if floor {
-			return time.Date(t.Year(), t.Month(), t.Day()-int(t.Weekday()), 0, 0, 0, 0, time.UTC), nil
-		} else {
-			return time.Date(t.Year(), t.Month(), t.Day()+int(time.Saturday)-int(t.Weekday()), 23, 59, 59, 999999999, time.UTC), nil
-		}
-	case "d": // Day.
-		if floor {
-			return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC), nil
-		} else {
-			return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 999999999, time.UTC), nil
-		}
-	case "h": // Hour.
-		if floor {
-			return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, time.UTC), nil
-		} else {
-			return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 59, 59, 999999999, time.UTC), nil
-		}
-	case "m": // Minute.
-		if floor {
-			return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, time.UTC), nil
-		} else {
-			return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 59, 999999999, time.UTC), nil
-		}
-	case "s": // Second.
-		if floor {
-			return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, time.UTC), nil
-		} else {
-			return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 999999999, time.UTC), nil
-		}
-	default:
-		return time.Time{}, ErrSyntax
-	}
 }
 
 type parser struct {
