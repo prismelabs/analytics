@@ -211,7 +211,10 @@ func main() {
 	// Register handlers.
 	{
 		// Public endpoints.
+
 		app.Use("/static", handlers.Static(prismeCfg))
+
+		app.Use("/dashboard", handlers.Dashboard())
 
 		app.Use("/api/v1/healthcheck", handlers.HealthCheck())
 

@@ -58,7 +58,11 @@ lint/fix:
 	$(MAKE) -C ./tests lint/fix
 
 .PHONY: codegen
-codegen: ./pkg/embedded/static/wa.js ./pkg/embedded/static/openapi.json
+codegen: ./pkg/embedded/static/wa.js ./pkg/embedded/static/openapi.json ./pkg/embedded/dashboard
+
+./pkg/embedded/dashboard:
+	rm -rf $(shell realpath $@)
+	cd front && deno task build --outDir $(shell realpath $@)
 
 ./pkg/embedded/static/openapi.json: ./openapi.yml
 	yq < $^ > $@
