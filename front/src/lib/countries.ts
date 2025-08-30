@@ -553,6 +553,7 @@ export const countryClass: Record<string, string> = {
   "EE": "Estonia",
   "ET": "Ethiopia",
   "FI": "Finland",
+  "FR": "France",
   "GF": "French Guiana",
   "GA": "Gabon",
   "GE": "Georgia",

@@ -9,19 +9,17 @@ import TopSources from "@/components/TopSources.tsx";
 import { isLoading } from "@/signals/loading.ts";
 import { trend } from "@/signals/trend.ts";
 import Filters from "@/components/Filters.tsx";
+import LoadingBar from "@/components/LoadingBar.tsx";
 
 export function App() {
   const _ = trend.value;
 
   return (
     <>
-      <span
-        class={`loader fixed top-0 z-50 ${isLoading.value ? "" : "hidden!"}`}
-      >
-      </span>
+      <LoadingBar loading={isLoading} class="fixed! top-0 z-50 h-2" />
       <header class="px-4 py-2 w-full flex gap-2 justify-between sticky bg-trend-page top-0 z-40">
         <div class="flex items-center gap-2 min-w-max">
-          <img src="/prisme.svg" class="size-8" />
+          <img src="/dashboard/prisme.svg" class="size-8" />
           <span class="text-system-fg font-bold">Prisme Analytics</span>
         </div>
         <TimeRangeInput />

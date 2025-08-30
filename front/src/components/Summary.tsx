@@ -12,6 +12,7 @@ import {
   pageViews,
   sessions,
   sessionsDuration,
+  Stat,
   totalLiveVisitors,
   totalPageViews,
   totalSessions,
@@ -19,6 +20,7 @@ import {
   viewsPerSessions,
   visitors,
 } from "@/signals/stats.ts";
+import LoadingBar from "./LoadingBar.tsx";
 
 export const selectedTimeSerie = signal<Signal<DataFrame | null>>(visitors);
 
@@ -72,7 +74,7 @@ function Metric(
   { name, value, data }: {
     name: string;
     value: string;
-    data?: Signal<DataFrame>;
+    data?: Signal<Stat>;
   },
 ) {
   const hasPlot = data !== undefined && data.value.keys.length > 1;
@@ -82,11 +84,15 @@ function Metric(
     <Card
       title={name}
       size="small"
-      class={`basis-0 shrink-0 grow-1 grid gap-1 items-center border-x-4 border-x-transparent px-3 ${
+      class={`basis-0 shrink-0 grow-1 min-w-max grid gap-1 items-center border-x-4 border-x-transparent px-3 relative ${
         hasPlot ? "grid-rows-3 cursor-pointer" : "grid-rows-2"
       } ${selected ? "border-l-trend-primary" : ""}`}
       onClick={hasPlot ? () => selectedTimeSerie.value = data : undefined}
     >
+      {data !== undefined
+        ? <LoadingBar loading={data.value.loading} class="absolute top-0" />
+        // deno-lint-ignore jsx-no-useless-fragment
+        : <></>}
       <p class="whitespace-nowrap text-system-fg text-center text-2xl self-start relative -top-2">
         {value}
       </p>

@@ -29,8 +29,9 @@ export default function Locations() {
               ".country",
               ...countryClass[countryCode[country]].split(" "),
             ].join(".");
-            const el = d.querySelector(selector);
-            if (el) el.classList.add(activeClass);
+            d.querySelectorAll(selector).forEach((el) => {
+              el.classList.add(activeClass);
+            });
           }
         }}
       >

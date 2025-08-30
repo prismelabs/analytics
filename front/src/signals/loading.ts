@@ -3,7 +3,7 @@ import { computed, signal } from "@preact/signals";
 const loadingCount = signal(0);
 
 export function load<T>(loader: () => Promise<T>): Promise<T> {
-  loadingCount.value += 1;
+  loadingCount.value = loadingCount.peek() + 1;
   return loader().finally(() => loadingCount.value -= 1);
 }
 

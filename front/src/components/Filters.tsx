@@ -1,10 +1,12 @@
 import * as location from "@/signals/location.ts";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid";
-import { countryName } from "../lib/countries.ts";
+import { countryName } from "@/lib/countries.ts";
 
 export default function () {
   const params = [...location.current.value.searchParams.entries()]
-    .filter(([param]) => !!filterName[param]);
+    .filter(([param, values]) =>
+      !!filterName[param] && values.trim().length > 0
+    );
 
   if (params.length === 0) return;
 

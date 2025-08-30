@@ -1,7 +1,8 @@
 import * as format from "@/lib/format.ts";
+import { Signal } from "@preact/signals";
 
 export default function BarGauge(
-  { data }: {
+  { data, selected }: {
     data: Array<
       {
         label: string;
@@ -11,6 +12,7 @@ export default function BarGauge(
         onMouseLeave?: (_: { label: string; value: number }) => void;
       }
     >;
+    selected: Signal<Record<string, boolean>>;
   },
 ) {
   data.sort((a, b) => b.value - a.value);
@@ -29,7 +31,9 @@ export default function BarGauge(
         {data.map((d, i) => (
           <li
             key={i}
-            class="rounded hover:bg-trend-page cursor-pointer"
+            class={`rounded hover:bg-trend-page cursor-pointer text-select-none ${
+              selected.value[d.label] ? "bg-trend-page" : ""
+            }`}
             onClick={d.onClick ? () => d.onClick!(d) : undefined}
             onMouseEnter={d.onMouseEnter ? () => d.onMouseEnter!(d) : undefined}
             onMouseLeave={d.onMouseLeave ? () => d.onMouseLeave!(d) : undefined}

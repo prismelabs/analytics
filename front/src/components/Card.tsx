@@ -5,13 +5,13 @@ export default function Card(
     title?: string;
     class?: string;
     size: "small" | "big";
-    children: JSX.Element | JSX.Element[];
+    children: JSX.Element | JSX.Element[] | undefined;
     onClick?: (_: MouseEvent) => void;
   },
 ) {
   return (
     <section
-      class={`bg-trend-background rounded-2xl p-4 ${className}`}
+      class={`bg-trend-background rounded-2xl p-4 overflow-hidden ${className}`}
       onClick={onClick}
     >
       {!title ? null : size === "big"
