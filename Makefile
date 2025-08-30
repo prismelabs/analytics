@@ -49,6 +49,7 @@ clean:
 
 .PHONY: lint
 lint: codegen
+	openapi-spec-validator openapi.yml
 	golangci-lint run --allow-parallel-runners --timeout 2m ./...
 	$(MAKE) -C ./tests lint
 
@@ -57,7 +58,10 @@ lint/fix:
 	$(MAKE) -C ./tests lint/fix
 
 .PHONY: codegen
-codegen: ./pkg/embedded/static/wa.js
+codegen: ./pkg/embedded/static/wa.js ./pkg/embedded/static/openapi.json
+
+./pkg/embedded/static/openapi.json: ./openapi.yml
+	yq < $^ > $@
 
 ./pkg/embedded/static/wa.js: ./tracker/web_analytics.js
 	minify --js-version 2019 $^ > $@

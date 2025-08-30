@@ -78,6 +78,8 @@
                   bun # Bun JS runtime
                   minify # JS minifier
                   clickhouse # clickhouse client
+                  yq # Command-line YAML/XML/TOML processor
+                  python313Packages.openapi-spec-validator # OpenAPI validator
                 ])
                 ++ (with gengeommdb.packages.${system}; [ default ])
                 ++ (with self.packages.${system}; [ libchdb ]);

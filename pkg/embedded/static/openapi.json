@@ -1,0 +1,43 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "version": "latest",
+    "title": "Prisme Analytics REST API",
+    "description": "This is the REST API for [Prisme Analytics](https://www.prismeanalytics.com).\n\n**Notes:**\n- HTTP 5XX errors are not listed for each endpoint.\n  These should be handled globally. Not all HTTP 5XX errors are generated from Prisme, and they may serve non-JSON content. Make sure you inspect the `Content-Type` header before parsing as JSON.\n- Error responses are somewhat inconsistent.\n  Avoid using the `msg` and HTTP status code to identify errors. HTTP 400 and 422 are used interchangeably in many APIs.\n- Rate limit errors are consistently raised with the HTTP 429 code.\n\n**Backward compatibility:**\n- Endpoints marked as _Experimental_ may change without notice.\n- Endpoints marked as _Deprecated_ will be supported for at least 3 months since being marked as deprecated.\n- HTTP status codes like 400, 404, 422 may change for the same underlying error condition.",
+    "contact": {
+      "name": "Ask a question about this API",
+      "url": "https://github.com/orgs/prismelabs/discussions"
+    },
+    "license": {
+      "name": "AGPL-3.0-only",
+      "url": "https://github.com/supabase/auth/blob/master/LICENSE"
+    }
+  },
+  "externalDocs": {
+    "description": "Learn more about Prisme Analytics",
+    "url": "https://www.prismeanalytics.com/docs"
+  },
+  "servers": [],
+  "tags": [
+    {
+      "name": "general",
+      "description": "General APIs."
+    }
+  ],
+  "paths": {
+    "/api/v1/healthcheck": {
+      "get": {
+        "summary": "Service healthcheck.",
+        "description": "Ping this endpoint to receive information about the health of the service.",
+        "tags": [
+          "general"
+        ],
+        "responses": {
+          "200": {
+            "description": "Service is healthy.\n"
+          }
+        }
+      }
+    }
+  }
+}
