@@ -75,11 +75,7 @@
 }
 
 .react-calendar__navigation {
-  @apply h-8 mb-2 flex
-}
-
-.react-calendar__navigation__arrow {
-  @apply min-w-8
+  @apply h-8 mb-2 flex gap-2
 }
 
 .react-calendar__navigation__arrow:hover {

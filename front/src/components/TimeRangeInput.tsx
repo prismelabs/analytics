@@ -17,7 +17,7 @@ export default function TimeRangeInput() {
       </PopoverButton>
       <PopoverPanel
         transition
-        className="absolute right-0 z-10 mt-2 w-64 h-128 origin-top-right select-none divide-y divide-trend-page/60 rounded-md bg-trend-background shadow-lg transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in overflow-hidden flex flex-col pl-2"
+        className="absolute right-0 z-10 mt-2 w-72 h-128 origin-top-right select-none divide-y divide-trend-page/60 rounded-md bg-trend-background shadow-lg transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in overflow-hidden flex flex-col pl-2"
       >
         {({ close }: { close: () => void }) => (
           <>
