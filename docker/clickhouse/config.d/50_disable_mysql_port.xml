@@ -1,4 +1,0 @@
-<?xml version="1.0"?>
-<clickhouse>
-    <mysql_port remove="1" />
-</clickhouse>

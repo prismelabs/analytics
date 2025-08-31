@@ -1,6 +1,6 @@
 services:
   clickhouse:
-    image: "prismelabs/clickhouse:latest"
+    image: "clickhouse/clickhouse-server:25.8.1.5101-alpine"
     ports:
       - 8123:8123 # HTTP interface
       - 9000:9000 # Native interface

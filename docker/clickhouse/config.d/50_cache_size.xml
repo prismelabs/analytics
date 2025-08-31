@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<clickhouse>
-    <mark_cache_size>268435456</mark_cache_size> <!-- 256 MB -->
-    <index_mark_cache_size>67108864</index_mark_cache_size> <!-- 64 MB -->
-    <uncompressed_cache_size>16777216</uncompressed_cache_size> <!-- 16 MB -->
-</clickhouse>

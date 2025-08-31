@@ -1,6 +1,6 @@
 services:
   clickhouse:
-    image: "prismelabs/clickhouse:latest"
+    image: "prismelabs/clickhouse:25.2.2.39-alpine"
     ulimits:
       nofile: 262144
     # ports:

@@ -126,10 +126,4 @@ docker/build/prisme:
 	$(DOCKER) load < result
 	if [ "$${REMOVE_RESULT:=1}" = "1" ]; then rm -f result; fi
 
-.PHONY: docker/build/clickhouse
-docker/build/clickhouse:
-	$(DOCKER) build $(repository_root)/docker/clickhouse -t prismelabs/clickhouse
-	tag=$$(grep 'FROM' docker/clickhouse/Dockerfile | sed -E 's/.*[a-zA-Z]+:(.*)/\1/'); \
-		docker tag prismelabs/clickhouse prismelabs/clickhouse:$$tag
-
 FORCE:
