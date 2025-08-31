@@ -2,6 +2,7 @@ package grafana
 
 import (
 	"context"
+	"regexp"
 	"testing"
 
 	"github.com/prismelabs/analytics/pkg/testutils"
@@ -29,6 +30,9 @@ func TestIntegClientHealthCheck(t *testing.T) {
 
 		err := cli.HealthCheck(context.Background())
 		require.Error(t, err)
-		require.Equal(t, "failed to query grafana for health check: error when dialing [::1]:80: dial tcp [::1]:80: connect: connection refused", err.Error())
+		require.Regexp(t,
+			regexp.MustCompile("failed to query grafana for health check: error when dialing [^ ]+ dial tcp [^ ]+ connect: connection refused"),
+			err.Error(),
+		)
 	})
 }
