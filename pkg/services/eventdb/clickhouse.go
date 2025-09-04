@@ -7,6 +7,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
+	"github.com/prismelabs/analytics/pkg/sql"
 )
 
 func init() {
@@ -28,12 +29,12 @@ func (c *clickhouseDb) Exec(ctx context.Context, query string, args ...any) erro
 }
 
 // Query implements Service.
-func (c *clickhouseDb) Query(ctx context.Context, query string, args ...any) (QueryResult, error) {
+func (c *clickhouseDb) Query(ctx context.Context, query string, args ...any) (sql.QueryResult, error) {
 	return c.ch.Query(ctx, query, args...)
 }
 
 // QueryRow implements Service.
-func (c *clickhouseDb) QueryRow(ctx context.Context, query string, args ...any) Row {
+func (c *clickhouseDb) QueryRow(ctx context.Context, query string, args ...any) sql.Row {
 	return c.ch.QueryRow(ctx, query, args...)
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/chdb"
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
+	"github.com/prismelabs/analytics/pkg/sql"
 )
 
 func init() {
@@ -31,12 +32,12 @@ func (c *chDb) Exec(ctx context.Context, query string, args ...any) error {
 }
 
 // Query implements Service.
-func (c *chDb) Query(ctx context.Context, query string, args ...any) (QueryResult, error) {
+func (c *chDb) Query(ctx context.Context, query string, args ...any) (sql.QueryResult, error) {
 	return c.chdb.QueryContext(ctx, query, args...)
 }
 
 // QueryRow implements Service.
-func (c *chDb) QueryRow(ctx context.Context, query string, args ...any) Row {
+func (c *chDb) QueryRow(ctx context.Context, query string, args ...any) sql.Row {
 	return c.chdb.QueryRowContext(ctx, query, args...)
 }
 

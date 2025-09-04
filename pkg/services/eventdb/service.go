@@ -1,7 +1,6 @@
 package eventdb
 
 import (
-	"context"
 	"fmt"
 	"iter"
 	"maps"
@@ -9,28 +8,14 @@ import (
 	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/teardown"
+	"github.com/prismelabs/analytics/pkg/sql"
 )
 
 // Service define an event database service.
 type Service interface {
-	Exec(ctx context.Context, query string, args ...any) error
-	Query(ctx context.Context, query string, args ...any) (QueryResult, error)
-	QueryRow(ctx context.Context, query string, args ...any) Row
+	sql.DB
 	DriverName() string
 	Driver() any
-}
-
-// QueryResult define result of a query.
-type QueryResult interface {
-	Next() bool
-	Scan(...any) error
-	Close() error
-}
-
-// Row is the result of calling Service.QueryRow to select a single row.
-type Row interface {
-	Err() error
-	Scan(...any) error
 }
 
 var dbFactory = map[string]func(
