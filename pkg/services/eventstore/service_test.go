@@ -39,6 +39,11 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 		db, err := eventdb.NewService(eventDbCfg, driverCfg, logger, source, teardown)
 		require.NoError(t, err)
 
+		teardown.RegisterProcedure(func() error {
+			testutils.DropTables(t, db)
+			return nil
+		})
+
 		store, err := NewService(cfg, db, logger, promRegistry, teardown)
 		require.NoError(t, err)
 
@@ -58,8 +63,10 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 				testutils.ConfigueLoad(t, &cfg)
 				driverCfg = cfg
 			}
+
 			t.Run(driver, func(t *testing.T) {
 				store, db, promRegistry, teardown := setup(t, cfg, driver, driverCfg)
+
 				fn(t, store, db, promRegistry)
 				require.NoError(t, teardown.Teardown())
 			})
