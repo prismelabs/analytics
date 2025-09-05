@@ -10,6 +10,7 @@ import { selectedTimeRange } from "@/components/TimeRangeInput.tsx";
 import Card from "@/components/Card.tsx";
 import { selectedTimeSerie } from "@/components/Summary.tsx";
 import { sessionsDuration } from "@/signals/stats.ts";
+import { isError } from "../lib/types.ts";
 
 const max = (acc: number, v: number) => v > acc ? v : acc;
 
@@ -19,7 +20,7 @@ export default function TimeSerie() {
 
   const stroke = colorScheme.value === "light" ? "black" : "white";
   const stat = selectedTimeSerie.value.value;
-  if (!stat) return;
+  if (!stat || isError(stat)) return;
 
   const formatY = selectedTimeSerie.value === sessionsDuration
     ? format.duration
@@ -31,7 +32,7 @@ export default function TimeSerie() {
         <h2 class="font-semibold tracking-wide whitespace-nowrap text-system-muted">
           Time Series
         </h2>
-        {stat.keys.length === 0
+        {stat.ok.keys.length === 0
           ? (
             <div class="flex h-[312px] items-center text-center">
               <p class="w-full font-bold">No data</p>
@@ -46,7 +47,7 @@ export default function TimeSerie() {
                 legend: { show: false },
                 scales: {
                   // x: { range: [stat.from * 1000, stat.to * 1000] },
-                  y: { range: [0, stat.values.reduce(max, 0)] },
+                  y: { range: [0, stat.ok.values.reduce(max, 0)] },
                 },
                 axes: [{
                   stroke,
@@ -93,7 +94,7 @@ export default function TimeSerie() {
                 ],
                 plugins: [tooltipPlugin(formatY), selectTimeRangePlugin],
               }}
-              data={[stat.keys, stat.values]}
+              data={[stat.ok.keys, stat.ok.values]}
             />
           )}
       </div>

@@ -5,14 +5,14 @@ import * as format from "@/lib/format.ts";
 import { theme } from "@/signals/trend.ts";
 import useSizeOf from "@/hooks/useSizeOf.ts";
 import { Signal, signal } from "@preact/signals";
-import { DataFrame } from "@/lib/types.ts";
+import { isOk } from "@/lib/types.ts";
 import {
   avgSessionsDuration,
+  FetchedStat,
   liveVisitors,
   pageViews,
   sessions,
   sessionsDuration,
-  Stat,
   totalLiveVisitors,
   totalPageViews,
   totalSessions,
@@ -20,9 +20,9 @@ import {
   viewsPerSessions,
   visitors,
 } from "@/signals/stats.ts";
-import LoadingBar from "./LoadingBar.tsx";
+import LoadingBar from "@/components/LoadingBar.tsx";
 
-export const selectedTimeSerie = signal<Signal<DataFrame | null>>(visitors);
+export const selectedTimeSerie = signal<Signal<FetchedStat>>(visitors);
 
 export default function Summary() {
   const metrics = [
@@ -74,11 +74,12 @@ function Metric(
   { name, value, data }: {
     name: string;
     value: string;
-    data?: Signal<Stat>;
+    data?: Signal<FetchedStat>;
   },
 ) {
-  const hasPlot = data !== undefined && data.value.keys.length > 1;
-  const selected = selectedTimeSerie.value === data;
+  const hasPlot = data && isOk(data.value) &&
+    data.value.ok.keys.length > 1;
+  const selected = hasPlot && selectedTimeSerie.value === data;
 
   return (
     <Card
@@ -89,14 +90,22 @@ function Metric(
       } ${selected ? "border-l-trend-primary" : ""}`}
       onClick={hasPlot ? () => selectedTimeSerie.value = data : undefined}
     >
-      {data !== undefined
-        ? <LoadingBar loading={data.value.loading} class="absolute top-0" />
+      {data !== undefined && isOk(data.value)
+        ? <LoadingBar loading={data.value.ok.loading} class="absolute top-0" />
         // deno-lint-ignore jsx-no-useless-fragment
         : <></>}
-      <p class="whitespace-nowrap text-system-fg text-center text-2xl self-start relative -top-2">
-        {value}
-      </p>
-      {hasPlot ? <Plot {...data.value} /> : <div />}
+      {!data || isOk(data.value)
+        ? (
+          <p class="whitespace-nowrap text-system-fg text-center text-2xl self-start relative -top-2">
+            {value}
+          </p>
+        )
+        : (
+          <span class="font-bold text-page-fg text-center flex flex-row items-center justify-center">
+            error
+          </span>
+        )}
+      {hasPlot && isOk(data.value) ? <Plot {...data.value.ok} /> : <div />}
     </Card>
   );
 }
@@ -113,6 +122,7 @@ function Plot(
       ref={plotRef}
     >
       <Uplot
+        class="absolute bottom-4"
         options={{
           width: size.width,
           height: 36,

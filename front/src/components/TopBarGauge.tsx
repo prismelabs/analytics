@@ -1,12 +1,13 @@
-import { DataFrame } from "@/lib/types.ts";
 import * as location from "@/signals/location.ts";
-import BarGauge from "./BarGauge.tsx";
+import BarGauge from "@/components/BarGauge.tsx";
 import { useEffect } from "preact/hooks";
-import { useSignal } from "@preact/signals";
+import { computed, useSignal } from "@preact/signals";
+import { FetchedStat } from "@/signals/stats.ts";
+import { isError } from "@/lib/types.ts";
 
 export default function (
   { data, searchParam, transformKey, onMouseEnter, onMouseLeave }: {
-    data: DataFrame<string>;
+    data: FetchedStat<string>;
     searchParam: string;
     transformKey?: (_: string) => string;
     onMouseEnter?: (_: { label: string; value: number }) => void;
@@ -15,6 +16,14 @@ export default function (
 ) {
   const multiple = useSignal(false);
   const selected = useSignal<Record<string, boolean>>({});
+  const selectedLabels = computed(() =>
+    Object.fromEntries(
+      Object.entries(selected.value).map((
+        [k, v],
+      ) => [transformKey ? transformKey(k) : k, v]),
+    )
+  );
+
   const updateFilters = () => {
     if (multiple.value) return;
 
@@ -58,17 +67,25 @@ export default function (
     };
   }, []);
 
+  if (isError(data)) {
+    return (
+      <span class="font-bold text-page-fg text-center flex flex-row min-h-56 items-center justify-center">
+        {data.error}
+      </span>
+    );
+  }
+
   return (
     <BarGauge
-      selected={selected}
-      data={data.keys.map((k, i) => {
+      selected={selectedLabels}
+      data={data.ok.keys.map((k, i) => {
         const label = transformKey ? transformKey(k) : k;
         return {
           label,
-          value: data.values[i],
+          value: data.ok.values[i],
           onClick: searchParam
             ? () => {
-              selected.value[label] = true;
+              selected.value = { ...selected.value, [k]: true };
               updateFilters();
             }
             : undefined,

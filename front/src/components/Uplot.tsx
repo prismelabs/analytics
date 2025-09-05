@@ -9,8 +9,11 @@ export default function (props: {
   onDelete?: (chart: uPlot) => void;
   onCreate?: (chart: uPlot) => void;
   resetScales?: boolean;
-  className?: string;
+  class?: string;
 }) {
   // @ts-ignore: ...
-  return <UplotReact {...props} /> as unknown as JSX.Element;
+  return <UplotReact
+    {...props}
+    className={props["class"]}
+  /> as unknown as JSX.Element;
 }

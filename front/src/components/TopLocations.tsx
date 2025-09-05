@@ -39,10 +39,7 @@ export default function Locations() {
         <TopBarGauge
           data={topCountries.value}
           searchParam="country"
-          transformKey={(k) => {
-            if (countryName[k]) return countryName[k];
-            return "Unknown";
-          }}
+          transformKey={(k) => countryName[k] ?? "Unknown"}
           onMouseEnter={({ label }) => setCountry(label)}
           onMouseLeave={() => setCountry(null)}
         />
