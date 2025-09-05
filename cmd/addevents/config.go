@@ -27,17 +27,17 @@ func (c *Config) RegisterOptions(f *configue.Figue) {
 	var extraDomains int
 	var extraPaths int
 
-	f.Uint64Var(&c.BatchSize, "batch-size", 40_000, "size of a batch")
-	f.Uint64Var(&c.TotalEvents, "total-events", 4_000_000, "number of events to generate")
+	f.Uint64Var(&c.BatchSize, "batch.size", 40_000, "size of a batch")
+	f.Uint64Var(&c.TotalEvents, "total.events", 4_000_000, "number of events to generate")
 	f.StringVar(&domains, "domains", domains, "comma separated extra list of domains with events")
-	f.IntVar(&extraDomains, "extra-domains", 10, "number of random domains generated added to the domains list")
-	f.IntVar(&extraPaths, "extra-paths", 10, "number of random paths generated added to the paths list")
-	f.Float64Var(&c.CustomEventsRate, "custom-events-rate", 0.3, "custom events rate per viewed page")
-	f.Float64Var(&c.BounceRate, "bounce-rate", 0.56, "bounce rate")
-	f.Float64Var(&c.ExitRate, "exit-rate", 0.3, "exit rate when no bounce")
-	f.Float64Var(&c.MobileRate, "mobile-rate", 0.3, "mobile client rate")
-	f.Uint64Var(&c.VisitorIdsRange, "visitor-ids", 40_000, "range of visitor ids")
-	f.Float64Var(&c.DirectTrafficRate, "direct-rate", 0.5, "direct traffic rate against external traffic")
+	f.IntVar(&extraDomains, "extra.domains", 10, "number of random domains generated added to the domains list")
+	f.IntVar(&extraPaths, "extra.paths", 10, "number of random paths generated added to the paths list")
+	f.Float64Var(&c.CustomEventsRate, "custom.events-rate", 0.3, "custom events rate per viewed page")
+	f.Float64Var(&c.BounceRate, "bounce.rate", 0.56, "bounce rate")
+	f.Float64Var(&c.ExitRate, "exit.rate", 0.3, "exit rate when no bounce")
+	f.Float64Var(&c.MobileRate, "mobile.rate", 0.3, "mobile client rate")
+	f.Uint64Var(&c.VisitorIdsRange, "visitor.ids", 40_000, "range of visitor ids")
+	f.Float64Var(&c.DirectTrafficRate, "direct.rate", 0.5, "direct traffic rate against external traffic")
 
 	c.FromDate = time.Now().AddDate(0, -6, 0)
 
@@ -47,10 +47,10 @@ func (c *Config) RegisterOptions(f *configue.Figue) {
 	}
 
 	// Generate extra paths
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		part := 1 + rand.Intn(8)
 		var path []string
-		for j := 0; j < part; j++ {
+		for range part {
 			path = append(path, "/"+randomString(alphaNum, 1+rand.Intn(8)))
 		}
 

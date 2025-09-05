@@ -39,5 +39,5 @@ func main() {
 
 	app.executeScenario(emulateSession)
 
-	app.logger.Info("scenario done", "duration", time.Since(start))
+	app.logger.Info("scenario done", "duration", time.Since(start).String())
 }
