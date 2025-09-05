@@ -69,7 +69,7 @@
             default = pkgs.mkShell rec {
               buildInputs =
                 (with pkgs; [
-                  go
+                  go_1_25
                   air # FS watcher / Live reload
                   gopls # Go LSP
                   golangci-lint # Go linter
