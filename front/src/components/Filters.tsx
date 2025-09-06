@@ -16,7 +16,7 @@ export default function () {
       <ul class="flex flex-1 text-trend-foreground text-sm gap-2 items-center overflow-x-auto scrollbar-thin">
         {params.map(([param, value]) => (
           <li class="bg-trend-background rounded-xl py-2 pl-2 pr-1 min-w-max flex">
-            {filterName[param]} {value.includes(",") ? "are" : "is"}{" "}
+            {filterName[param]} {value.includes(",") ? "is one of " : "is "}
             {value.split(",")
               .map((s) => s.trim())
               .map(mapValue[param] ?? unchanged)
