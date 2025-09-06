@@ -66,13 +66,10 @@
   }
 
   function configureHeaders(options, headers) {
-    headers["Access-Control-Max-Age"] = 3600 // 1 hour
     headers["X-Prisme-Referrer"] = options.url
-
     if (options[visitorIdString]) {
       headers["X-Prisme-Visitor-Id"] = options[visitorIdString].toString()
     }
-
     return headers
   }
 
