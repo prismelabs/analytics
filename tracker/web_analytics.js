@@ -37,7 +37,6 @@
   // State variables.
   var referrer = doc.referrer.replace(loc.host, domain);
   var pageviewCount = 0
-  var supportsKeepAlive = 'Request' in global && 'keepalive' in new Request('')
   var trackingDisabled = localStorage.getItem("prismeAnalytics.tracking.enable") === "false"
 
   function defaultOptions(options) {
@@ -129,22 +128,8 @@
 
     // Outbound links.
     if (trackOutboundLinks && url.host !== loc.host) {
-      var shouldFollowLinkManually = !supportsKeepAlive && shouldFollowLink(event, url)
-      var followed = false
-      function followLink() {
-        if (!followed && shouldFollowLinkManually) {
-          followed = true
-          global.location.assign(url)
-        }
-      }
-
-      if (shouldFollowLinkManually) {
-        event.preventDefault()
-        setTimeout(followLink, 5000)
-      }
-
       // Send event.
-      sendClickEvent("/outbound-links", url).finally(followLink)
+      sendClickEvent("/outbound-links", url)
     }
 
     // File downloads.
