@@ -15,39 +15,39 @@ func TestService(t *testing.T) {
 	t.Run("NewService", func(t *testing.T) {
 		t.Run("Error", func(t *testing.T) {
 			t.Run(".fr", func(t *testing.T) {
-				service, err := NewService(Config{Origins: ".com"}, logger)
+				service, err := NewService(Config{Origins: []string{".com"}}, logger)
 				require.Error(t, err)
 				require.Nil(t, service)
 			})
 			t.Run("foo.fr", func(t *testing.T) {
-				service, err := NewService(Config{Origins: "foo..fr"}, logger)
+				service, err := NewService(Config{Origins: []string{"foo..fr"}}, logger)
 				require.Error(t, err)
 				require.Nil(t, service)
 			})
 			t.Run("**.foo.fr", func(t *testing.T) {
-				service, err := NewService(Config{Origins: "**.foo.fr"}, logger)
+				service, err := NewService(Config{Origins: []string{"**.foo.fr"}}, logger)
 				require.Error(t, err)
 				require.Nil(t, service)
 			})
 			t.Run("*foo.fr", func(t *testing.T) {
-				service, err := NewService(Config{Origins: "*foo.fr"}, logger)
+				service, err := NewService(Config{Origins: []string{"*foo.fr"}}, logger)
 				require.Error(t, err)
 				require.Nil(t, service)
 			})
 			t.Run("bar.*.foo.fr", func(t *testing.T) {
-				service, err := NewService(Config{Origins: "*foo.fr"}, logger)
+				service, err := NewService(Config{Origins: []string{"*foo.fr"}}, logger)
 				require.Error(t, err)
 				require.Nil(t, service)
 			})
 			t.Run("NoOrigin", func(t *testing.T) {
-				service, err := NewService(Config{Origins: ""}, logger)
+				service, err := NewService(Config{Origins: nil}, logger)
 				require.Error(t, err)
 				require.Nil(t, service)
 			})
 		})
 		t.Run("Success", func(t *testing.T) {
 			service, err := NewService(Config{
-				Origins: "      example.com          , example.fr, www.negrel.dev,*.github.com         ",
+				Origins: []string{"example.com", "example.fr", "www.negrel.dev", "*.github.com"},
 			}, logger)
 			require.NoError(t, err)
 			require.NotNil(t, service)
@@ -58,7 +58,7 @@ func TestService(t *testing.T) {
 		ctx := context.Background()
 
 		t.Run("NonRegistered", func(t *testing.T) {
-			service, err := NewService(Config{Origins: "notexample.com"}, logger)
+			service, err := NewService(Config{Origins: []string{"notexample.com"}}, logger)
 			require.NoError(t, err)
 
 			isRegistered, err := service.IsOriginRegistered(ctx, "example.com")
@@ -67,9 +67,7 @@ func TestService(t *testing.T) {
 		})
 
 		t.Run("Registered", func(t *testing.T) {
-			service, err := NewService(Config{
-				Origins: "example.org,example.com, example.io, *.example.fr",
-			}, logger)
+			service, err := NewService(Config{Origins: []string{"example.org", "example.com", "example.io", "*.example.fr"}}, logger)
 			require.NoError(t, err)
 
 			isRegistered, err := service.IsOriginRegistered(ctx, "example.com")
@@ -97,7 +95,7 @@ func TestService(t *testing.T) {
 
 func BenchmarkServiceNoWildcard(b *testing.B) {
 	logger := log.New("env_var_service_test", io.Discard, false)
-	service, err := NewService(Config{Origins: "example.org,example.com, example.io"}, logger)
+	service, err := NewService(Config{Origins: []string{"example.org", "example.com", "example.io"}}, logger)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -111,7 +109,7 @@ func BenchmarkServiceNoWildcard(b *testing.B) {
 
 func BenchmarkServiceWithWildcards(b *testing.B) {
 	logger := log.New("env_var_service_test", io.Discard, false)
-	service, err := NewService(Config{Origins: "example.org,example.com, *.example.io"}, logger)
+	service, err := NewService(Config{Origins: []string{"example.org", "example.com", "*.example.io"}}, logger)
 	if err != nil {
 		b.Fatal(err)
 	}

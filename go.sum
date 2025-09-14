@@ -116,8 +116,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/negrel/assert v0.5.0 h1:woWYcJDBNLMxpIv9XaRacA0l9K6cStkoYygu58J4DzI=
 github.com/negrel/assert v0.5.0/go.mod h1:Llg7o+ziRE+JPUR7Je9Ojnd7/efvwOXDuUN6lBo8uS4=
-github.com/negrel/configue v0.4.0 h1:kcW4oGiun/7L7D1d9LLcztyha/+1wtLhkVt3Bc1NXgs=
-github.com/negrel/configue v0.4.0/go.mod h1:zGwMgE6fJGj5e/StBHhExcj4oRnypqEOX3ZI0HUYMMk=
+github.com/negrel/configue v0.5.0 h1:OU8K+bw6aMt9tc4b9LULnn6RfMgS7NVConOUr8SGTH0=
+github.com/negrel/configue v0.5.0/go.mod h1:zGwMgE6fJGj5e/StBHhExcj4oRnypqEOX3ZI0HUYMMk=
 github.com/negrel/ringo v0.7.0 h1:pNeF5Y5GJyE4+/ra/9ol2OFIWxemooyCYKnTCQx0ETs=
 github.com/negrel/ringo v0.7.0/go.mod h1:cDSDvU1fY2PcKCOj0OB53CBqSt1m1uKWUqcIJlaCvL4=
 github.com/negrel/secrecy v0.7.0 h1:N8278Kj0ZuXAipIbMrnA66iEhv7Gi4P05qxocMGgE2M=

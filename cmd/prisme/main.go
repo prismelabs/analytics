@@ -39,8 +39,13 @@ import (
 
 func main() {
 	// Setup configuration loader.
-	env := configue.NewEnv("PRISME")
-	figue := configue.New("", configue.ContinueOnError, env, configue.NewFlag())
+	figue := configue.New(
+		"",
+		configue.ContinueOnError,
+		configue.NewINI(configue.File("./", "config.ini")),
+		configue.NewEnv("PRISME"),
+		configue.NewFlag(),
+	)
 	figue.Usage = func() {
 		_, _ = fmt.Fprintln(figue.Output(), "prisme - High-perfomance, self-hosted and privacy-focused web analytics service.")
 		_, _ = fmt.Fprintln(figue.Output())

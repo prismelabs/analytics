@@ -33,7 +33,7 @@ func NewService(cfg Config, logger log.Logger) (Service, error) {
 	}
 
 	origins := make(map[string]struct{})
-	for _, origin := range strings.Split(cfg.Origins, ",") {
+	for _, origin := range cfg.Origins {
 		wildcard := false
 
 		origin = strings.TrimSpace(origin)
@@ -122,17 +122,17 @@ end:
 
 // Service options.
 type Config struct {
-	Origins string
+	Origins []string
 }
 
 // RegisterOptions registers Config fields as options.
 func (c *Config) RegisterOptions(f *configue.Figue) {
-	f.StringVar(&c.Origins, "origins", "", "comma separated `list` of allowed origins without scheme (e.g. localhost, *.example.com, prismeanalytics.com)")
+	f.StringSliceVar(&c.Origins, "origins", nil, "comma separated `list` of allowed origins without scheme (e.g. localhost, example.com, prismeanalytics.com)")
 }
 
 // Validate validates configuration options.
 func (c *Config) Validate() error {
-	if strings.TrimSpace(c.Origins) == "" {
+	if c.Origins == nil {
 		return errors.New("origins allow list is empty, please specify -origins flag")
 	}
 	return nil
