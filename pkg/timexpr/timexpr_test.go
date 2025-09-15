@@ -71,3 +71,11 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
+
+func FuzzParse(f *testing.F) {
+	f.Add("now")
+	f.Fuzz(func(t *testing.T, expr string) {
+		_, _ = Parse(expr, false)
+		_, _ = Parse(expr, true)
+	})
+}
