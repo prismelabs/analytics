@@ -15,6 +15,14 @@ func TestParse(t *testing.T) {
 		expected time.Time
 		err      error
 	}
+
+	var lastDayOfThisMonth int
+	{
+		now := time.Now()
+		nextMonth := now.AddDate(0, 1, 0)
+		lastDayOfThisMonth = nextMonth.AddDate(0, 0, -nextMonth.Day()).Day()
+	}
+
 	testCases := []testCase{
 		{expr: "now", expected: time.Now()},
 		{expr: "now-120s", expected: time.Now().Add(-2 * time.Minute)},
@@ -26,7 +34,7 @@ func TestParse(t *testing.T) {
 		{expr: "now-1y/y", floor: true, expected: time.Date(time.Now().Year()-1, time.January, 1, 0, 0, 0, 0, time.UTC)},
 		{expr: "now-1y/y", expected: time.Date(time.Now().Year()-1, time.December, 31, 23, 59, 59, 99999999, time.UTC)},
 		{expr: "now-1y/M", floor: true, expected: time.Date(time.Now().Year()-1, time.Now().Month(), 1, 0, 0, 0, 0, time.UTC)},
-		{expr: "now-1y/M", expected: time.Date(time.Now().Year()-1, time.Now().Month(), 31, 23, 59, 59, 99999999, time.UTC)},
+		{expr: "now-1y/M", expected: time.Date(time.Now().Year()-1, time.Now().Month(), lastDayOfThisMonth, 23, 59, 59, 99999999, time.UTC)},
 		{expr: "now-1M/M", floor: true, expected: time.Date(time.Now().Year(), time.Now().Month()-1, 1, 0, 0, 0, 0, time.UTC)},
 		{expr: "now-1M/M", expected: time.Date(time.Now().Year(), time.Now().Month(), 0, 23, 59, 59, 99999999, time.UTC)},
 		{expr: "now-7", expected: time.Time{}, err: ErrSyntax},
