@@ -7,7 +7,6 @@ import (
 	"github.com/negrel/configue"
 	"github.com/prismelabs/analytics/pkg/chdb"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
-	"github.com/prismelabs/analytics/pkg/grafana"
 	"github.com/prismelabs/analytics/pkg/prisme"
 	"github.com/prismelabs/analytics/pkg/services/eventdb"
 	"github.com/prismelabs/analytics/pkg/services/eventstore"
@@ -19,7 +18,6 @@ type Config struct {
 	prisme         prisme.Config
 	chdb           chdb.Config
 	clickhouse     clickhouse.Config
-	grafana        grafana.Config
 	sessionstore   sessionstore.Config
 	fiber          fiber.Config
 	eventDb        eventdb.Config
@@ -31,7 +29,6 @@ func (c *Config) RegisterOptions(figue *configue.Figue) {
 	c.prisme.RegisterOptions(figue)
 	c.chdb.RegisterOptions(figue)
 	c.clickhouse.RegisterOptions(figue)
-	c.grafana.RegisterOptions(figue)
 	c.sessionstore.RegisterOptions(figue)
 	c.eventDb.RegisterOptions(figue)
 	c.eventStore.RegisterOptions(figue)

@@ -79,7 +79,6 @@ func serve() {
 		// Validated later.
 		// cfg.chdb.Validate(),
 		// cfg.clickhouse.Validate(),
-		// cfg.grafana.Validate(),
 		cfg.sessionstore.Validate(),
 		cfg.eventDb.Validate(),
 		cfg.eventStore.Validate(),

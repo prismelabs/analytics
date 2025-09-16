@@ -42,33 +42,6 @@ services:
         aliases:
           - "clickhouse.localhost"
 
-  grafana:
-    image: "docker.io/grafana/grafana-oss:12.0.2"
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
-      timeout: 30s
-    ports:
-      - 3000:3000
-    user: "root:root"
-    volumes:
-      - "grafana_data:/data"
-    environment:
-      # Configuration options are listed and explained here:
-      # https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/
-      #
-      # Install ClickHouse and Funnel plugins.
-      GF_INSTALL_PLUGINS: "grafana-clickhouse-datasource, mckn-funnel-panel"
-      # [database]
-      GF_DATABASE_TYPE: "sqlite3"
-      GF_DATABASE_PATH: "/data/grafana.db" # grafana_data volumes
-      # [security]
-      GF_SECURITY_ADMIN_USER: "admin" # grafana admin user username (password default to "admin")
-    networks:
-      default:
-        aliases:
-          - "grafana.localhost"
-
 volumes:
-  grafana_data:
   clickhouse_data:
 
