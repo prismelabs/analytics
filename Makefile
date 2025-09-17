@@ -60,9 +60,10 @@ lint/fix:
 .PHONY: codegen
 codegen: ./pkg/embedded/static/wa.js ./pkg/embedded/static/openapi.json ./pkg/embedded/dashboard
 
+.PHONY: ./pkg/embedded/dashboard
 ./pkg/embedded/dashboard:
-	rm -rf $(shell realpath $@)
-	cd front && deno task build --outDir $(shell realpath $@)
+	mkdir -p $@
+	$(MAKE) -C front DIST_DIR="../$@" build
 
 ./pkg/embedded/static/openapi.json: ./openapi.yml
 	yq < $^ > $@
