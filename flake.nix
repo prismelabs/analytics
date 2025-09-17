@@ -21,17 +21,18 @@
           lib = pkgs.lib;
           buildPrisme =
             tags:
-            pkgs.buildGoModule {
+            pkgs.buildGo125Module {
               pname = "prisme";
               version = "0.20.0";
               vendorHash = "sha256-bYmuF80sPnr1pTJC8Uljyh6sBL9wACIevGryx7WjCLo=";
               src = ./.;
               # Skip go test.
               doCheck = false;
-
               tags = tags;
-
               subPackages = "./cmd/prisme";
+              env = {
+                GOEXPERIMENT = "jsonv2";
+              };
             };
           dockerBuildPrisme =
             prisme: extraEnv:
