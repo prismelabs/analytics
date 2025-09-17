@@ -1,6 +1,8 @@
 package dataview
 
 import (
+	"bytes"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,41 +10,30 @@ import (
 )
 
 func TestJsonKvCollector(t *testing.T) {
-	t.Run("CollectKeysValues/NoPath", func(t *testing.T) {
-		kvCollector := JsonKvCollector{
-			Json: NewJsonData([]byte(`{"foo":"bar","bool":true,"number":1,"null":null,"obj":{"foo":"bar","bool":true}}`)),
-			Path: "",
-		}
+	t.Run("CollectKeysValues/Empty", func(t *testing.T) {
+		kvCollector := NewJsonKvCollector(bytes.NewReader([]byte(`{}`)))
+		keys, values, err := kvCollector.CollectKeysValues()
+		require.NoError(t, err)
+
+		require.Nil(t, keys)
+		require.Nil(t, values)
+	})
+	t.Run("CollectKeysValues/NonEmpty", func(t *testing.T) {
+		kvCollector := NewJsonKvCollector(bytes.NewReader([]byte(`{"foo":"bar","bool":true,"number":1.123,"null":null,"obj":{"foo":"bar","bool":true}}`)))
 		keys, values, err := kvCollector.CollectKeysValues()
 		require.NoError(t, err)
 
 		require.Equal(t, []string{"foo", "bool", "number", "null", "obj"}, keys)
-		require.Equal(t, []string{`"bar"`, "true", "1", "null", `{"foo":"bar","bool":true}`}, values)
-	})
-
-	t.Run("CollectKeysValues/WithPath", func(t *testing.T) {
-		kvCollector := JsonKvCollector{
-			Json: NewJsonData([]byte(`{"foo":"bar","bool":true,"number":1,"null":null,"obj":{"foo":"bar","bool":true}}`)),
-			Path: "obj.",
-		}
-		keys, values, err := kvCollector.CollectKeysValues()
-		require.NoError(t, err)
-
-		require.Equal(t, []string{"foo", "bool"}, keys)
-		require.Equal(t, []string{`"bar"`, "true"}, values)
+		require.Equal(t, []string{`"bar"`, "true", "1.123", "null", `{"foo":"bar","bool":true}`}, values)
 	})
 
 	t.Run("CollectKeysValues/MalformedJson", func(t *testing.T) {
 		// Missing closing brace.
-		kvCollector := JsonKvCollector{
-			Json: NewJsonData([]byte(`{"foo":"bar","bool":true,"number":1,"null":null,"obj":{"foo":"bar","bool":true}`)),
-			Path: "",
-		}
-		keys, values, err := kvCollector.CollectKeysValues()
+		kvCollector := NewJsonKvCollector(bytes.NewReader([]byte(
+			`{"foo":"bar","bool":true,"number":1,"null":null,"obj":{"foo":"bar","bool":true}`,
+		)))
+		_, _, err := kvCollector.CollectKeysValues()
 		require.Error(t, err)
-		require.ErrorIs(t, err, ErrMalformedData)
-		require.Nil(t, keys)
-		require.Nil(t, values)
 	})
 }
 
@@ -50,7 +41,7 @@ func TestFasthttpArgsKvCollector(t *testing.T) {
 	t.Run("CollectKeysValues/NoPrefix", func(t *testing.T) {
 		kvCollector := FasthttpArgsKeysValuesCollector{
 			Args:           &fasthttp.Args{},
-			ValueValidator: JsonValidator,
+			ValueValidator: json.Valid,
 		}
 		kvCollector.Args.Add("foo", `"bar"`)
 		kvCollector.Args.Add("number", "1")
@@ -66,7 +57,7 @@ func TestFasthttpArgsKvCollector(t *testing.T) {
 		kvCollector := FasthttpArgsKeysValuesCollector{
 			Args:           &fasthttp.Args{},
 			Prefix:         "foo-",
-			ValueValidator: JsonValidator,
+			ValueValidator: json.Valid,
 		}
 		kvCollector.Args.Add("foo-foo", `"bar"`)
 		kvCollector.Args.Add("foo-bar", "1")
@@ -82,14 +73,14 @@ func TestFasthttpArgsKvCollector(t *testing.T) {
 		kvCollector := FasthttpArgsKeysValuesCollector{
 			Args:           &fasthttp.Args{},
 			Prefix:         "foo-",
-			ValueValidator: JsonValidator,
+			ValueValidator: json.Valid,
 		}
 		kvCollector.Args.Add("foo-foo", `bar`) // Missing double quote for a string.
 		kvCollector.Args.Add("foo-bar", "1")
 
 		keys, values, err := kvCollector.CollectKeysValues()
 		require.Error(t, err)
-		require.ErrorIs(t, err, ErrMalformedData)
+		require.ErrorIs(t, err, ErrInvalidData)
 		require.Nil(t, keys)
 		require.Nil(t, values)
 	})

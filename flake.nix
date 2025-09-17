@@ -86,6 +86,7 @@
 
               LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
               GOFLAGS = "-tags=chdb";
+              GOEXPERIMENT = "jsonv2";
             };
           };
           packages = rec {

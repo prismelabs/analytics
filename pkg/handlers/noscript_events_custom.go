@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/prismelabs/analytics/pkg/dataview"
@@ -42,7 +44,7 @@ func GetNoscriptEventsCustom(
 			dataview.FasthttpArgsKeysValuesCollector{
 				Args:           c.Context().QueryArgs(),
 				Prefix:         "prop-",
-				ValueValidator: dataview.JsonValidator,
+				ValueValidator: json.Valid,
 			},
 		)
 	}

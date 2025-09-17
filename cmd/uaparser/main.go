@@ -8,18 +8,12 @@ import (
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/tidwall/gjson"
 )
 
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("User agents list file path is missing")
 		os.Exit(1)
-	}
-
-	path := ""
-	if len(os.Args) == 3 {
-		path = os.Args[2]
 	}
 
 	logger := log.New("uaparser", os.Stderr, false)
@@ -31,19 +25,22 @@ func main() {
 		panic(err)
 	}
 
-	if !gjson.ValidBytes(userAgents) {
-		logger.Warn("json is invalid, results may be incoherent")
+	if !json.Valid(userAgents) {
+		logger.Error("json is invalid, results may be incoherent")
+		return
 	}
 
-	userAgentsList := gjson.Parse(string(userAgents)).Array()
+	var userAgentsList []struct {
+		UserAgent string `json:"ua"`
+	}
+	err = json.Unmarshal(userAgents, &userAgentsList)
+	if err != nil {
+		panic(err)
+	}
 
 	var clients []uaparser.Client
 	for _, item := range userAgentsList {
-		ua := item.String()
-		if path != "" {
-			ua = item.Get(path).String()
-		}
-		client := uaParser.ParseUserAgent(ua)
+		client := uaParser.ParseUserAgent(item.UserAgent)
 		clients = append(clients, client)
 	}
 

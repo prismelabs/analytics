@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -36,7 +37,7 @@ func PostEventsCustom(
 			return err
 		}
 
-		data := dataview.NewJsonData(hutils.BodyOrEmptyJsonObj(c))
+		kvCollector := dataview.NewJsonKvCollector(bytes.NewReader(hutils.BodyOrEmptyJsonObj(c)))
 		return eventsCustomHandler(
 			c.UserContext(),
 			eventStore,
@@ -46,7 +47,7 @@ func PostEventsCustom(
 			c.Request().Header.UserAgent(),
 			utils.UnsafeBytes(c.IP()),
 			c.Params("name"),
-			dataview.JsonKvCollector{Json: data},
+			kvCollector,
 		)
 	}
 }
