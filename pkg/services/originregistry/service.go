@@ -3,6 +3,7 @@ package originregistry
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/negrel/configue"
@@ -54,12 +55,9 @@ func NewService(cfg Config, logger log.Logger) (Service, error) {
 
 		// foo..fr and .fr are invalid.
 		labels := strings.Split(origin, ".")
-		if len(labels) < 2 {
-			return nil, errors.New("invalid origin")
-		}
 		for i, l := range labels {
 			if (i > 0 || !wildcard) && strings.TrimSpace(l) == "" {
-				return nil, errors.New("invalid origin")
+				return nil, fmt.Errorf("invalid origin %q", origin)
 			}
 		}
 
