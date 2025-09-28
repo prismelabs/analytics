@@ -1,3 +1,8 @@
+export type TimeRange = {
+  from: string;
+  to: string;
+};
+
 export type DataFrame<K = number> = {
   from: number;
   to: number;

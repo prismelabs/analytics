@@ -2,7 +2,7 @@ import { computed, effect, signal } from "@preact/signals";
 import { CalendarDateRangeIcon } from "@heroicons/react/20/solid";
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import Calendar from "react-calendar";
-import { TimeRange } from "@/lib/timerange.ts";
+import { TimeRange } from "@/lib/types.ts";
 import * as location from "@/signals/location.ts";
 
 export default function TimeRangeInput() {
