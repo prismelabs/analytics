@@ -88,10 +88,10 @@ func NewService(
 ) Service {
 	logger = logger.With(
 		"service", "sessionstorage",
-		"gc_interval", cfg.gcInterval,
+		"gc_interval", cfg.gcInterval.String(),
 		"max_sessions_per_visitor", cfg.maxSessionsPerVisitor,
 		"device_expiry_percentile", cfg.deviceExpiryPercentile,
-		"session_inactive_ttl", cfg.sessionInactiveTtl,
+		"session_inactive_ttl", cfg.sessionInactiveTtl.String(),
 	)
 
 	service := &service{
