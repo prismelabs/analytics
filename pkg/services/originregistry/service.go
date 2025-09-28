@@ -49,7 +49,7 @@ func NewService(cfg Config, logger log.Logger) (Service, error) {
 
 			// *.fr and *bar.foo.fr are not allowed.
 			if strings.Count(origin, ".") < 2 || !strings.HasPrefix(origin, ".") {
-				return nil, errors.New("wildcard is only allowed at subdomain level (e.g. *.negrel.dev or *.www.negrel.dev)")
+				return nil, fmt.Errorf("invalid origins %q: wildcard is only allowed in subdomain (e.g. *.example.com or *.www.example.com)", origin)
 			}
 		}
 
@@ -63,7 +63,7 @@ func NewService(cfg Config, logger log.Logger) (Service, error) {
 
 		// www.*.negrel.dev is not allowed.
 		if strings.ContainsRune(origin, '*') {
-			return nil, errors.New("wildcard is only allowed at the beginning of an origin (e.g. *.negrel.dev)")
+			return nil, fmt.Errorf("invalid origins %q: wildcard is only allowed at the beginning of an origin (e.g. *.example.com or *.www.example.com)", origin)
 		}
 
 		srv.hasWildcard = srv.hasWildcard || wildcard
