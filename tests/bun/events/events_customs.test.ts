@@ -94,6 +94,22 @@ test('malformed json body', async () => {
   expect(response.status).toBe(400)
 })
 
+test('invalid custom event with JSON primitive / array as body', async () => {
+  for (const body of [1.23, 'a string', true, null, false, 3.15, [1], ['foo', 1, 2, true]]) {
+    const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
+      method: 'POST',
+      headers: {
+        Origin: 'http://mywebsite.localhost',
+        'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
+        'X-Prisme-Referrer': 'http://mywebsite.localhost/',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    })
+    expect(response.status).toBe(400)
+  }
+})
+
 test('valid test cases break', async () => {
   // Sleep so pageviews and identify timestamps are different for valid test
   // cases.
@@ -244,145 +260,6 @@ test('valid custom event with no properties', async () => {
       version: 1
     },
     event: {
-      domain: 'mywebsite.localhost',
-      path: '/',
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: 'foo',
-      properties: {}
-    }
-  })
-})
-
-test('valid custom event with JSON bool as body', async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
-    method: 'POST',
-    headers: {
-      Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(true)
-  })
-  expect(response.status).toBe(200)
-
-  const data = await getLatestCustomEvent()
-
-  expect(data).toMatchObject({
-    session: {
-      domain: 'mywebsite.localhost',
-      entry_path: '/',
-      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/',
-      operating_system: 'Other',
-      browser_family: 'Other',
-      device: 'Other',
-      referrer_domain: 'direct',
-      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      utm_source: '',
-      utm_medium: '',
-      utm_campaign: '',
-      utm_term: '',
-      utm_content: '',
-      version: 1
-    },
-    event: {
-      domain: 'mywebsite.localhost',
-      path: '/',
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: 'foo',
-      properties: {}
-    }
-  })
-})
-
-test('valid custom event with JSON number as body', async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
-    method: 'POST',
-    headers: {
-      Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(Math.random())
-  })
-  expect(response.status).toBe(200)
-
-  const data = await getLatestCustomEvent()
-
-  expect(data).toMatchObject({
-    session: {
-      domain: 'mywebsite.localhost',
-      entry_path: '/',
-      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/',
-      operating_system: 'Other',
-      browser_family: 'Other',
-      device: 'Other',
-      referrer_domain: 'direct',
-      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      utm_source: '',
-      utm_medium: '',
-      utm_campaign: '',
-      utm_term: '',
-      utm_content: '',
-      version: 1
-    },
-    event: {
-      domain: 'mywebsite.localhost',
-      path: '/',
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: 'foo',
-      properties: {}
-    }
-  })
-})
-
-test('valid custom event with JSON string as body', async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + '/foo', {
-    method: 'POST',
-    headers: {
-      Origin: 'http://mywebsite.localhost',
-      'X-Forwarded-For': await randomIpWithSession('mywebsite.localhost'),
-      'X-Prisme-Referrer': 'http://mywebsite.localhost/',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(Math.random().toString())
-  })
-  expect(response.status).toBe(200)
-
-  const data = await getLatestCustomEvent()
-
-  expect(data).toMatchObject({
-    session: {
-      domain: 'mywebsite.localhost',
-      entry_path: '/',
-      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: '/',
-      operating_system: 'Other',
-      browser_family: 'Other',
-      device: 'Other',
-      referrer_domain: 'direct',
-      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      utm_source: '',
-      utm_medium: '',
-      utm_campaign: '',
-      utm_term: '',
-      utm_content: '',
-      version: 1
-    },
-    event: {
-      timestamp: expect.stringMatching(TIMESTAMP_REGEX),
       domain: 'mywebsite.localhost',
       path: '/',
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
