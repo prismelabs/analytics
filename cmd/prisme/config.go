@@ -15,24 +15,24 @@ import (
 )
 
 type Config struct {
-	prisme         prisme.Config
-	chdb           chdb.Config
-	clickhouse     clickhouse.Config
-	sessionstore   sessionstore.Config
-	fiber          fiber.Config
-	eventDb        eventdb.Config
-	eventStore     eventstore.Config
-	originRegistry originregistry.Config
+	Prisme         prisme.Config
+	ChDb           chdb.Config
+	Clickhouse     clickhouse.Config
+	Sessionstore   sessionstore.Config
+	Fiber          fiber.Config
+	EventDb        eventdb.Config
+	EventStore     eventstore.Config
+	OriginRegistry originregistry.Config
 }
 
 func (c *Config) RegisterOptions(figue *configue.Figue) {
-	c.prisme.RegisterOptions(figue)
-	c.chdb.RegisterOptions(figue)
-	c.clickhouse.RegisterOptions(figue)
-	c.sessionstore.RegisterOptions(figue)
-	c.eventDb.RegisterOptions(figue)
-	c.eventStore.RegisterOptions(figue)
-	c.originRegistry.RegisterOptions(figue)
+	c.Prisme.RegisterOptions(figue)
+	c.ChDb.RegisterOptions(figue)
+	c.Clickhouse.RegisterOptions(figue)
+	c.Sessionstore.RegisterOptions(figue)
+	c.EventDb.RegisterOptions(figue)
+	c.EventStore.RegisterOptions(figue)
+	c.OriginRegistry.RegisterOptions(figue)
 }
 
 func defaultConfig() {

@@ -75,41 +75,43 @@ func serve() {
 
 	// Validate configuration.
 	err = errors.Join(
-		cfg.prisme.Validate(),
+		cfg.Prisme.Validate(),
 		// Validated later.
 		// cfg.chdb.Validate(),
 		// cfg.clickhouse.Validate(),
-		cfg.sessionstore.Validate(),
-		cfg.eventDb.Validate(),
-		cfg.eventStore.Validate(),
-		cfg.originRegistry.Validate(),
+		cfg.Sessionstore.Validate(),
+		cfg.EventDb.Validate(),
+		cfg.EventStore.Validate(),
+		cfg.OriginRegistry.Validate(),
 	)
 	if err != nil {
 		cliError(err)
 	}
 
 	// Create application logger.
-	logger := log.New("app", os.Stderr, cfg.prisme.Debug)
+	logger := log.New("app", os.Stderr, cfg.Prisme.Debug)
 	err = logger.TestOutput()
 	if err != nil {
 		panic(err)
 	}
 
+	logger.Info("configuration loaded", "configuration", cfg)
+
 	// Sets event store backend config.
 	var driverCfg any
-	if cfg.eventDb.Driver == "clickhouse" {
-		err = cfg.clickhouse.Validate()
-		driverCfg = cfg.clickhouse
+	if cfg.EventDb.Driver == "clickhouse" {
+		err = cfg.Clickhouse.Validate()
+		driverCfg = cfg.Clickhouse
 	} else {
-		err = cfg.chdb.Validate()
-		driverCfg = cfg.chdb
+		err = cfg.ChDb.Validate()
+		driverCfg = cfg.ChDb
 	}
 	if err != nil {
 		cliError(err)
 	}
 
 	// Fiber configuration.
-	cfg.fiber = fiber.Config{
+	cfg.Fiber = fiber.Config{
 		ServerHeader:          "prisme",
 		StrictRouting:         true,
 		AppName:               "Prisme Analytics",
@@ -120,12 +122,12 @@ func serve() {
 			return nil
 		},
 	}
-	if cfg.prisme.TrustProxy {
-		cfg.fiber.EnableIPValidation = false
-		cfg.fiber.ProxyHeader = cfg.prisme.ProxyHeader
+	if cfg.Prisme.TrustProxy {
+		cfg.Fiber.EnableIPValidation = false
+		cfg.Fiber.ProxyHeader = cfg.Prisme.ProxyHeader
 	} else {
-		cfg.fiber.EnableIPValidation = true
-		cfg.fiber.ProxyHeader = ""
+		cfg.Fiber.EnableIPValidation = true
+		cfg.Fiber.ProxyHeader = ""
 	}
 
 	// Setup prometheus registry.
@@ -139,7 +141,7 @@ func serve() {
 
 	// Setup services.
 	eventDb, err := eventdb.NewService(
-		cfg.eventDb,
+		cfg.EventDb,
 		driverCfg,
 		logger,
 		clickhouse.EmbeddedSourceDriver(logger),
@@ -149,7 +151,7 @@ func serve() {
 		cliError(err)
 	}
 	eventStore, err := eventstore.NewService(
-		cfg.eventStore,
+		cfg.EventStore,
 		eventDb,
 		logger,
 		promRegistry,
@@ -162,14 +164,14 @@ func serve() {
 	uaParser := uaparser.NewService(logger, promRegistry)
 	ipGeolocator := ipgeolocator.NewMmdbService(logger, promRegistry)
 	saltManager := saltmanager.NewService(logger)
-	sessionStore := sessionstore.NewService(logger, cfg.sessionstore, promRegistry)
-	originRegistry, err := originregistry.NewService(cfg.originRegistry, logger)
+	sessionStore := sessionstore.NewService(logger, cfg.Sessionstore, promRegistry)
+	originRegistry, err := originregistry.NewService(cfg.OriginRegistry, logger)
 	if err != nil {
 		cliError(err)
 	}
 
 	// Create fiber app.
-	app := fiber.New(cfg.fiber)
+	app := fiber.New(cfg.Fiber)
 
 	teardownService.RegisterProcedure(func() error {
 		logger.Info("shutting down fiber server...")
@@ -184,15 +186,15 @@ func serve() {
 	})
 
 	app.Use(middlewares.Metrics(promRegistry),
-		middlewares.RequestId(cfg.prisme),
-		middlewares.AccessLog(cfg.prisme, logger),
+		middlewares.RequestId(cfg.Prisme),
+		middlewares.AccessLog(cfg.Prisme, logger),
 		middlewares.ErrorHandler(promRegistry, logger))
 
 	// Register handlers.
 	{
 		// Public endpoints.
 
-		app.Use("/static", handlers.Static(cfg.prisme))
+		app.Use("/static", handlers.Static(cfg.Prisme))
 
 		app.Use("/dashboard", handlers.Dashboard())
 
@@ -200,13 +202,13 @@ func serve() {
 
 		eventCors := middlewares.EventsCors()
 		eventRateLimit := middlewares.EventsRateLimiter(
-			cfg.prisme,
+			cfg.Prisme,
 			memory.New(memory.Config{
 				GCInterval: 10 * time.Second,
 			}),
 		)
 		nonRegisteredOriginFilter := middlewares.NonRegisteredOriginFilter(originRegistry)
-		eventTimeout := middlewares.ApiEventsTimeout(cfg.prisme)
+		eventTimeout := middlewares.ApiEventsTimeout(cfg.Prisme)
 
 		app.Use("/api/v1/events/*",
 			eventCors,
@@ -281,7 +283,7 @@ func serve() {
 		)
 
 		stats := handlers.GetStatsHandlers(stats)
-		app.Use("/api/v1/stats/*", middlewares.StatsCors(cfg.prisme))
+		app.Use("/api/v1/stats/*", middlewares.StatsCors(cfg.Prisme))
 		app.Get("/api/v1/stats/bounces", stats.Bounces)
 		app.Get("/api/v1/stats/visitors", stats.Visitors)
 		app.Get("/api/v1/stats/sessions", stats.Sessions)
@@ -319,13 +321,13 @@ func serve() {
 			EnableOpenMetrics:   false,
 			ProcessStartTime:    time.Now(),
 		}))
-		logger.Info("admin server listening for incoming request", "host_port", cfg.prisme.AdminHostPort)
-		err := http.ListenAndServe(cfg.prisme.AdminHostPort, nil)
+		logger.Info("admin server listening for incoming request", "host_port", cfg.Prisme.AdminHostPort)
+		err := http.ListenAndServe(cfg.Prisme.AdminHostPort, nil)
 		logger.Fatal("failed to start admin server", err)
 	}()
 
 	go func() {
-		socket := "0.0.0.0:" + fmt.Sprint(cfg.prisme.Port)
+		socket := "0.0.0.0:" + fmt.Sprint(cfg.Prisme.Port)
 		logger.Info("start listening for incoming requests", "host_port", socket)
 		err := app.Listen(socket)
 		logger.Fatal("failed to listen for incoming requests", err)
