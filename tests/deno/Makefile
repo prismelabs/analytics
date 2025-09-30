@@ -16,10 +16,12 @@ clean/%: FORCE
 
 .PHONY: lint
 lint:
-	bunx ts-standard
+	deno fmt --check
+	deno check
 
 .PHONY: lint/fix
 lint/fix:
-	bunx ts-standard --fix
+	deno fmt
+	deno check
 
 FORCE:

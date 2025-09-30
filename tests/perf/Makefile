@@ -20,11 +20,12 @@ prisme/%: FORCE
 
 .PHONY: lint
 lint:
-	bunx standard
+	deno fmt --check
+	deno check
 
 .PHONY: lint/fix
 lint/fix:
-	bunx standard --fix
-
+	deno fmt
+	deno check
 
 FORCE:

@@ -75,7 +75,6 @@
                   golangci-lint # Go linter
                   go-migrate # Go SQL migration
                   bunyan-rs # Bunyan format pretty print
-                  bun # Bun JS runtime
                   minify # JS minifier
                   clickhouse # clickhouse client
                   yq # Command-line YAML/XML/TOML processor

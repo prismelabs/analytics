@@ -2,7 +2,7 @@ repository_root := $(shell git rev-parse --show-toplevel)
 export repository_root := $(or $(repository_root), $(CURDIR))
 include $(repository_root)/variables.mk
 
-export COMPOSE_PROJECT_NAME := prisme-bun-trusted-proxy
+export COMPOSE_PROJECT_NAME := prisme-deno-untrusted-proxy
 
 .PHONY: start
 start:

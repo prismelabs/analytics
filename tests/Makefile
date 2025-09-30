@@ -1,12 +1,12 @@
 .PHONY: all
-all: bun # perf must be called manually
+all: deno # perf must be called manually
 
-.PHONY: bun
-bun:
-	$(MAKE) -C bun
+.PHONY: deno
+deno:
+	$(MAKE) -C deno
 
-bun/%: FORCE
-	$(MAKE) -C bun $*
+deno/%: FORCE
+	$(MAKE) -C deno $*
 
 .PHONY: perf
 perf:
@@ -16,9 +16,9 @@ perf/%: FORCE
 	$(MAKE) -C perf $*
 
 .PHONY: lint
-lint: bun/lint perf/lint
+lint: deno/lint perf/lint
 
 .PHONY: lint/fix
-lint/fix: bun/lint/fix perf/lint/fix
+lint/fix: deno/lint/fix perf/lint/fix
 
 FORCE:
