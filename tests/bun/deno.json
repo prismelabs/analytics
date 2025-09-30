@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "@std/expect": "jsr:@std/expect@1",
+		"@faker-js/faker": "npm:@faker-js/faker@8",
+		"@clickhouse/client-web": "npm:@clickhouse/client-web@1"
+  },
+	"compilerOptions": {
+		"lib": ["deno.ns", "dom"]
+	}
+}

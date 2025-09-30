@@ -1,5 +1,5 @@
 .PHONY: all
-all: setup .WAIT all/events all/trusted-proxy all/trusted-proxy-custom-header all/untrusted-proxy
+all: all/events # all/trusted-proxy all/trusted-proxy-custom-header all/untrusted-proxy
 	@true
 
 all/%: FORCE start/% .WAIT test/% .WAIT clean/%
@@ -21,10 +21,5 @@ lint:
 .PHONY: lint/fix
 lint/fix:
 	bunx ts-standard --fix
-
-setup: node_modules
-
-node_modules:
-	$(DOCKER) run --rm -v $$PWD:/app -w /app docker.io/oven/bun bun install
 
 FORCE:

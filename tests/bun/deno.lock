@@ -1,0 +1,49 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/assert@^1.0.14": "1.0.14",
+    "jsr:@std/expect@1": "1.0.17",
+    "jsr:@std/internal@^1.0.10": "1.0.10",
+    "npm:@clickhouse/client-web@1": "1.12.1",
+    "npm:@faker-js/faker@8": "8.4.1"
+  },
+  "jsr": {
+    "@std/assert@1.0.14": {
+      "integrity": "68d0d4a43b365abc927f45a9b85c639ea18a9fab96ad92281e493e4ed84abaa4",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/expect@1.0.17": {
+      "integrity": "316b47dd65c33e3151344eb3267bf42efba17d1415425f07ed96185d67fc04d9",
+      "dependencies": [
+        "jsr:@std/assert",
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.10": {
+      "integrity": "e3be62ce42cab0e177c27698e5d9800122f67b766a0bea6ca4867886cbde8cf7"
+    }
+  },
+  "npm": {
+    "@clickhouse/client-common@1.12.1": {
+      "integrity": "sha512-ccw1N6hB4+MyaAHIaWBwGZ6O2GgMlO99FlMj0B0UEGfjxM9v5dYVYql6FpP19rMwrVAroYs/IgX2vyZEBvzQLg=="
+    },
+    "@clickhouse/client-web@1.12.1": {
+      "integrity": "sha512-r4FbR0ShxwZ9lt2tE4uvL7Pu5y6jjoU0TX1DsKvhiERvfTIZeSWB1pwbu3hEHBNK9IzvArgAeA2gdVMiFxNArg==",
+      "dependencies": [
+        "@clickhouse/client-common"
+      ]
+    },
+    "@faker-js/faker@8.4.1": {
+      "integrity": "sha512-XQ3cU+Q8Uqmrbf2e0cIC/QN43sTBSC8KF12u29Mb47tWrt2hAgBXSgpZMj4Ao8Uk0iJcU99QsOCaIL8934obCg=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/expect@1",
+      "npm:@clickhouse/client-web@1",
+      "npm:@faker-js/faker@8"
+    ]
+  }
+}

@@ -4,7 +4,7 @@ import { faker } from "@faker-js/faker";
 import { createClient } from "@clickhouse/client-web";
 import {
   COUNTRY_CODE_REGEX,
-  PRISME_CUSTOM_EVENTS_URL,
+  PRISME_FILE_DOWNLOAD_EVENTS_URL,
   PRISME_PAGEVIEWS_URL,
   PRISME_VISITOR_ID_REGEX,
   TIMESTAMP_REGEX,
@@ -17,13 +17,12 @@ console.log("faker seed", seed);
 faker.seed(seed);
 
 Deno.test("GET request instead of POST request", async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
     method: "GET",
     headers: {
       Origin: "http://mywebsite.localhost",
       "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
       "X-Prisme-Referrer": "http://mywebsite.localhost/",
-      "Content-Type": "application/json",
     },
     // body: JSON.stringify({}) // GET request can't have body.
   });
@@ -32,103 +31,107 @@ Deno.test("GET request instead of POST request", async () => {
 });
 
 Deno.test("invalid URL in X-Prisme-Referrer header", async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
     method: "POST",
     headers: {
       Origin: "http://mywebsite.localhost",
       "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
       "X-Prisme-Referrer": "not an url",
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify({}),
+    body: "https://www.example.com/file.tar.gz",
   });
-  await response.body?.cancel();
   expect(response.status).toBe(400);
+  await response.body?.cancel();
 });
 
 Deno.test("non registered domain in Origin header is rejected", async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
     method: "POST",
     headers: {
       Origin: "https://example.com",
       "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
       "X-Prisme-Referrer": "https://example.com/",
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify({}),
+    body: "https://www.example.com/file.tar.gz",
   });
-  await response.body?.cancel();
   expect(response.status).toBe(400);
+  await response.body?.cancel();
 });
 
-Deno.test("content type different than application/json is rejected", async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
+Deno.test("relative file uri in body", async () => {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
     method: "POST",
     headers: {
       Origin: "https://mywebsite.localhost",
       "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
       "X-Prisme-Referrer": "https://mywebsite.localhost/",
-      "Content-Type": "text/plain",
     },
-    body: "abc",
+    body: "/foo/bar/baz",
   });
-  await response.body?.cancel();
   expect(response.status).toBe(400);
+  await response.body?.cancel();
 });
 
-Deno.test("invalid sessionless custom event", async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
+Deno.test("invalid sessionless file download event", async () => {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
     method: "POST",
     headers: {
       Origin: "http://mywebsite.localhost",
       // No session associated with this ip.
       "X-Forwarded-For": faker.internet.ip(),
       "X-Prisme-Referrer": "http://mywebsite.localhost/",
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify({}),
+    body: "https://www.example.com/file.tar.gz",
   });
-  await response.body?.cancel();
   expect(response.status).toBe(400);
+  await response.body?.cancel();
 });
 
-Deno.test("malformed json body", async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
+Deno.test("invalid Ping-From header", async () => {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
     method: "POST",
     headers: {
-      Origin: "https://mywebsite.localhost",
+      Origin: "http://mywebsite.localhost",
       "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
-      "X-Prisme-Referrer": "https://mywebsite.localhost/",
-      "Content-Type": "application/json",
+      "Ping-From": "/relative/url",
+      "Ping-To": "https://www.example.com",
     },
-    body: '{"foo": "bar and foo", "num": 100', // No closing brace.
+    body: "PING",
   });
-  await response.body?.cancel();
   expect(response.status).toBe(400);
+  await response.body?.cancel();
 });
 
-Deno.test("invalid custom event with JSON primitive / array as body", async () => {
-  for (
-    const body of [1.23, "a string", true, null, false, 3.15, [1], [
-      "foo",
-      1,
-      2,
-      true,
-    ]]
-  ) {
-    const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
-      method: "POST",
-      headers: {
-        Origin: "http://mywebsite.localhost",
-        "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
-        "X-Prisme-Referrer": "http://mywebsite.localhost/",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-    await response.body?.cancel();
-    expect(response.status).toBe(400);
-  }
+Deno.test("invalid Ping-To header", async () => {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
+    method: "POST",
+    headers: {
+      Origin: "http://mywebsite.localhost",
+      "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
+      "Ping-From": "http://mywebsite.localhost",
+      "Ping-To": "",
+    },
+    body: "PING",
+  });
+  expect(response.status).toBe(400);
+  await response.body?.cancel();
+});
+
+Deno.test("invalid ping request, no session associated with Ping-From page", async () => {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
+    method: "POST",
+    headers: {
+      Origin: "http://mywebsite.localhost",
+      "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost", {
+        path: "/bar",
+      }),
+      "Ping-From": "http://mywebsite.localhost/foo",
+      "Ping-To": "https://www.example.com/page1",
+    },
+    body: "PING",
+  });
+  expect(response.status).toBe(400);
+  await response.body?.cancel();
 });
 
 Deno.test("valid test cases break", async () => {
@@ -140,20 +143,155 @@ Deno.test("valid test cases break", async () => {
   await sleep(1000);
 });
 
-Deno.test("concurrent pageview and custom event", async () => {
+Deno.test("valid file download event", async () => {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
+    method: "POST",
+    headers: {
+      Origin: "http://mywebsite.localhost",
+      "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
+      "X-Prisme-Referrer": "http://mywebsite.localhost/",
+    },
+    body: "https://anotherwebsite.localhost/resource.tar.gz",
+  });
+  expect(response.status).toBe(200);
+  await response.body?.cancel();
+
+  const data = await getLatestFileDownloadClickEvent();
+
+  expect(data).toMatchObject({
+    session: {
+      domain: "mywebsite.localhost",
+      entry_path: "/",
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: "/",
+      operating_system: "Other",
+      browser_family: "Other",
+      device: "Other",
+      referrer_domain: "direct",
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: "",
+      utm_medium: "",
+      utm_campaign: "",
+      utm_term: "",
+      utm_content: "",
+      version: 1,
+    },
+    event: {
+      domain: "mywebsite.localhost",
+      path: "/",
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      url: "https://anotherwebsite.localhost/resource.tar.gz",
+    },
+  });
+});
+
+Deno.test("valid ping request", async () => {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
+    method: "POST",
+    headers: {
+      Origin: "http://mywebsite.localhost",
+      "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
+      "Ping-From": "http://mywebsite.localhost/foo",
+      "Ping-To": "https://mywebsite.localhost/resource.tar.gz",
+    },
+    body: "PING",
+  });
+  expect(response.status).toBe(200);
+  await response.body?.cancel();
+
+  const data = await getLatestFileDownloadClickEvent();
+
+  expect(data).toMatchObject({
+    session: {
+      domain: "mywebsite.localhost",
+      entry_path: "/",
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: "/",
+      operating_system: "Other",
+      browser_family: "Other",
+      device: "Other",
+      referrer_domain: "direct",
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: "",
+      utm_medium: "",
+      utm_campaign: "",
+      utm_term: "",
+      utm_content: "",
+      version: 1,
+    },
+    event: {
+      domain: "mywebsite.localhost",
+      path: "/", // path of session and not path of Ping-From
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      url: "https://mywebsite.localhost/resource.tar.gz",
+    },
+  });
+});
+
+Deno.test("valid file download with internal link click event", async () => {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
+    method: "POST",
+    headers: {
+      Origin: "http://mywebsite.localhost",
+      "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
+      "X-Prisme-Referrer": "http://mywebsite.localhost/",
+    },
+    body: "https://mywebsite.localhost/foo",
+  });
+  expect(response.status).toBe(200);
+  await response.body?.cancel();
+
+  const data = await getLatestFileDownloadClickEvent();
+
+  expect(data).toMatchObject({
+    session: {
+      domain: "mywebsite.localhost",
+      entry_path: "/",
+      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
+      exit_path: "/",
+      operating_system: "Other",
+      browser_family: "Other",
+      device: "Other",
+      referrer_domain: "direct",
+      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      utm_source: "",
+      utm_medium: "",
+      utm_campaign: "",
+      utm_term: "",
+      utm_content: "",
+      version: 1,
+    },
+    event: {
+      domain: "mywebsite.localhost",
+      path: "/",
+      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
+      session_uuid: expect.stringMatching(UUID_V7_REGEX),
+      url: "https://mywebsite.localhost/foo",
+    },
+  });
+});
+
+Deno.test("concurrent pageview and file download event", async () => {
   const ipAddr = faker.internet.ip();
 
   await Promise.all([
-    // Custom events first.
-    fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
+    // Click events first.
+    fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
       method: "POST",
       headers: {
-        Origin: "https://mywebsite.localhost",
+        Origin: "http://mywebsite.localhost",
         "X-Forwarded-For": ipAddr,
-        Referer: "https://mywebsite.localhost/",
-        "Content-Type": "application/json",
+        "X-Prisme-Referrer": "http://mywebsite.localhost/",
       },
-      body: JSON.stringify({}),
+      body: "https://anotherwebsite.localhost/resource.tar.gz",
     }),
     // Pageview concurrently.
     // This pageview will create session that will be used for both events.
@@ -172,7 +310,7 @@ Deno.test("concurrent pageview and custom event", async () => {
     })
   );
 
-  const data = await getLatestCustomEvent();
+  const data = await getLatestFileDownloadClickEvent();
 
   expect(data).toMatchObject({
     session: {
@@ -199,236 +337,25 @@ Deno.test("concurrent pageview and custom event", async () => {
       path: "/",
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: "foo",
-      properties: {},
+      url: "https://anotherwebsite.localhost/resource.tar.gz",
     },
   });
 });
 
-Deno.test("valid custom event request without body and Content-Type header", async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
-    method: "POST",
-    headers: {
-      Origin: "http://mywebsite.localhost",
-      "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
-      "X-Prisme-Referrer": "http://mywebsite.localhost/",
-      // 'Content-Type': 'application/json' // not required if no body.
-    },
-  });
-  await response.body?.cancel();
-  expect(response.status).toBe(200);
-
-  const data = await getLatestCustomEvent();
-
-  expect(data).toMatchObject({
-    session: {
-      domain: "mywebsite.localhost",
-      entry_path: "/",
-      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: "/",
-      operating_system: "Other",
-      browser_family: "Other",
-      device: "Other",
-      referrer_domain: "direct",
-      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      utm_source: "",
-      utm_medium: "",
-      utm_campaign: "",
-      utm_term: "",
-      utm_content: "",
-      version: 1,
-    },
-    event: {
-      domain: "mywebsite.localhost",
-      path: "/",
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: "foo",
-      properties: {},
-    },
-  });
-});
-
-Deno.test("valid custom event with no properties", async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
-    method: "POST",
-    headers: {
-      Origin: "http://mywebsite.localhost",
-      "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
-      "X-Prisme-Referrer": "http://mywebsite.localhost/",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({}),
-  });
-  await response.body?.cancel();
-  expect(response.status).toBe(200);
-
-  const data = await getLatestCustomEvent();
-
-  expect(data).toMatchObject({
-    session: {
-      domain: "mywebsite.localhost",
-      entry_path: "/",
-      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: "/",
-      operating_system: "Other",
-      browser_family: "Other",
-      device: "Other",
-      referrer_domain: "direct",
-      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      utm_source: "",
-      utm_medium: "",
-      utm_campaign: "",
-      utm_term: "",
-      utm_content: "",
-      version: 1,
-    },
-    event: {
-      domain: "mywebsite.localhost",
-      path: "/",
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: "foo",
-      properties: {},
-    },
-  });
-});
-
-Deno.test("valid custom event with few properties", async () => {
-  const props = {
-    x: Math.round(Math.random() * 100),
-    y: Math.round(Math.random() * 100),
-  };
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
-    method: "POST",
-    headers: {
-      Origin: "http://mywebsite.localhost",
-      "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
-      "X-Prisme-Referrer": "http://mywebsite.localhost/",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(props),
-  });
-  await response.body?.cancel();
-  expect(response.status).toBe(200);
-
-  const data = await getLatestCustomEvent();
-
-  expect(data).toMatchObject({
-    session: {
-      domain: "mywebsite.localhost",
-      entry_path: "/",
-      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: "/",
-      operating_system: "Other",
-      browser_family: "Other",
-      device: "Other",
-      referrer_domain: "direct",
-      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      utm_source: "",
-      utm_medium: "",
-      utm_campaign: "",
-      utm_term: "",
-      utm_content: "",
-      version: 1,
-    },
-    event: {
-      domain: "mywebsite.localhost",
-      path: "/",
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: "foo",
-      properties: props,
-    },
-  });
-});
-
-Deno.test("valid custom event with lot of properties", async () => {
-  // deno-lint-ignore no-explicit-any
-  const props: Record<number, any> = {};
-  for (let i = 0; i < 8; i++) {
-    switch (i % 4) {
-      case 0: // Bool
-        props[i] = Math.random() < 0.5;
-        break;
-      case 1: // String
-        props[i] = (Math.random() * Number.MAX_SAFE_INTEGER).toString();
-        break;
-      case 2: // Number
-        props[i] = Math.random() * Number.MAX_SAFE_INTEGER;
-        break;
-      case 3: // Null
-        props[i] = null;
-        break;
-    }
-  }
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
-    method: "POST",
-    headers: {
-      Origin: "http://mywebsite.localhost",
-      "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
-      "X-Prisme-Referrer": "http://mywebsite.localhost/",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(props),
-  });
-  await response.body?.cancel();
-  expect(response.status).toBe(200);
-
-  const data = await getLatestCustomEvent();
-
-  expect(data).toMatchObject({
-    session: {
-      domain: "mywebsite.localhost",
-      entry_path: "/",
-      exit_timestamp: expect.stringMatching(TIMESTAMP_REGEX),
-      exit_path: "/",
-      operating_system: "Other",
-      browser_family: "Other",
-      device: "Other",
-      referrer_domain: "direct",
-      country_code: expect.stringMatching(COUNTRY_CODE_REGEX),
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      utm_source: "",
-      utm_medium: "",
-      utm_campaign: "",
-      utm_term: "",
-      utm_content: "",
-      version: 1,
-    },
-    event: {
-      domain: "mywebsite.localhost",
-      path: "/",
-      visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
-      session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: "foo",
-      properties: props,
-    },
-  });
-});
-
-Deno.test("valid custom event without X-Prisme-Referrer", async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
+Deno.test("valid click event without X-Prisme-Referrer", async () => {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
     method: "POST",
     headers: {
       Origin: "http://mywebsite.localhost",
       "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
       Referer: "http://mywebsite.localhost/",
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify({}),
+    body: "https://anotherwebsite.localhost/resource.tar.gz",
   });
-  await response.body?.cancel();
   expect(response.status).toBe(200);
+  await response.body?.cancel();
 
-  const data = await getLatestCustomEvent();
+  const data = await getLatestFileDownloadClickEvent();
 
   expect(data).toMatchObject({
     session: {
@@ -455,27 +382,25 @@ Deno.test("valid custom event without X-Prisme-Referrer", async () => {
       path: "/",
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: "foo",
-      properties: {},
+      url: "https://anotherwebsite.localhost/resource.tar.gz",
     },
   });
 });
 
-Deno.test("valid custom event without trailing slash in referrer", async () => {
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
+Deno.test("valid click event without trailing slash in referrer", async () => {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
     method: "POST",
     headers: {
       Origin: "http://mywebsite.localhost",
       "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost"),
       Referer: "http://mywebsite.localhost",
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify({}),
+    body: "https://anotherwebsite.localhost/resource.tar.gz",
   });
-  await response.body?.cancel();
   expect(response.status).toBe(200);
+  await response.body?.cancel();
 
-  const data = await getLatestCustomEvent();
+  const data = await getLatestFileDownloadClickEvent();
 
   expect(data).toMatchObject({
     session: {
@@ -502,33 +427,31 @@ Deno.test("valid custom event without trailing slash in referrer", async () => {
       path: "/",
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: "foo",
-      properties: {},
+      url: "https://anotherwebsite.localhost/resource.tar.gz",
     },
   });
 });
 
-Deno.test("valid custom event with Windows + Chrome user agent", async () => {
+Deno.test("valid click event with Windows + Chrome user agent", async () => {
   const userAgent =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.3";
 
-  const response = await fetch(PRISME_CUSTOM_EVENTS_URL + "/foo", {
+  const response = await fetch(PRISME_FILE_DOWNLOAD_EVENTS_URL, {
     method: "POST",
     headers: {
       Origin: "http://mywebsite.localhost",
       "X-Forwarded-For": await randomIpWithSession("mywebsite.localhost", {
         userAgent,
       }),
-      Referer: "http://mywebsite.localhost/",
-      "Content-Type": "application/json",
+      Referer: "http://mywebsite.localhost",
       "User-Agent": userAgent,
     },
-    body: JSON.stringify({ foo: "bar" }),
+    body: "https://anotherwebsite.localhost/resource.tar.gz",
   });
-  await response.body?.cancel();
   expect(response.status).toBe(200);
+  await response.body?.cancel();
 
-  const data = await getLatestCustomEvent();
+  const data = await getLatestFileDownloadClickEvent();
 
   expect(data).toMatchObject({
     session: {
@@ -555,14 +478,13 @@ Deno.test("valid custom event with Windows + Chrome user agent", async () => {
       path: "/",
       visitor_id: expect.stringMatching(PRISME_VISITOR_ID_REGEX),
       session_uuid: expect.stringMatching(UUID_V7_REGEX),
-      name: "foo",
-      properties: { foo: "bar" },
+      url: "https://anotherwebsite.localhost/resource.tar.gz",
     },
   });
 });
 
 // deno-lint-ignore no-explicit-any
-async function getLatestCustomEvent(): Promise<any> {
+async function getLatestFileDownloadClickEvent(): Promise<any> {
   // Wait for clickhouse to ingest batch.
   await sleep(1000);
 
@@ -581,24 +503,15 @@ async function getLatestCustomEvent(): Promise<any> {
   expect(session.sign).toBe(1);
   delete session.sign;
 
-  const customEvents = await client.query({
-    query: `SELECT * FROM events_custom WHERE visitor_id = '${session
+  const clickEvents = await client.query({
+    query: `SELECT * FROM file_downloads WHERE visitor_id = '${session
       .visitor_id as string}' ORDER BY timestamp DESC LIMIT 1`,
   });
   // deno-lint-ignore no-explicit-any
-  const customEvent = await customEvents.json().then((r: any) => r.data[0]);
-  if (customEvent === null || customEvent === undefined) return null;
-  expect(customEvent.visitor_id).toBe(session.visitor_id);
-  expect(customEvent.session_uuid).toBe(session.session_uuid);
+  const clickEvent = await clickEvents.json().then((r: any) => r.data[0]);
+  if (clickEvent === null || clickEvent === undefined) return null;
+  expect(clickEvent.visitor_id).toBe(session.visitor_id);
+  expect(clickEvent.session_uuid).toBe(session.session_uuid);
 
-  customEvent.properties = Object.fromEntries(
-    customEvent.keys.map((
-      key: string,
-      index: number,
-    ) => [key, JSON.parse(customEvent.values[index])]),
-  );
-  delete customEvent.keys;
-  delete customEvent.values;
-
-  return { event: customEvent, session };
+  return { event: clickEvent, session };
 }
