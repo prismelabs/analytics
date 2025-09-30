@@ -15,4 +15,3 @@ services:
       default:
         aliases:
           - "clickhouse.localhost"
-

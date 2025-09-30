@@ -1,8 +1,8 @@
 services:
-  bun:
-    image: docker.io/oven/bun
-    command: sh -c "bun install && cd ./untrusted-proxy && exec bun test"
-    working_dir: /data
+  deno:
+    image: docker.io/denoland/deno:2.5.2
+    command: deno test --allow-net
+    working_dir: /data/untrusted-proxy
     volumes:
       - ..:/data
       - prisme_logs:/prisme_logs:ro

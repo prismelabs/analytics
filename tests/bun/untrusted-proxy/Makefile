@@ -18,7 +18,7 @@ test:
 		-f ./docker-compose.test.yml \
 		up \
 		--abort-on-container-exit \
-		--exit-code-from bun
+		--exit-code-from deno
 
 .PHONY: clean
 clean:
