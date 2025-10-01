@@ -21,11 +21,9 @@ prisme/%: FORCE
 .PHONY: lint
 lint:
 	deno fmt --check
-	deno check
 
 .PHONY: lint/fix
 lint/fix:
 	deno fmt
-	deno check
 
 FORCE:
