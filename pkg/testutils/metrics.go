@@ -11,7 +11,7 @@ import (
 // FindMetric gather and returns metric of the given type, name and with the
 // given labels from the registry.
 func FindMetric(
-	t *testing.T,
+	t require.TestingT,
 	registry *prometheus.Registry,
 	metricType io_prometheus_client.MetricType,
 	name string,
@@ -54,7 +54,7 @@ func FindMetric(
 
 // CounterValue gather and return value of counter metric with given name and
 // labels.
-func CounterValue(t *testing.T, registry *prometheus.Registry, name string, labels prometheus.Labels) float64 {
+func CounterValue(t require.TestingT, registry *prometheus.Registry, name string, labels prometheus.Labels) float64 {
 	metric := FindMetric(t, registry, io_prometheus_client.MetricType_COUNTER, name, labels)
 	if metric != nil {
 		return *metric.Counter.Value
