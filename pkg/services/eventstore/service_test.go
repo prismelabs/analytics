@@ -1,4 +1,4 @@
-//go:build !race && chdb
+//go:build test && !race && chdb
 
 package eventstore
 
@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/prismelabs/analytics/pkg/chdb"
-	"github.com/prismelabs/analytics/pkg/clickhouse"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/log"
 	"github.com/prismelabs/analytics/pkg/services/eventdb"
@@ -18,6 +16,7 @@ import (
 	"github.com/prismelabs/analytics/pkg/services/teardown"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
 	"github.com/prismelabs/analytics/pkg/testutils"
+	"github.com/prismelabs/analytics/pkg/testutils/faker"
 	"github.com/prismelabs/analytics/pkg/uri"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
@@ -28,23 +27,24 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 		t.SkipNow()
 	}
 
-	setup := func(t *testing.T, cfg Config, driver string, driverCfg any) (Service, eventdb.Service, *prometheus.Registry, teardown.Service) {
-		logger := log.New("eventstore_service_test", io.Discard, false)
-		promRegistry := prometheus.NewRegistry()
-		eventDbCfg := eventdb.Config{
-			Driver: driver,
+	setup := func(t *testing.T, cfg Config, driver string) (Service, eventdb.Service, *prometheus.Registry, teardown.Service) {
+		var (
+			db           eventdb.Service
+			teardown     teardown.Service
+			promRegistry = prometheus.NewRegistry()
+		)
+		switch driver {
+		case "clickhouse":
+			db, teardown = eventdb.NewClickHouse(t)
+		case "chdb":
+			db, teardown = eventdb.NewChDb(t)
+		default:
+			panic("unknown driver")
 		}
-		source := clickhouse.EmbeddedSourceDriver(logger)
-		teardown := teardown.NewService()
-		db, err := eventdb.NewService(eventDbCfg, driverCfg, logger, source, teardown)
-		require.NoError(t, err)
 
-		teardown.RegisterProcedure(func() error {
-			testutils.DropTables(t, db)
-			return nil
-		})
-
-		store, err := NewService(cfg, db, logger, promRegistry, teardown)
+		store, err := NewService(cfg, db,
+			log.New("eventstore-test", io.Discard, false),
+			promRegistry, teardown)
 		require.NoError(t, err)
 
 		return store, db, promRegistry, teardown
@@ -52,20 +52,8 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 
 	forEachEventDb := func(t *testing.T, cfg Config, fn func(t *testing.T, store Service, db eventdb.Service, promRegistry *prometheus.Registry)) {
 		for driver := range eventdb.Drivers() {
-			var driverCfg any
-			switch driver {
-			case "chdb":
-				var cfg chdb.Config
-				testutils.ConfigueLoad(t, &cfg)
-				driverCfg = cfg
-			case "clickhouse":
-				var cfg clickhouse.Config
-				testutils.ConfigueLoad(t, &cfg)
-				driverCfg = cfg
-			}
-
 			t.Run(driver, func(t *testing.T) {
-				store, db, promRegistry, teardown := setup(t, cfg, driver, driverCfg)
+				store, db, promRegistry, teardown := setup(t, cfg, driver)
 
 				fn(t, store, db, promRegistry)
 				require.NoError(t, teardown.Teardown())
@@ -292,5 +280,103 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 					float64(0))
 			}
 		})
+	})
+}
+
+func BenchmarkInteg(b *testing.B) {
+	type BenchCase struct {
+		name      string
+		batchSize int
+	}
+
+	benchCases := []BenchCase{
+		{
+			name:      "SingleBatch",
+			batchSize: 0,
+		},
+		{
+			name:      "10kEventsPerBatch",
+			batchSize: 10_000,
+		},
+		{
+			name:      "20kEventsPerBatch",
+			batchSize: 20_000,
+		},
+		{
+			name:      "30kEventsPerBatch",
+			batchSize: 30_000,
+		},
+		{
+			name:      "100kEventsPerBatch",
+			batchSize: 100_000,
+		},
+	}
+
+	bench := func(b *testing.B, bcase BenchCase, back backend) {
+		b.Run(bcase.name, func(b *testing.B) {
+			err := back.prepareBatch()
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			session := faker.Session()
+			for i := range b.N {
+				if i > 0 && bcase.batchSize > 0 && i%bcase.batchSize == 0 {
+					// Send batch.
+					err = back.sendBatch()
+					if err != nil {
+						b.Fatal(err)
+					}
+
+					// Prepare next one.
+					err := back.prepareBatch()
+					if err != nil {
+						b.Fatal(err)
+					}
+				}
+
+				// Create new session every 10 page views.
+				if i%10 == 0 {
+					session = faker.Session()
+				}
+
+				// Add page view event.
+				session.PageviewCount++
+				pv := faker.PageView(session)
+				err = back.appendToBatch(&pv)
+				if err != nil {
+					b.Fatal(err)
+				}
+			}
+			// Send last batch.
+			err = back.sendBatch()
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			b.StopTimer()
+		})
+	}
+
+	b.Run("ClickHouse", func(b *testing.B) {
+		for _, bcase := range benchCases {
+			db, teardown := eventdb.NewClickHouse(b)
+			back := newClickhouseBackend(db, teardown)
+			b.ResetTimer()
+			bench(b, bcase, back)
+			b.StopTimer()
+			require.NoError(b, teardown.Teardown())
+		}
+	})
+
+	b.Run("ChDb", func(b *testing.B) {
+		for _, bcase := range benchCases {
+			db, teardown := eventdb.NewChDb(b)
+			back := newChDbBackend(db, teardown)
+			b.ResetTimer()
+			bench(b, bcase, back)
+			b.StopTimer()
+			require.NoError(b, teardown.Teardown())
+		}
 	})
 }
