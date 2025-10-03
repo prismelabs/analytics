@@ -1,17 +1,13 @@
-//go:build !race && chdb
+//go:build test && !race && chdb
 
 package eventdb
 
 import (
 	"context"
-	"io"
 	"testing"
 
 	"github.com/prismelabs/analytics/pkg/chdb"
 	"github.com/prismelabs/analytics/pkg/clickhouse"
-	"github.com/prismelabs/analytics/pkg/log"
-	"github.com/prismelabs/analytics/pkg/services/teardown"
-	"github.com/prismelabs/analytics/pkg/testutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,39 +16,17 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 		t.SkipNow()
 	}
 
-	setup := func(t *testing.T, driver string, driverCfg any) (Service, teardown.Service) {
-		logger := log.New("eventdb_service_test", io.Discard, false)
-		cfg := Config{
-			Driver: driver,
-		}
-		source := clickhouse.EmbeddedSourceDriver(logger)
-		teardown := teardown.NewService()
-
-		db, err := NewService(cfg, driverCfg, logger, source, teardown)
-		require.NoError(t, err)
-
-		return db, teardown
-	}
-
 	forEachDriver := func(t *testing.T, fn func(t *testing.T, db Service)) {
-		for driver := range Drivers() {
-			var driverCfg any
-			switch driver {
-			case "chdb":
-				var cfg chdb.Config
-				testutils.ConfigueLoad(t, &cfg)
-				driverCfg = cfg
-			case "clickhouse":
-				var cfg clickhouse.Config
-				testutils.ConfigueLoad(t, &cfg)
-				driverCfg = cfg
-			}
-			t.Run(driver, func(t *testing.T) {
-				db, teardown := setup(t, driver, driverCfg)
-				fn(t, db)
-				require.NoError(t, teardown.Teardown())
-			})
-		}
+		t.Run("ClickHouse", func(t *testing.T) {
+			db, teardown := NewClickHouse(t)
+			fn(t, db)
+			require.NoError(t, teardown.Teardown())
+		})
+		t.Run("ChDb", func(t *testing.T) {
+			db, teardown := NewChDb(t)
+			fn(t, db)
+			require.NoError(t, teardown.Teardown())
+		})
 	}
 
 	t.Run("DriverName", func(t *testing.T) {
