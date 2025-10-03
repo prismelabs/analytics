@@ -11,12 +11,16 @@ GO ?= go
 
 default: start/prisme
 
-.PHONY: start/prisme
-start/prisme: tmp/.env tmp/prisme
+.PHONY: start
+start: tmp/.env
 	source ./tmp/.env \
 	&& $(DOCKER_COMPOSE) \
 		-f ./docker-compose.yml \
 		up --wait \
+
+.PHONY: start/prisme
+start/prisme: start tmp/prisme
+	source ./tmp/.env \
 	&& air --build.cmd '$(MAKE) tmp/prisme' --build.bin './tmp/prisme' \
 	|& bunyan
 
@@ -87,18 +91,13 @@ tmp/:
 
 .PHONY: test/unit
 test/unit: codegen
-	go test -v -tags assert -short -race -bench=./... -benchmem ./...
+	go test -v -tags assert,test -short -race -bench=./... -benchmem ./...
 
 .PHONY: test/integ
-test/integ: tmp/.env
-	$(DOCKER_COMPOSE) \
-		-f ./docker-compose.yml \
-		up --wait
-	source ./tmp/.env && go test -tags chdb -v -race -p 1 -run TestInteg ./...
-	source ./tmp/.env && go test -tags chdb -v -p 1 -run TestIntegNoRaceDetector ./...
-	$(DOCKER_COMPOSE) \
-		-f ./docker-compose.yml \
-		down --volumes --remove-orphans
+test/integ: start ./tmp/.env
+	source ./tmp/.env && go test -tags chdb,test -v -race -p 1 -run TestInteg ./...
+	source ./tmp/.env && go test -tags chdb,test -v -p 1 -run TestIntegNoRaceDetector ./...
+	$(MAKE) clean
 
 .PHONY: test/e2e
 test/e2e:
@@ -106,6 +105,10 @@ test/e2e:
 
 tests/%: FORCE
 	$(MAKE) -C ./tests $*
+
+.PHONY: phony/integ
+bench/integ:
+	source ./tmp/.env && go test -tags chdb,test -v -p 1 -run ^$$ -bench=BenchmarkInteg -benchtime 10s ./...
 
 .PHONY: go/build
 go/build: go/build/prisme
