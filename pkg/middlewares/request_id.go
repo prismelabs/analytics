@@ -3,18 +3,18 @@ package middlewares
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
-	"github.com/prismelabs/analytics/pkg/prisme"
+	"github.com/prismelabs/analytics/pkg/options"
 )
 
 type RequestIdKey struct{}
 
 // RequestId returns request id middleware.
-func RequestId(cfg prisme.Config) fiber.Handler {
+func RequestId(cfg options.Proxy) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var requestId string
 
-		if cfg.TrustProxy {
-			requestId = utils.UnsafeString(c.Request().Header.Peek(cfg.ProxyRequestIdHeader))
+		if cfg.Trust {
+			requestId = utils.UnsafeString(c.Request().Header.Peek(cfg.RequestIdHeader))
 		}
 
 		if requestId == "" {

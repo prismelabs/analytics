@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/prismelabs/analytics/pkg/prisme"
+	"github.com/prismelabs/analytics/pkg/options"
 )
 
 // ApiEventsTimeout returns a timeout middleware used on /api/*/events/*
 // handlers.
-func ApiEventsTimeout(cfg prisme.Config) fiber.Handler {
+func ApiEventsTimeout(cfg options.Server) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		ctx := c.UserContext()
 		var cancel context.CancelFunc

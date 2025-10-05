@@ -74,22 +74,13 @@ func serve() {
 	}
 
 	// Validate configuration.
-	err = errors.Join(
-		cfg.Prisme.Validate(),
-		// Validated later.
-		// cfg.chdb.Validate(),
-		// cfg.clickhouse.Validate(),
-		cfg.Sessionstore.Validate(),
-		cfg.EventDb.Validate(),
-		cfg.EventStore.Validate(),
-		cfg.OriginRegistry.Validate(),
-	)
+	err = cfg.Validate()
 	if err != nil {
 		cliError(err)
 	}
 
 	// Create application logger.
-	logger := log.New("app", os.Stderr, cfg.Prisme.Debug)
+	logger := log.New("app", os.Stderr, cfg.Server.Debug)
 	err = logger.TestOutput()
 	if err != nil {
 		panic(err)
@@ -122,9 +113,9 @@ func serve() {
 			return nil
 		},
 	}
-	if cfg.Prisme.TrustProxy {
+	if cfg.Proxy.Trust {
 		cfg.Fiber.EnableIPValidation = false
-		cfg.Fiber.ProxyHeader = cfg.Prisme.ProxyHeader
+		cfg.Fiber.ProxyHeader = cfg.Proxy.ForwardedForHeader
 	} else {
 		cfg.Fiber.EnableIPValidation = true
 		cfg.Fiber.ProxyHeader = ""
@@ -186,15 +177,15 @@ func serve() {
 	})
 
 	app.Use(middlewares.Metrics(promRegistry),
-		middlewares.RequestId(cfg.Prisme),
-		middlewares.AccessLog(cfg.Prisme, logger),
+		middlewares.RequestId(cfg.Proxy),
+		middlewares.AccessLog(cfg.Server, logger),
 		middlewares.ErrorHandler(promRegistry, logger))
 
 	// Register handlers.
 	{
 		// Public endpoints.
 
-		app.Use("/static", handlers.Static(cfg.Prisme))
+		app.Use("/static", handlers.Static(cfg.Server))
 
 		app.Use("/dashboard", handlers.Dashboard())
 
@@ -202,13 +193,13 @@ func serve() {
 
 		eventCors := middlewares.EventsCors()
 		eventRateLimit := middlewares.EventsRateLimiter(
-			cfg.Prisme,
+			cfg.Server,
 			memory.New(memory.Config{
 				GCInterval: 10 * time.Second,
 			}),
 		)
 		nonRegisteredOriginFilter := middlewares.NonRegisteredOriginFilter(originRegistry)
-		eventTimeout := middlewares.ApiEventsTimeout(cfg.Prisme)
+		eventTimeout := middlewares.ApiEventsTimeout(cfg.Server)
 
 		app.Use("/api/v1/events/*",
 			eventCors,
@@ -283,7 +274,7 @@ func serve() {
 		)
 
 		stats := handlers.GetStatsHandlers(stats)
-		app.Use("/api/v1/stats/*", middlewares.StatsCors(cfg.Prisme))
+		app.Use("/api/v1/stats/*", middlewares.StatsCors(cfg.Server))
 		app.Get("/api/v1/stats/bounces", stats.Bounces)
 		app.Get("/api/v1/stats/visitors", stats.Visitors)
 		app.Get("/api/v1/stats/sessions", stats.Sessions)
@@ -321,13 +312,13 @@ func serve() {
 			EnableOpenMetrics:   false,
 			ProcessStartTime:    time.Now(),
 		}))
-		logger.Info("admin server listening for incoming request", "host_port", cfg.Prisme.AdminHostPort)
-		err := http.ListenAndServe(cfg.Prisme.AdminHostPort, nil)
+		logger.Info("admin server listening for incoming request", "host_port", cfg.Admin.HostPort)
+		err := http.ListenAndServe(cfg.Admin.HostPort, nil)
 		logger.Fatal("failed to start admin server", err)
 	}()
 
 	go func() {
-		socket := "0.0.0.0:" + fmt.Sprint(cfg.Prisme.Port)
+		socket := "0.0.0.0:" + fmt.Sprint(cfg.Server.Port)
 		logger.Info("start listening for incoming requests", "host_port", socket)
 		err := app.Listen(socket)
 		logger.Fatal("failed to listen for incoming requests", err)

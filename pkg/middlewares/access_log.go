@@ -8,11 +8,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/analytics/pkg/log"
-	"github.com/prismelabs/analytics/pkg/prisme"
+	"github.com/prismelabs/analytics/pkg/options"
 )
 
 // AccessLog returns an access log middleware.
-func AccessLog(cfg prisme.Config, logger log.Logger) fiber.Handler {
+func AccessLog(cfg options.Server, logger log.Logger) fiber.Handler {
 	// Create access logger.
 	var accessLogWriter io.Writer
 	switch cfg.AccessLog {

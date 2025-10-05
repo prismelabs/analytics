@@ -6,11 +6,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/prismelabs/analytics/pkg/embedded"
-	"github.com/prismelabs/analytics/pkg/prisme"
+	"github.com/prismelabs/analytics/pkg/options"
 )
 
 // Static returns a static HTTP middleware.
-func Static(cfg prisme.Config) fiber.Handler {
+func Static(cfg options.Server) fiber.Handler {
 	fsCfg := filesystem.Config{
 		Root:       http.FS(embedded.Static),
 		PathPrefix: "static",

@@ -9,7 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/prismelabs/analytics/pkg/log"
-	"github.com/prismelabs/analytics/pkg/prisme"
+	"github.com/prismelabs/analytics/pkg/options"
 	"github.com/stretchr/testify/require"
 )
 
@@ -67,7 +67,7 @@ func TestAccessLog(t *testing.T) {
 				app := fiber.New(fiber.Config{
 					ProxyHeader: tcase.proxyHeader,
 				})
-				app.Use(RequestId(prisme.Config{}))
+				app.Use(RequestId(options.Proxy{}))
 				app.Use(accessLog(accessLogger))
 				app.Use(func(c *fiber.Ctx) error {
 					return nil
