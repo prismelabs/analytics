@@ -59,6 +59,7 @@ lint: codegen
 
 .PHONY: lint/fix
 lint/fix:
+	go fmt ./...
 	$(MAKE) -C ./tests lint/fix
 
 .PHONY: codegen
