@@ -27,6 +27,9 @@ Then, tidy up the `go.mod`:
 $ go mod tidy
 ```
 
+Update `chdb` version in `nix/libchdb.nix` (see
+[latest releases](https://github.com/chdb-io/chdb/releases)).
+
 Once your done, run all tests to ensure nothing broke and fix it otherwise.
 
 ## Update IP database
