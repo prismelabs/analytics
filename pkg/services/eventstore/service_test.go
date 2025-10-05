@@ -27,48 +27,43 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 		t.SkipNow()
 	}
 
-	setup := func(t *testing.T, cfg Config, driver string) (Service, eventdb.Service, *prometheus.Registry, teardown.Service) {
-		var (
-			db           eventdb.Service
-			teardown     teardown.Service
+	var (
+		cfg          Config
+		db           eventdb.Service
+		err          error
+		promRegistry *prometheus.Registry
+		store        Service
+	)
+
+	forEachBackend := func(t *testing.T, test func(t *testing.T)) {
+		eventdb.ForEachDriver(t, func(edb eventdb.Service) {
 			promRegistry = prometheus.NewRegistry()
-		)
-		switch driver {
-		case "clickhouse":
-			db, teardown = eventdb.NewClickHouse(t)
-		case "chdb":
-			db, teardown = eventdb.NewChDb(t)
-		default:
-			panic("unknown driver")
-		}
+			teardown := teardown.NewService()
+			db = edb
 
-		store, err := NewService(cfg, db,
-			log.New("eventstore-test", io.Discard, false),
-			promRegistry, teardown)
-		require.NoError(t, err)
-
-		return store, db, promRegistry, teardown
-	}
-
-	forEachEventDb := func(t *testing.T, cfg Config, fn func(t *testing.T, store Service, db eventdb.Service, promRegistry *prometheus.Registry)) {
-		for driver := range eventdb.Drivers() {
-			t.Run(driver, func(t *testing.T) {
-				store, db, promRegistry, teardown := setup(t, cfg, driver)
-
-				fn(t, store, db, promRegistry)
+			t.Run(edb.DriverName(), func(t *testing.T) {
+				store, err = NewService(
+					cfg,
+					db,
+					log.New("eventstore-test", io.Discard, false),
+					promRegistry,
+					teardown,
+				)
+				require.NoError(t, err)
+				test(t)
 				require.NoError(t, teardown.Teardown())
 			})
-		}
+		})
 	}
 
-	cfg := Config{
+	cfg = Config{
 		MaxBatchSize:      1,
 		MaxBatchTimeout:   time.Millisecond,
 		RingBuffersFactor: 100,
 	}
 
 	t.Run("SinglePageView", func(t *testing.T) {
-		forEachEventDb(t, cfg, func(t *testing.T, store Service, db eventdb.Service, promRegistry *prometheus.Registry) {
+		forEachBackend(t, func(t *testing.T) {
 			// Add event to batch.
 			eventTime := time.Now().UTC().Round(time.Second)
 			err := store.StorePageView(context.Background(), &event.PageView{
@@ -126,7 +121,7 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 	})
 
 	t.Run("MultipleEvents/Pageviews/Custom/OutboundLinkClick", func(t *testing.T) {
-		forEachEventDb(t, cfg, func(t *testing.T, store Service, db eventdb.Service, promRegistry *prometheus.Registry) {
+		forEachBackend(t, func(t *testing.T) {
 			testStartTime := time.Now().UTC()
 			// Store events.
 			sessionsCount := 10
@@ -242,14 +237,14 @@ func TestIntegNoRaceDetectorService(t *testing.T) {
 		})
 	})
 
-	t.Run("RingBufferDroppedEvents", func(t *testing.T) {
-		cfg := Config{
-			MaxBatchSize:      10,
-			MaxBatchTimeout:   10 * time.Millisecond,
-			RingBuffersFactor: 1,
-		}
+	cfg = Config{
+		MaxBatchSize:      10,
+		MaxBatchTimeout:   10 * time.Millisecond,
+		RingBuffersFactor: 1,
+	}
 
-		forEachEventDb(t, cfg, func(t *testing.T, store Service, db eventdb.Service, promRegistry *prometheus.Registry) {
+	t.Run("RingBufferDroppedEvents", func(t *testing.T) {
+		forEachBackend(t, func(t *testing.T) {
 			// Send thousands of event to force small ring buffer to drop events.
 			for i := 0; i < 10_000; i++ {
 				eventTime := time.Now().UTC().Round(time.Second)
@@ -348,13 +343,12 @@ func BenchmarkInteg(b *testing.B) {
 					b.Fatal(err)
 				}
 			}
+
 			// Send last batch.
 			err = back.sendBatch()
 			if err != nil {
 				b.Fatal(err)
 			}
-
-			b.StopTimer()
 		})
 	}
 
