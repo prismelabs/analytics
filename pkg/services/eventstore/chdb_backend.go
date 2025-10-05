@@ -128,8 +128,8 @@ func (cb *chdbBackend) appendToBatch(ev any) error {
 			UtmCampaign:     e.Session.Utm.Campaign,
 			UtmTerm:         e.Session.Utm.Term,
 			UtmContent:      e.Session.Utm.Content,
-			Version:         e.Status,
-			ExitStatus:      e.Session.PageviewCount,
+			Version:         e.Session.PageviewCount,
+			ExitStatus:      e.Status,
 			Sign:            1,
 		})
 
