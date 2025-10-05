@@ -69,11 +69,18 @@ func (c *Config) Validate() error {
 }
 
 func defaultConfig() {
-	ini := configue.NewINI(configue.File("./", "config.ini"))
+	ini := configue.NewINI(configFilePath())
 	figue := configue.New("default-config", configue.ContinueOnError, ini)
 	var cfg Config
 	cfg.RegisterOptions(figue)
 
 	ini.SetOutput(os.Stdout)
 	ini.PropSet.PrintDefaults()
+}
+
+func configFilePath() string {
+	if fpath := os.Getenv("PRISME_CONFIG"); fpath != "" {
+		return fpath
+	}
+	return configue.File("./", "config.ini")
 }

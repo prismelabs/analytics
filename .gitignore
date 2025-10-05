@@ -1,9 +1,8 @@
 .direnv/
+.envrc
 
-# Server envfile.
-.env
-# .env generator script.
-config/genenv.local.sh
+# Local config file.
+config/local.ini
 
 # gomock
 *_mock_test.go

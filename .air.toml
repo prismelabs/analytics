@@ -8,8 +8,8 @@ exclude_dir = []
 exclude_file = []
 exclude_regex = ["_test\\.go$", "\\.md$"]
 exclude_unchanged = false
-include_dir = ["pkg", "cmd"]
-include_ext = ["go"]
+include_dir = ["pkg", "cmd", "config"]
+include_ext = ["go", "ini"]
 include_file = []
 kill_delay = "0s"
 log = "/dev/stderr"
@@ -21,4 +21,3 @@ rerun = false
 rerun_delay = 500
 send_interrupt = false
 stop_on_error = false
-

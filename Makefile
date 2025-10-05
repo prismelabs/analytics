@@ -2,8 +2,8 @@ repository_root := $(shell git rev-parse --show-toplevel)
 repository_root := $(or $(repository_root), $(CURDIR))
 include $(repository_root)/variables.mk
 
-GENENV_FILES ?= $(wildcard ./config/*)
-GENENV_FILE ?= ./config/genenv.local.sh
+CONFIG_FILES ?= $(wildcard ./config/*.ini)
+CONFIG_FILE ?= ./config/local.ini
 
 COMPOSE_PROJECT_NAME ?= $(notdir $(CURDIR))
 
@@ -20,8 +20,7 @@ start: tmp/.env
 
 .PHONY: start/prisme
 start/prisme: start tmp/prisme
-	source ./tmp/.env \
-	&& air --build.cmd '$(MAKE) tmp/prisme' --build.bin './tmp/prisme' \
+	PRISME_CONFIG=$(CONFIG_FILE) air --build.cmd '$(MAKE) tmp/prisme' --build.bin './tmp/prisme' \
 	|& bunyan
 
 .PHONY: start/addevents
@@ -76,14 +75,11 @@ codegen: ./pkg/embedded/static/wa.js ./pkg/embedded/static/openapi.json ./pkg/em
 ./pkg/embedded/static/wa.js: ./tracker/web_analytics.js
 	minify --js-version 2019 $^ > $@
 
-$(GENENV_FILE):
-	@echo "$(GENENV_FILE) doesn't exist, generating one..."
-	@printf '#!/usr/bin/env bash\n\nDIR="$$(dirname $$0)"\nsource "$$DIR/genenv.sh"\n\n# setenv PRISME_XXX_OPTION "value"' > $@
-	@chmod +x $(GENENV_FILE)
-	@echo "$(GENENV_FILE) generated, you can edit it!"
-
-tmp/.env: tmp/ $(GENENV_FILES) $(GENENV_FILE)
-	bash $(GENENV_FILE) > tmp/.env; \
+$(CONFIG_FILE): ./config/example.ini
+	@echo "$(CONFIG_FILE) doesn't exist, generating one..."
+	@cp ./config/example.ini $@
+	@chmod +x $(CONFIG_FILE)
+	@echo "$(CONFIG_FILE) generated, you can edit it!"
 
 tmp/prisme: go/build/prisme
 
@@ -95,7 +91,7 @@ test/unit: codegen
 	go test -v -tags assert,test -short -race -bench=./... -benchmem ./...
 
 .PHONY: test/integ
-test/integ: start ./tmp/.env
+test/integ: start $(CONFIG_FILE)
 	source ./tmp/.env && go test -tags chdb,test -v -race -p 1 -run TestInteg ./...
 	source ./tmp/.env && go test -tags chdb,test -v -p 1 -run TestIntegNoRaceDetector ./...
 	$(MAKE) clean

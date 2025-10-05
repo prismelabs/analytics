@@ -34,7 +34,7 @@ import (
 
 func serve() {
 	// Setup configuration loader.
-	ini := configue.NewINI(configue.File("./", "config.ini"))
+	ini := configue.NewINI(configFilePath())
 	figue := configue.New(
 		"",
 		configue.ContinueOnError,
