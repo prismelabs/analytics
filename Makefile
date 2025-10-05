@@ -30,7 +30,7 @@ start/addevents: tmp/.env
 	&& $(DOCKER_COMPOSE) \
 		-f ./docker-compose.yml \
 		up --wait \
-	&& $(GO) run ./cmd/addevents |& bunyan
+	&& $(GO) run -tags test ./cmd/addevents $(ARGS) |& bunyan
 
 .PHONY: stop
 stop:

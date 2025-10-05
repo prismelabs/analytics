@@ -3,10 +3,12 @@
 package faker
 
 import (
+	"encoding/binary"
 	"math/rand"
 	"time"
 
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/google/uuid"
 	"github.com/prismelabs/analytics/pkg/event"
 	"github.com/prismelabs/analytics/pkg/services/ipgeolocator"
 	"github.com/prismelabs/analytics/pkg/services/uaparser"
@@ -107,6 +109,14 @@ func PageUri(session event.Session) uri.Uri {
 	)
 }
 
+// ReferrerUri returns a random non direct referrer URI.
+func ReferrerUri(direct bool) event.ReferrerUri {
+	if direct {
+		return event.ReferrerUri{}
+	}
+	return testutils.Must(event.ParseReferrerUri)([]byte(Uri().String()))
+}
+
 // Time returns a random time between now + d. If d is negative return time
 // maybe in the past.
 func Time(d time.Duration) time.Time {
@@ -120,4 +130,13 @@ func Time(d time.Duration) time.Time {
 	}
 
 	return now.Add(time.Duration(rand.Intn(int(d))))
+}
+
+// UuidV7 returns a random UUIDv7 and patch it's time component with provided
+// time.
+func UuidV7(t time.Time) uuid.UUID {
+	u := uuid.Must(uuid.NewV7())
+	copy(u[:], binary.BigEndian.AppendUint64(nil, uint64((t.Unix()*1000)<<16)))
+	u[6] = 0x70 // version byte.
+	return u
 }

@@ -3,35 +3,21 @@
 package faker
 
 import (
-	"encoding/binary"
 	"math/rand"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/prismelabs/analytics/pkg/event"
-	"github.com/prismelabs/analytics/pkg/testutils"
 )
 
 // Session returns a random valid event.Session with 0 page view.
 func Session() event.Session {
-	referrerUri := event.ReferrerUri{}
-	if rand.Int()%4 != 0 {
-		referrerUri = testutils.Must(event.ParseReferrerUri)([]byte(Uri().String()))
-	}
-
-	sessionUuid := uuid.Must(uuid.NewV7())
-	entryTime := Time(-6 * 31 * 24 * time.Hour)
-
-	// Update sessionUuid timestamp.
-	copy(sessionUuid[:], binary.BigEndian.AppendUint64(nil, uint64((entryTime.Unix()*1000)<<16)))
-
 	return event.Session{
 		PageUri:       Uri(),
-		ReferrerUri:   referrerUri,
+		ReferrerUri:   ReferrerUri(rand.Int()%4 != 0),
 		Client:        UapClient(),
 		CountryCode:   CountryCode(),
 		VisitorId:     "prisme_" + String(AlphaNum, 8),
-		SessionUuid:   sessionUuid,
+		SessionUuid:   UuidV7(Time(-6 * time.Hour)),
 		Utm:           event.UtmParams{},
 		PageviewCount: 0,
 	}
