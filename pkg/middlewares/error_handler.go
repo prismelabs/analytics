@@ -36,6 +36,7 @@ func ErrorHandler(promRegistry *prometheus.Registry, logger log.Logger) fiber.Ha
 					"http request handler panicked",
 					"error", err,
 					"stacktrace", string(debug.Stack()),
+					"request_id", c.Locals(RequestIdKey{}).(string),
 				)
 			}
 		}()
