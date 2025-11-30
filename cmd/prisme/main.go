@@ -32,7 +32,7 @@ func main() {
 func cliError(err error) {
 	_, _ = fmt.Fprintln(os.Stderr, "Error:", err.Error())
 	_, _ = fmt.Fprintln(os.Stderr)
-	_, _ = fmt.Fprintln(os.Stderr, "Usage: prisme [COMMAND] [FLAGS]")
+	_, _ = fmt.Fprintln(os.Stderr, "Usage: prisme COMMAND [FLAGS]")
 	_, _ = fmt.Fprintln(os.Stderr)
 	_, _ = fmt.Fprintf(os.Stderr, "Run 'prisme -h' for more information.\n")
 	os.Exit(1)
