@@ -3,7 +3,7 @@ repository_root := $(or $(repository_root), $(CURDIR))
 include $(repository_root)/variables.mk
 
 CONFIG_FILES ?= $(wildcard ./config/*.ini)
-CONFIG_FILE ?= ./config/local.ini
+CONFIG_FILE ?= ./config/dev.ini
 
 COMPOSE_PROJECT_NAME ?= $(notdir $(CURDIR))
 
@@ -12,9 +12,8 @@ GO ?= go
 default: start/prisme
 
 .PHONY: start
-start: tmp/.env
-	source ./tmp/.env \
-	&& $(DOCKER_COMPOSE) \
+start:
+	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.yml \
 		up --wait \
 
@@ -24,9 +23,8 @@ start/prisme: start tmp/prisme
 	|& bunyan
 
 .PHONY: start/addevents
-start/addevents: tmp/.env
-	source ./tmp/.env \
-	&& $(DOCKER_COMPOSE) \
+start/addevents:
+	$(DOCKER_COMPOSE) \
 		-f ./docker-compose.yml \
 		up --wait \
 	&& $(GO) run -tags test ./cmd/addevents $(ARGS) |& bunyan
@@ -92,8 +90,8 @@ test/unit: codegen
 
 .PHONY: test/integ
 test/integ: start $(CONFIG_FILE)
-	source ./tmp/.env && go test -tags chdb,test -v -race -p 1 -run TestInteg ./...
-	source ./tmp/.env && go test -tags chdb,test -v -p 1 -run TestIntegNoRaceDetector ./...
+	go test -tags chdb,test -v -race -p 1 -run TestInteg ./...
+	go test -tags chdb,test -v -p 1 -run TestIntegNoRaceDetector ./...
 	$(MAKE) clean
 
 .PHONY: test/e2e
@@ -105,7 +103,7 @@ tests/%: FORCE
 
 .PHONY: phony/integ
 bench/integ:
-	source ./tmp/.env && go test -tags chdb,test -v -p 1 -run ^$$ -bench=BenchmarkInteg -benchtime 10s ./...
+	go test -tags chdb,test -v -p 1 -run ^$$ -bench=BenchmarkInteg -benchtime 10s ./...
 
 .PHONY: go/build
 go/build: go/build/prisme
