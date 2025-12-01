@@ -21,7 +21,7 @@
     </a>
 </p>
 
-# :gem: Prisme Analytics
+# ◢ Prisme Analytics
 
 [An Open Source, privacy-focused and progressive analytics service.](https://www.prismeanalytics.com/docs/next/)
 
