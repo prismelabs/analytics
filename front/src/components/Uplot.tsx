@@ -12,8 +12,10 @@ export default function (props: {
   class?: string;
 }) {
   // @ts-ignore: ...
-  return <UplotReact
-    {...props}
-    className={props["class"]}
-  /> as unknown as JSX.Element;
+  return (
+    <UplotReact
+      {...props}
+      className={props["class"]}
+    />
+  ) as unknown as JSX.Element;
 }

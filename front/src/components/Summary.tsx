@@ -85,8 +85,9 @@ function Metric(
     <Card
       title={name}
       size="small"
-      class={`basis-0 shrink-0 grow-1 min-w-max grid gap-1 items-center border-x-4 border-x-transparent px-3 relative ${hasPlot ? "grid-rows-3 cursor-pointer" : "grid-rows-2"
-        } ${selected ? "border-l-trend-primary" : ""}`}
+      class={`basis-0 shrink-0 grow-1 min-w-max grid gap-1 items-center border-x-4 border-x-transparent px-3 relative ${
+        hasPlot ? "grid-rows-3 cursor-pointer" : "grid-rows-2"
+      } ${selected ? "border-l-trend-primary" : ""}`}
       onClick={hasPlot ? () => selectedTimeSerie.value = data : undefined}
     >
       {data !== undefined && isOk(data.value)

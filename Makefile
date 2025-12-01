@@ -53,11 +53,13 @@ lint: codegen
 	openapi-spec-validator openapi.yml
 	golangci-lint run --allow-parallel-runners --timeout 2m ./...
 	$(MAKE) -C ./tests lint
+	$(MAKE) -C ./front lint
 
 .PHONY: lint/fix
 lint/fix:
 	go fmt ./...
 	$(MAKE) -C ./tests lint/fix
+	$(MAKE) -C ./front lint/fix
 
 .PHONY: codegen
 codegen: ./pkg/embedded/static/wa.js ./pkg/embedded/static/openapi.json ./pkg/embedded/dashboard

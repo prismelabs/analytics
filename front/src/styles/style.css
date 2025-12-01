@@ -69,27 +69,27 @@
 }
 
 .react-calendar {
-  @apply text-sm text-nowrap text-system-fg rounded
+  @apply text-sm text-nowrap text-system-fg rounded;
 }
 
 .react-calendar__navigation {
-  @apply h-8 mb-2 flex gap-2
+  @apply h-8 mb-2 flex gap-2;
 }
 
 .react-calendar__navigation__arrow:hover {
-  @apply bg-trend-primary-light
+  @apply bg-trend-primary-light;
 }
 
 .react-calendar button {
-  @apply size-8 my-1
+  @apply size-8 my-1;
 }
 
 .react-calendar button:hover {
-  @apply bg-trend-primary-light rounded
+  @apply bg-trend-primary-light rounded;
 }
 
 .react-calendar__tile--hover {
-  @apply bg-trend-primary-light rounded-none
+  @apply bg-trend-primary-light rounded-none;
 }
 
 .react-calendar__tile--hoverStart {
@@ -105,11 +105,11 @@
 }
 
 .react-calendar__month-view__days__day {
-  @apply text-sm
+  @apply text-sm;
 }
 
 .react-calendar__month-view__days__day--neighboringMonth {
-  @apply text-system-fg/50
+  @apply text-system-fg/50;
 }
 
 .react-calendar__month-view__weekdays__weekday abbr {
