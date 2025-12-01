@@ -87,6 +87,7 @@
               LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
               GOFLAGS = "-tags=chdb,test";
               GOEXPERIMENT = "jsonv2";
+              CHDB_LIB_PATH = "${self.packages.${system}.libchdb}/lib/libchdb.so";
             };
           };
           packages = rec {

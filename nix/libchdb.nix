@@ -6,7 +6,7 @@
 
 stdenv.mkDerivation rec {
   pname = "libchdb";
-  version = "3.4.0";
+  version = "3.7.2";
 
   outputs = [ "out" ];
 
@@ -19,13 +19,14 @@ stdenv.mkDerivation rec {
       lib.fatalError "unsupported CPU architecture";
 
   src = fetchzip {
-    url = "https://github.com/chdb-io/chdb/releases/download/v${version}/linux-x86_64-libchdb.tar.gz";
-    sha256 = "sha256:1b29g97f7d23y5ycdfgirm1lhlyv81lg0ffc4jbw9rrizzj6k4d5";
+    url = "https://github.com/chdb-io/chdb/releases/download/v${version}/linux-${arch}-libchdb.tar.gz";
+    sha256 = "sha256-GCTaHOW46owrPj4UhD8pREUBylPAiFiouXGR+la/UbQ=";
     stripRoot = false;
   };
 
   installPhase = ''
-    mkdir -p "$out"/lib
+    mkdir -p "$out"/lib "$out"/include
     cp libchdb.so $out/lib/libchdb.so
+    cp chdb.h chdb.hpp $out/include/
   '';
 }
