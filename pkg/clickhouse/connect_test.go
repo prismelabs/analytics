@@ -28,7 +28,7 @@ func TestClickhouseConnect(t *testing.T) {
 	})
 
 	runtime.GC()
-	// We're not testing a real connection to postgres in unit tests.
+	// We're not testing a real connection to clickhouse in unit tests.
 }
 
 func TestClickhouseConnectSql(t *testing.T) {
