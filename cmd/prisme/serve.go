@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -42,35 +41,28 @@ func serve() {
 		configue.NewEnv("PRISME"),
 		configue.NewFlag(),
 	)
-	figue.Usage = func() {
-		_, _ = fmt.Fprintln(figue.Output(), "prisme - High-perfomance, self-hosted and privacy-focused web analytics service.")
-		_, _ = fmt.Fprintln(figue.Output())
-		_, _ = fmt.Fprintln(figue.Output(), "Usage:")
-		_, _ = fmt.Fprintln(figue.Output(), "  prisme [COMMAND] [FLAGS]")
-		_, _ = fmt.Fprintln(figue.Output())
-		_, _ = fmt.Fprintln(figue.Output(), "  prisme serve -eventdb-driver chdb -chdb-path ./prisme -origins 'localhost,prismeanalytics.com'")
-		_, _ = fmt.Fprintln(figue.Output())
-		_, _ = fmt.Fprintln(figue.Output(), "Commands:")
-		_, _ = fmt.Fprintln(figue.Output(), "  serve")
-		_, _ = fmt.Fprintln(figue.Output(), "        start web analytics server, this is the default")
-		_, _ = fmt.Fprintln(figue.Output(), "  grafana-dashboard")
-		_, _ = fmt.Fprintln(figue.Output(), "        generate and print grafana dashboard to stdout")
-		_, _ = fmt.Fprintln(figue.Output(), "  default-config")
-		_, _ = fmt.Fprintln(figue.Output(), "        print default configuration file to stdout")
-		_, _ = fmt.Fprintln(figue.Output())
-		figue.PrintDefaults()
-	}
+	figue.Usage = func() {}
 
 	var cfg Config
 	cfg.RegisterOptions(figue)
 
 	// Load configuration.
 	err := figue.Parse()
-	if errors.Is(err, flag.ErrHelp) {
-		return
-	}
 	if err != nil {
-		cliError(err)
+		if errors.Is(err, configue.ErrHelp) {
+			_, _ = fmt.Fprintln(figue.Output(), "prisme - High-perfomance, self-hosted and privacy-focused web analytics service.")
+			_, _ = fmt.Fprintln(figue.Output())
+			_, _ = fmt.Fprintln(figue.Output(), "Usage:")
+			_, _ = fmt.Fprintln(figue.Output(), "  prisme [COMMAND] [FLAGS]")
+			_, _ = fmt.Fprintln(figue.Output())
+			_, _ = fmt.Fprintln(figue.Output(), "  prisme serve -eventdb-driver chdb -chdb-path ./prisme -origins 'localhost,prismeanalytics.com'")
+			_, _ = fmt.Fprintln(figue.Output())
+			figue.PrintDefaults()
+			return
+		} else {
+			cliError(nil)
+		}
+		return
 	}
 
 	// Validate configuration.

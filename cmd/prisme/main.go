@@ -20,7 +20,7 @@ func main() {
 		defaultConfig()
 
 	case "serve":
-		fallthrough
+		serve()
 	default:
 		if cmd != "" && !strings.HasPrefix(cmd, "-") {
 			cliError(fmt.Errorf("unknown command %q", cmd))
@@ -30,7 +30,9 @@ func main() {
 }
 
 func cliError(err error) {
-	_, _ = fmt.Fprintln(os.Stderr, "Error:", err.Error())
+	if err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, "Error:", err.Error())
+	}
 	_, _ = fmt.Fprintln(os.Stderr)
 	_, _ = fmt.Fprintln(os.Stderr, "Usage: prisme COMMAND [FLAGS]")
 	_, _ = fmt.Fprintln(os.Stderr)
